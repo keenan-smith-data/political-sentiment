@@ -1,0 +1,157 @@
+---
+title: "Lexicon Text Scraping"
+author: "Keenan Smith"
+format: html
+---
+
+```{r}
+#| label: Library Initiation
+
+library(tidyverse)
+library(rvest)
+```
+
+
+```{r}
+#| label: Importing Cleaned Sitemaps
+
+jacobin <- read_rds("data/jacobin.rds")
+features <- read_rds("data/americanmindfeatures.rds")
+memos <- read_rds("data/americanmindmemos.rds")
+salvos <- read_rds("data/americanmindsalvos.rds")
+h_commentary <- read_rds("data/heritage_commentary.rds")
+h_report <- read_rds("data/heritage_report.rds")
+b_blog <- read_rds("data/brookings_blog.rds")
+
+source("scraping_functions.R")
+```
+
+
+```{r}
+#| label: Test Links
+
+j_tl <- sample(jacobin$url, 1)
+j_tl_2 <- sample(jacobin$url, 1)
+j_tl_3 <- sample(jacobin$url, 1)
+j_tl_wrong <- "https://jacobin.com/2022/06/american-exceptionae-off-the-rails"
+
+h_com_tl <- sample(h_commentary$url, 1)
+h_com_tl_2 <- sample(h_commentary$url, 1)
+h_com_tl_3 <- sample(h_commentary$url, 1)
+h_com_tl_wrong <- "https://www.heritage.org/american-founders/commentary/pulitzer-overlooks-eggious-errors-award-prize-new-york-times-fatally"
+
+h_rep_tl <- sample(h_report$url, 1)
+h_rep_tl_2 <- sample(h_report$url, 1)
+h_rep_tl_3 <- sample(h_report$url, 1)
+h_rep_tl_wrong <- "https://www.heritage.org/arms-control/report/arms-cont-the-heritage-foundation-recommendations"
+
+b_tl <- sample(b_blog$url, 1)
+b_tl_2 <- sample(b_blog$url, 1)
+b_tl_3 <- sample(b_blog$url, 1)
+
+memo_tl <- sample(memos$url, 1)
+memo_tl_2 <- sample(memos$url, 1)
+
+salvo_tl <- sample(salvos$url, 1)
+salvo_tl_2 <- sample(salvos$url, 1)
+
+feature_tl <- sample(features$url, 1)
+feature_tl <- sample(features$url, 1)
+
+j_test_vec <- sample(jacobin$url, 10)
+h_com_test_vec <- sample(h_commentary$url, 10)
+h_rep_test_vec <- sample(h_report$url, 10)
+b_test_vec <- sample(b_blog$url, 10)
+
+```
+
+```{r}
+#| label: Testing Web Scrapes
+
+b_test <- b_pull_try(b_tl)
+b_test_2 <- b_pull_try(b_tl_2)
+
+memo_test <- am_mind_pull_try(memo_tl)
+salvo_test_2 <- am_mind_pull_try(salvo_tl)
+feature_test_3 <- am_mind_pull_try(feature_tl)
+
+jac_test <- j_pull_try(j_tl)
+jac_test_2 <- j_pull_try(j_tl_2)
+jac_test_3 <- j_pull_try(j_tl_3)
+
+h_com_test <- h_com_pull_try(h_com_tl)
+h_com_test_2 <- h_com_pull_try(h_com_tl_2)
+
+h_rep_test <- h_rep_pull_try(h_rep_tl)
+h_rep_test_2 <- h_rep_pull_try(h_rep_tl_2)
+h_rep_test_3 <- h_rep_pull_try(h_rep_tl_wrong)
+```
+
+<https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop>
+Absolute Legend of Help for R ways of doing loops
+
+```{r}
+#| label: Testing Iterations
+
+j_data_list <- list()
+h_com_data_list <- list()
+h_rep_data_list <- list()
+b_data_list <- list()
+
+for (i in seq_along(j_test_vec)) {
+  j_test_df <- j_pull_try(j_test_vec[i])
+  j_test_df$i <- i
+  j_data_list[[i]] <- j_test_df
+  
+  h_com_test_df <- h_com_pull_try(h_com_test_vec[i])
+  h_com_test_df$i <- i
+  h_com_data_list[[i]] <- h_com_test_df
+  
+  h_rep_test_df <- h_rep_pull_try(h_rep_test_vec[i])
+  h_rep_test_df$i <- i
+  h_rep_data_list[[i]] <- h_rep_test_df
+  
+  b_test_df <- b_pull_try(b_test_vec[i])
+  b_test_df$i <- i
+  b_data_list[[i]] <- b_test_df
+}
+
+j_text_test <- bind_rows(j_data_list)
+h_com_text_test <- bind_rows(h_com_data_list)
+h_rep_text_test <- bind_rows(h_rep_data_list)
+b_text_test <- bind_rows(b_data_list)
+
+write_rds(j_text_test, "data/jacobin_text_test.rds", "gz", compression = 9L)
+write_rds(h_com_text_test, "data/heritage_com_text_test.rds", "gz", compression = 9L)
+write_rds(h_rep_text_test, "data/heritage_rep_text_test.rds", "gz", compression = 9L)
+write_rds(b_text_test, "data/brooking_text_test.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: Testing Webscraping Loops
+#| eval: false
+
+j_wrong <- list()
+h_com_wrong <- list()
+h_rep_wrong <- list()
+
+for (i in seq_along(j_test_wrong)) {
+  j_test_df_wrong <- j_pull_try(j_test_wrong[i])
+  j_test_df_wrong$i <- i
+  j_wrong[[i]] <- j_test_df_wrong
+  
+  h_com_test_df_wrong <- h_com_pull_try(h_com_test_wrong[i])
+  h_com_test_df_wrong$i <- i
+  h_com_wrong[[i]] <- h_com_test_df_wrong
+  
+  h_rep_test_df_wrong <- h_rep_pull_try(h_rep_test_wrong[i])
+  h_rep_test_df_wrong$i <- i
+  h_rep_wrong[[i]] <- h_rep_test_df_wrong
+}
+
+j_text_wrong <- bind_rows(j_wrong)
+h_com_text_wrong <- bind_rows(h_com_wrong)
+h_rep_text_wrong <- bind_rows(h_rep_wrong)
+```
+

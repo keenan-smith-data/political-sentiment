@@ -1,0 +1,47 @@
+---
+title: "Brookings Report PDF Text"
+author: "Keenan smith"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(pdftools)
+library(rvest)
+```
+
+```{r}
+b_report_pdf_pull <- function(hyperlink) {
+  hyperlink_title <- stringr::str_split(hyperlink, "/") |>
+    as_vector()
+  title <- hyperlink_title[[8]]
+  report_title <- stringr::str_c("~/brookings_reports/", title)
+  download.file(hyperlink, report_title, mode = "wb")
+  raw_text <- pdftools::pdf_text(report_title)
+  raw_text <- stringr::str_squish(raw_text)
+  report_text <- tibble::as_tibble(raw_text)
+  return(report_text)
+}
+```
+
+```{r}
+b_report_links <- read_rds("data/brookings_pdf.rds")
+```
+
+
+```{r}
+b_test_report <- "https://www.brookings.edu/wp-content/uploads/2022/08/LTRC_ChinaSupplyChain.pdf"
+
+test_url <- xml2::url_parse(b_test_report)
+
+test_url_title <-
+  b_test_report |>
+  stringr::str_split("/")
+
+test_url_title[[1]][8]
+```
+
+```{r}
+b_test_text <- b_report_pdf_pull(b_test_report)
+```
+

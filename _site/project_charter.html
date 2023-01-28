@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.269">
+<meta name="generator" content="quarto-1.2.313">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -174,7 +174,8 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li>Additional data will be acquired through similar means as the first 4 data sources.</li>
 </ul></li>
-<li>The end product will most likely be a series of deployed models with some sort of either <code>shiny</code> application or Power BI dashboard to provide ease of understanding.</li>
+<li>The end product will most likely be a series of deployed models using the <code>vetiver</code> library</li>
+<li>If there is additional time, I will attempt to create a <code>shiny</code> application that allows ease of access to the models and the data for stakeholders to explore but this may go out of scope as time permits.</li>
 </ul>
 </section>
 <section id="personnel" class="level2">
@@ -224,8 +225,31 @@ ul.task-list li input[type="checkbox"] {
 <li>Business Understanding
 <ul>
 <li>Defining Objectives which is encapsulated in this project charter</li>
-<li>Identifying Data Sources</li>
+<li>Identifying Data Sources
+<ul>
+<li>Currently there are 4 but this will be expanded</li>
+<li>The criteria is ease of the ability to scrape a large corpus of articles from the think tank, the explicit nature of the political bias present in popular culture, the ability to get the corpus into similar data as the currently acquired corpus</li>
 </ul></li>
+</ul></li>
+<li>Data Acquisiton and Understanding
+<ul>
+<li>Ingest the Data into R and the model workflow</li>
+<li>Writing Data cleaning functions to clean the data prior to vectorization</li>
+<li>Explore the data using a variety of popular NLP vectorization techniques</li>
+</ul></li>
+<li>Modeling
+<ul>
+<li>Feature Engineering and Model Selection</li>
+<li>Modeling the data using lessons learned from Exploration of the data</li>
+<li>Evaluating the Model</li>
+<li>As a note, this project will utilize the <code>tidymodels</code> framework as much as possible as it uses a unified syntax across a variety of popular machine learning algorithms to output easily understood metrics and visualizations</li>
+</ul></li>
+<li>Deployment
+<ul>
+<li>Deployed the selected models using the <code>vetiver</code> library.</li>
+<li>Optionally deploy the model using the <code>plumber</code> library to create an API for others to use the models</li>
+</ul></li>
+<li>The key areas that I foresee that will take the most time is data acquisition and understanding. Using prior experience in this area and experience from others, data acquisition and cleaning the data take up to 70% of the work of a data analysis project. A project plan will be developed using project planning software to help plan this project in more detail for the stakeholders.</li>
 </ul>
 </section>
 <section id="architecture" class="level2">
@@ -251,8 +275,10 @@ ul.task-list li input[type="checkbox"] {
 <section id="communication" class="level2">
 <h2 class="anchored" data-anchor-id="communication">Communication</h2>
 <ul>
-<li>How will we keep in touch? Weekly meetings?</li>
-<li>Who are the contact persons on both sides?</li>
+<li>How will we keep in touch? Weekly meetings?
+<ul>
+<li>There will be weekly update emails at a minimum to provide an update of current status. In-person or zoom meetings will be as required but at least occur on a bi-weekly basis.</li>
+</ul></li>
 </ul>
 
 

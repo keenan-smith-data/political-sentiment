@@ -1,6 +1,18 @@
 ---
 title: "Project Charter"
 author: "Keenan Smith"
+date: "19 Jan 2023"
+format:
+  pdf:
+    df-print: paged
+    tbl-colwidths: auto
+    geometry:
+      - top=20mm
+      - left=10mm
+      - bottom=20mm
+      - right=10mm
+editor_options: 
+  chunk_output_type: inline
 ---
 
 # Project Charter
@@ -25,7 +37,7 @@ author: "Keenan Smith"
 
 -   I will be building a data science solution that encompasses a large corpus of political speech web scraped from top think tanks with clear ideological leanings. This project will encapsulate the entire data science spectrum from data collection, data cleaning, data exploration, data modeling, and model deployment.
 -   Data has already been collected from 4 sources and preliminary data modeling has occured. The lessons learned from that initial analysis will be pulled through into this project. 
-    - Additional data will be acquired through similar means as the first 4 data sources. 
+    -   Additional data will be acquired through similar means as the first 4 data sources. 
 -   The end product will most likely be a series of deployed models using the `vetiver` library
 -   If there is additional time, I will attempt to create a `shiny` application that allows ease of access to the models and the data for stakeholders to explore but this may go out of scope as time permits.
 
@@ -41,48 +53,48 @@ author: "Keenan Smith"
 ## Metrics
 
 -   Qualitative objectives
-    - At least 4 deploy-able models using the Vetiver library that have been trained and optimized using grid search to find the highest accuracy model
-    - The modeling and code must be left in a state where it is able to be redeployed with an expanded corpus
-    - The hooks must be left so that there is potential for a generative model in the future
+    -   At least 4 deploy-able models using the Vetiver library that have been trained and optimized using grid search to find the highest accuracy model
+    -   The modeling and code must be left in a state where it is able to be redeployed with an expanded corpus
+    -   The hooks must be left so that there is potential for a generative model in the future
 -   What is a quantifiable metric (e.g. reduce the fraction of users with 4-week inactivity)
-    - At least one model with a classification accuracy of 70% or more (This is subject to change as modeling is performed)
+    -   At least one model with a classification accuracy of 70% or more (This is subject to change as modeling is performed)
 -   What is the baseline (current) value of the metric? 
-    - The current baseline for this project is the null hypothesis that political speech does not indicate bias
+    -   The current baseline for this project is the null hypothesis that political speech does not indicate bias
 -   How will we measure the metric? (e.g. A/B test on a specified subset for a specified period; or comparison of performance after implementation to baseline)
-    - The metric will be measured by observing an accuracy score above 70%
+    -   The metric will be measured by observing an accuracy score above 70%
 
 ## Plan
 
 -   This is a loose definition of the current plan
-- Business Understanding
-    - Defining Objectives which is encapsulated in this project charter
-    - Identifying Data Sources
-        - Currently there are 4 but this will be expanded
-        - The criteria is ease of the ability to scrape a large corpus of articles from the think tank, the explicit nature of the political bias present in popular culture, the ability to get the corpus into similar data as the currently acquired corpus
-- Data Acquisiton and Understanding
-    - Ingest the Data into R and the model workflow
-    - Writing Data cleaning functions to clean the data prior to vectorization
-    - Explore the data using a variety of popular NLP vectorization techniques
-- Modeling
-    - Feature Engineering and Model Selection
-    - Modeling the data using lessons learned from Exploration of the data
-    - Evaluating the Model
-    - As a note, this project will utilize the `tidymodels` framework as much as possible as it uses a unified syntax across a variety of popular machine learning algorithms to output easily understood metrics and visualizations
-- Deployment
-    - Deployed the selected models using the `vetiver` library.
-    - Optionally deploy the model using the `plumber` library to create an API for others to use the models
+-    Business Understanding
+     -   Defining Objectives which is encapsulated in this project charter
+     -   Identifying Data Sources
+        -   Currently there are 4 but this will be expanded
+        -   The criteria is ease of the ability to scrape a large corpus of articles from the think tank, the explicit nature of the political bias present in popular culture, the ability to get the corpus into similar data as the currently acquired corpus
+-   Data Acquisiton and Understanding
+    -   Ingest the Data into R and the model workflow
+    -   Writing Data cleaning functions to clean the data prior to vectorization
+    -   Explore the data using a variety of popular NLP vectorization techniques
+-   Modeling
+    -   Feature Engineering and Model Selection
+    -   Modeling the data using lessons learned from Exploration of the data
+    -   Evaluating the Model
+    -   As a note, this project will utilize the `tidymodels` framework as much as possible as it uses a unified syntax across a variety of popular machine learning algorithms to output easily understood metrics and visualizations
+-   Deployment
+    -   Deployed the selected models using the `vetiver` library.
+    -   Optionally deploy the model using the `plumber` library to create an API for others to use the models
     
-- The key areas that I foresee that will take the most time is data acquisition and understanding. Using prior experience in this area and experience from others, data acquisition and cleaning the data take up to 70% of the work of a data analysis project. A project plan will be developed using project planning software to help plan this project in more detail for the stakeholders. 
+-   The key areas that I foresee that will take the most time is data acquisition and understanding. Using prior experience in this area and experience from others, data acquisition and cleaning the data take up to 70% of the work of a data analysis project. A project plan will be developed using project planning software to help plan this project in more detail for the stakeholders. 
     
 
 ## Architecture
 
 -   Data
-    - The data will be provided via webscraping using the `rvest` package in R
-    - The list of think tanks is currently being finalized at this current edition of the project charter  
+    -   The data will be provided via webscraping using the `rvest` package in R
+    -   The list of think tanks is currently being finalized at this current edition of the project charter  
 -   What tools and data storage/analytics resources will be used in the solution e.g.,
-    - Currently the data will be stored as CSV or .rda compressed data files
-    - SQLite will be explored as a way to store the data for deployment
+    -   Currently the data will be stored as CSV or .rda compressed data files
+    -   SQLite will be explored as a way to store the data for deployment
 -   How will the models be operationalized?
     -   The models will be deployed using the `vetiver` library and possibly expanded to an API using the `plumber` library
 

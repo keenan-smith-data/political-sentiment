@@ -1,0 +1,316 @@
+---
+title: "Sitemap Cleaning"
+author: "Keenan Smith"
+format: html
+---
+
+```{r Library Initiation}
+library(tidyverse)
+```
+
+
+```{r}
+#| label: Jacobin Sitemap
+#| eval: false
+
+jacobin_raw <- read_rds("C:/Users/slaps/OneDrive/Documents/Programming/Data/jacobin_unfiltered.rds")
+
+jacobin_exclude <- c(
+  "wp-content", "format", "category", "jpg", "png", "gif",
+  "com$", "\\?"
+)
+jacobin <-
+  jacobin_raw |>
+  filter(
+    valid == TRUE,
+    size > 1,
+    is.na(infostring),
+    str_detect(url, "jacobin\\.com/20"),
+    str_detect(url, paste(jacobin_exclude, collapse = "|"), negate = TRUE)
+  )
+
+jacobin_mod <-
+  jacobin |>
+  distinct(url)
+
+jacobin_mod <-
+  jacobin_mod |>
+  mutate(year = as.numeric(str_extract(url, "\\d\\d\\d\\d"))) |>
+  filter(year > 2018) |>
+  arrange(desc(year))
+
+write_rds(jacobin_mod, "data/jacobin.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: Brookings Sitemap
+#| eval: false
+
+# brookings_raw <- read_delim("~/brookings.csv", delim = ";", show_col_types = FALSE)
+# write_rds(brookings_raw, "data/brookings_raw.rds", "gz", compression = 9L)
+
+brookings_raw <- read_rds("data/brookings_raw.rds")
+
+brookings_exclude <- c(
+  "com$", "/experts/", "html$", "#",
+  "\\?", "%", "amp/$", "feed/$"
+)
+
+brookings_include <- c(
+  "edu/blog/", "edu/testimonies/", "edu/research/", "edu/book/", "pdf$"
+)
+
+brookings <-
+  brookings_raw |>
+  filter(
+    valid == TRUE,
+    size > 1,
+    str_detect(url, paste(brookings_include, collapse = "|")),
+    str_detect(url, paste(brookings_exclude, collapse = "|"), negate = TRUE)
+  )
+
+brookings_blog <-
+  brookings |>
+  filter(
+    str_detect(url, brookings_include[[1]])
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+brookings_testimonies <-
+  brookings |>
+  filter(
+    str_detect(url, brookings_include[[2]])
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+brookings_research <-
+  brookings |>
+  filter(
+    str_detect(url, brookings_include[[3]])
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+brookings_book <-
+  brookings |>
+  filter(
+    str_detect(url, brookings_include[[4]])
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+brookings_pdf <-
+  brookings |>
+  filter(
+    str_detect(url, brookings_include[[5]])
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(brookings_blog, "data/brookings_blog.rds", "gz", compression = 9L)
+write_rds(brookings_testimonies, "data/brookings_testimonies.rds", "gz", compression = 9L)
+write_rds(brookings_research, "data/brookings_research.rds", "gz", compression = 9L)
+write_rds(brookings_book, "data/brookings_book.rds", "gz", compression = 9L)
+write_rds(brookings_pdf, "data/brookings_pdf.rds", "gz", compression = 9L)
+
+```
+
+
+```{r}
+#| label: The Nation Sitemap
+#| eval: false
+
+thenation_raw <- read_rds("C:/Users/slaps/OneDrive/Documents/Programming/Data/thenation_unfilted.rds")
+
+thenation_exclude <- c(
+  "wp-", "com$", "/feed/$", "html$", "tnamp/$", "#",
+  "\\?", "%"
+)
+
+thenation <-
+  thenation_raw |>
+  filter(
+    valid == TRUE,
+    size > 1,
+    is.na(infostring),
+    str_detect(url, "thenation\\.com/article"),
+    str_detect(url, paste(thenation_exclude, collapse = "|"), negate = TRUE)
+  )
+
+thenation_mod <-
+  thenation |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(thenation_mod, "data/thenation.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: Claremont and American Mind Data Read In
+#| eval: false
+
+features_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/americanmindfeatures.csv", delim = ";", show_col_types = FALSE)
+memos_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/americanmindmemos.csv", delim = ";", show_col_types = FALSE)
+salvos_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/americanmindsalvos.csv", delim = ";", show_col_types = FALSE)
+claremont_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/claremontreviewessays.csv", delim = ";", show_col_types = FALSE)
+```
+
+
+```{r}
+#| label: American Mind Features Sitemap
+#| eval: false
+
+features_exclude <- c("oembed", "twitter", "features/$", "\\.com$", "google\\.com/")
+
+features <-
+  features_raw |>
+  filter(
+    valid == TRUE,
+    size > 1,
+    str_detect(url, "americanmind\\.org/features/"),
+    str_detect(url, paste(features_exclude, collapse = "|"), negate = TRUE)
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(features, "data/americanmindfeatures.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: American Mind Memos Sitemap
+#| eval: false
+
+memos <-
+  memos_raw |>
+  filter(
+    valid == TRUE,
+    str_detect(url, "org/memo/")
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(memos, "data/americanmindmemos.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: American Mind Salvos Sitemap
+#| eval: false
+
+salvos <-
+  salvos_raw |>
+  filter(
+    valid == TRUE,
+    str_detect(url, "org/salvo/")
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(salvos, "data/americanmindsalvos.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: Claremont Review of Books Sitemap
+#| eval: false
+
+claremont_exclude <- c(
+  "/auth", "/issue", "/article", "/subscribe", "/podcast/",
+  "/donate", "/advertising/", "/archive", "/faqs/",
+  "/about-us/", "/my-account/", "/contact-us/", "/digital-exclusive/",
+  "/publication-committee/", "com/$", "com$", "wp-"
+)
+
+
+claremont <-
+  claremont_raw |>
+  filter(
+    valid == TRUE,
+    str_detect(url, "claremontreviewofbooks\\.com"),
+    str_detect(url, paste(claremont_exclude, collapse = "|"), negate = TRUE)
+  ) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(claremont, "data/claremontreviewessays.rds", "gz", compression = 9L)
+```
+
+
+```{r}
+#| label: Heritage Sitemap
+#| eval: false
+
+heritage_raw <- read_rds("C:/Users/slaps/OneDrive/Documents/Programming/Data/heritage.rds")
+
+heritage_exclude <- c("mailto", "staff", "wp-", "\\.com", "html$", "#", "\\?", "%", "=")
+heritage_include <- c("commentary", "report")
+
+heritage <-
+  heritage_raw |>
+  filter(
+    valid == TRUE,
+    str_detect(infostring, "denied", negate = TRUE),
+    str_detect(url, "www\\.heritage\\.org"),
+    str_detect(url, paste(heritage_exclude, collapse = "|"), negate = TRUE),
+    str_detect(url, paste(heritage_include, collapse = "|"))
+  )
+
+heritage_final <-
+  heritage |>
+  distinct(url) |>
+  arrange(url)
+
+heritage_commentary <-
+  heritage_final |>
+  filter(str_detect(url, "commentary"))
+
+heritage_report <-
+  heritage_final |>
+  filter(str_detect(url, "report"))
+
+write_rds(heritage_commentary, "data/heritage_commentary.rds", "gz", compression = 9L)
+write_rds(heritage_report, "data/heritage_report.rds", "gz", compression = 9L)
+```
+
+```{r}
+#| label: National Review Politics and Policy Sitemap
+#| eval: false
+
+nr_pol_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/nationalreviewpol.csv", delim = ";", show_col_types = FALSE)
+
+nr_pol <-
+  nr_pol_raw |>
+  filter(
+    str_detect(urlname, "wp-content", negate = TRUE),
+    str_detect(url, "com/20")
+  ) |>
+  transmute(url) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(nr_pol, "data/nationalreview_pol_policy.rds", "gz", compression = 9L)
+```
+
+```{r}
+#| label: National Review Courts Sitemap
+#| eval: false
+
+nr_law_courts_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/nationalreviewlawcourts.csv", delim = ";", show_col_types = FALSE)
+
+nr_law_courts <-
+  nr_law_courts_raw |>
+  filter(
+    str_detect(urlname, "wp-content", negate = TRUE),
+    str_detect(url, "com/20")
+  ) |>
+  transmute(url) |>
+  distinct(url) |>
+  arrange(url)
+
+write_rds(nr_law_courts, "data/nationalreview_law_courts.rds", "gz", compression = 9L)
+```
