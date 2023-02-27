@@ -1,0 +1,137 @@
+---
+title: "Political Sentiment Sitemap Collection Testing"
+format: html
+---
+
+# Political Sentiment Sitemap Collection Testing
+
+Loading the Libraries required to start work.
+
+```{r}
+library(xml2)
+library(tidyverse)
+library(googledrive)
+library(googlesheets4)
+```
+
+Authorizing `googledrive` to have access to my personal google drive sheet with the data in it. Will remain personal for the time being.
+
+```{r}
+# drive_auth()
+gs4_auth(token = drive_token())
+```
+
+```{r}
+# drive_find("political-sentiment")
+
+ss <- drive_get("political-sentiment-sheet")
+
+gathered_sitemaps <- read_sheet(ss)
+```
+
+This will be changed as the sitemaps are developed and tested so that it can be used conditionally.
+
+```{r}
+#| label: Function Block
+
+sitemap_function_1 <- function(sitemap, 
+                               unnest.col = "sitemapindex",
+                               filter.col = "loc")
+  {
+  read_xml(sitemap) |>
+    as_list() |>
+    as_tibble() |>
+    unnest_longer(unnest.col) |>
+    filter(sitemapindex_id == filter.col) |>
+    unnest(unnest.col)
+}
+
+sitemap_function_2 <- function(sitemap, 
+                               unnest.col = "urlset",
+                               filter.col = "loc")
+  {
+  read_xml(sitemap) |>
+    as_list() |>
+    as_tibble() |>
+    unnest_longer(unnest.col) |>
+    filter(urlset_id == filter.col) |> # Change in XML format
+    unnest(unnest.col)
+}
+
+sitemap_function_3 <- function(sitemap, 
+                               unnest.col = "urlset",
+                               filter.col = "loc")
+  {
+  read_xml(sitemap) |>
+    as_list() |>
+    as_tibble() |>
+    slice(2:n()) |> # Comment in the First Row
+    unnest_longer(unnest.col) |>
+    filter(urlset_id == filter.col) |>
+    unnest(unnest.col)
+}
+```
+
+```{r}
+#| label: Sitemap Print
+gathered_sitemaps
+```
+
+# Sitemap Variable Definitions
+
+```{r}
+#| label: Assigning Sitemaps to Variables
+heritage_sitemap <- gathered_sitemaps[[1,1]]
+cato_sitemap <- gathered_sitemaps[[2,1]]
+brookings_sitemap_2022 <- gathered_sitemaps[[3,1]]
+aei_sitemap <- gathered_sitemaps[[4,1]]
+am_prog_sitemap <- gathered_sitemaps[[5,1]]
+cbpp_sitemap <- gathered_sitemaps[[6,1]]
+epic_sitemap <- gathered_sitemaps[[7,1]]
+hoover_sitemap <- gathered_sitemaps[[8,1]]
+claremont_sitemap <- gathered_sitemaps[[9,1]]
+mercatus_sitemap <- gathered_sitemaps[[10,1]]
+discovery_sitemap <- gathered_sitemaps[[11,1]]
+manhattan_sitemap <- gathered_sitemaps[[12,1]]
+```
+
+```{r}
+#| label: First Function Sitemap Acquisition
+heritage_sitemap_links <- sitemap_function_1(heritage_sitemap)
+cato_sitemap_links <- sitemap_function_1(cato_sitemap)
+aei_sitemap_links <- sitemap_function_1(aei_sitemap)
+am_prog_sitemap_links <- sitemap_function_1(am_prog_sitemap)
+cbpp_sitemap_links <- sitemap_function_1(cbpp_sitemap)
+epic_sitemap_links <- sitemap_function_1(epic_sitemap)
+mercatus_sitemap_links <- sitemap_function_1(mercatus_sitemap)
+manhattan_sitemap_links <- sitemap_function_1(manhattan_sitemap)
+```
+
+```{r}
+#| label: Second Function Sitemap Acquisition
+hoover_sitemap_links <- sitemap_function_2(hoover_sitemap)
+```
+
+```{r}
+#| label: Third Function Sitemap Acquisition
+claremont_sitemap_links <- sitemap_function_3(claremont_sitemap)
+discovery_sitemap_links <- sitemap_function_3(discovery_sitemap)
+```
+
+
+# Issues
+
+```{r}
+
+```
+
+# Fixing Stage
+
+```{r}
+read_xml("https://www.epi.org/wp-sitemap.xml")
+```
+
+```{r}
+
+```
+

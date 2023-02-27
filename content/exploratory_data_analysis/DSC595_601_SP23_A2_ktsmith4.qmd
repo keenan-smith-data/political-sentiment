@@ -1,0 +1,267 @@
+---
+title: "DSC595_601_SP23_A2_ktsmith4"
+author: "Keenan Smith"
+date: "10 Feb 2023"
+format:
+  pdf:
+    df-print: paged
+    tbl-colwidths: auto
+    geometry:
+      - top=20mm
+      - left=10mm
+      - bottom=20mm
+      - right=10mm
+editor_options: 
+  chunk_output_type: inline
+---
+
+Built with R Version `r getRversion()`
+
+Guidance on R tidy text exploration provided by Silge, J & Robinson, D (2022). Text Mining with R (1st ed.). O'Reilly. [Link to Textbook](https://www.tidytextmining.com/index.html)
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/exploratory_data_analysis/DSC595_601_SP23_A2_ktsmith4.qmd")
+library(here)
+library(tidyverse)
+library(data.table)
+library(dtplyr)
+library(dplyr, warn.conflicts = FALSE)
+
+library(parallel)
+
+all_cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(all_cores)
+doParallel::registerDoParallel(cl)
+```
+
+# ID and Messy Data
+
+Since my data was acquired prior to this project. I have chosen to describe the data collection process. Several cleaning methods utilizing REGEX were used actually to clean link data to ensure that only links with actual text data was collected. The actual data was scraped using the `rvest` library which is modelled on the famous `beautifulsoup` library in Python. The scrape was done with cleaning in mind so only HTML `<p>` tags with the CSS article tags were collected into some additional article metadata. Prior to the large scale web scrape, testing functions were created and tested on 4 articles for each source. This seemed to be a good eyeball check in my estimation as a human can only compare so much. This allowed for checking to make sure that no extraneous data was collected in accordance with the article text data. Also, the 4 test articles were randomly selected to help catch faults in the HTML documents across a sitemap. This served as a further check to ensure that the article text data was gathered. 
+
+During the web scrape, a `trycatch()` function was utilized so that the scrape could continue if an article incurred an error. This helped to ensure the integrity of the scraped data. Only data with the appropriate CSS and HTML tags were selected. 
+
+One of the questions in data processing is what is the quality of the data? In this case, all of the data were selected from reputable think tanks that are widely utilized to discuss potential policy gains in several areas of politics. The only news source is Jacobin which is a prominent leftist news source. This was added since truly left think tanks do not widely exist in an influential capacity in the United States.
+
+One oddity that was actually found during my initial test modeling of the data is that I did not removed the names of the organizations from which I was scraping. This led to optimal models selecting "Heritage Foundation" as one of the influencing identifiers out of 400 ngrams. In this run through the data, I will ensure that this is fixed prior to modeling. It will stay in during exploratory data analysis since I find it interesting to see which organizations use their names frequently.  
+
+# Cleaning the Data
+
+The following sections show pulling the data into R and then processing it into its final product. The `rvest` ingests text data row by row. Though R possesses the ability to analyze text data through grouping, I find that with the article data it is better to have one row, one article. Through the following steps I bring the data in, join it, add a bias classifier, and create the full corpus. I try to leave comments where applicable. 
+
+## Function Block
+
+```{r}
+corpus_concatenation <- function(df) {
+  df |>
+    lazy_dt() |> # helpful translator from tibble to datatable
+    group_by(art_link,
+             art_date,
+             art_author,
+             art_topic,
+             art_title,
+             art_source) |> # These are the metadata tags REFACTOR in future
+    summarise(full_text = paste(text, collapse = " "),
+              .groups = "drop") |> # combining using the summarise function
+    as_tibble() |> # from lazy dt back to tibble
+    mutate(art_source = as.factor(art_source)) # changing column type
+}
+```
+
+## Loading Text Data
+
+Data is read in and combined column wise by using the `data.table` library in R. `data.table` is a very fast library for working with dataframes. There are a lot of transitions between datatables and tibbles (the tidyverse dataframe) because though datatables are faster, the tidyverse library of tools is wider and I know more of them. I am holding 1.4 GB of data in RAM, I want fast operations on things that need to be fast and I want deliberate operations on things that need to be deliberate. 
+
+```{r}
+#| eval: false
+
+# Define Bias Sources
+left_wing <- c("Jacobin", "Brookings Institute")
+right_wing <- c("Heritage Commentary", "Heritage Report", "American Mind")
+
+# Left Wing Read In
+text_jacobin <- read_rds(here("data", "text_jacobin.rds")) |> as.data.table()
+text_brookings <- read_rds(here("data", "text_brooking.rds")) |> as.data.table()
+
+# Right Wing Read In
+text_am_mind_feature <- read_rds(here("data", "text_am_mind_feature.rds")) |> as.data.table()
+text_am_mind_memo <- read_rds(here("data", "text_am_mind_memo.rds")) |> as.data.table()
+text_am_mind_salvo <- read_rds(here("data", "text_am_mind_salvo.rds")) |> as.data.table()
+text_heritage_com <- read_rds(here("data", "text_heritage_com.rds")) |> as.data.table()
+text_heritage_rep <- read_rds(here("data", "text_heritage_rep.rds")) |> as.data.table()
+
+# Remove Loop Iteration Column from Large Datasets
+text_jacobin <- text_jacobin[, i := NULL]
+text_brookings <- text_brookings[, i := NULL]
+text_heritage_com <- text_heritage_com[, i := NULL]
+text_heritage_rep <- text_heritage_rep[, i := NULL]
+
+# Combine Text Datasets into Full Corpus
+text_full_corpus <- rbind(text_jacobin, text_brookings, text_am_mind_feature,
+                          text_am_mind_memo, text_am_mind_salvo, 
+                          text_heritage_com, text_heritage_rep) |>
+  as_tibble()
+
+# Combine Text into One Row, One Article
+text_condensed_full_corpus <- corpus_concatenation(text_full_corpus)
+
+# Removing Individual Corpus from Memory
+rm(text_jacobin, text_brookings, text_am_mind_feature, text_am_mind_memo,
+   text_am_mind_salvo, text_heritage_com, text_heritage_rep)
+
+# Add Bias Column
+text_condensed_full_corpus <- text_condensed_full_corpus |>
+  mutate(art_bias = case_when(
+    art_source %in% left_wing ~ "left-wing",
+    art_source %in% right_wing ~ "right-wing"
+  ),
+  art_bias = as.factor(art_bias))
+# Write to Disk
+write_rds(text_condensed_full_corpus, here("data", "text_full_corpus.rds"),  
+          "gz", compression = 9L)
+# Removing non-condensed corpus
+rm(text_full_corpus)
+```
+
+
+
+
+# Exploratory Data Analysis
+
+A majority of these techniques are using the code from Text Mining with R. 
+
+```{r}
+# Reading the data back in after processing
+text_condensed_full_corpus <- read_rds(here("data", "text_full_corpus.rds"))
+
+# Load Text Specific Libraries
+library(tidytext)
+# for future work
+# library(text)
+
+# stop words from the tidytext package
+data("stop_words")
+```
+
+```{r}
+# Initial look at word token data
+bias_words <- text_condensed_full_corpus |>
+  unnest_tokens(word, full_text) |>
+  anti_join(stop_words) |>
+  count(art_bias, word, sort = TRUE)
+
+total_words <- bias_words |>
+  group_by(art_bias) |>
+  summarise(total = sum(n))
+
+bias_words <- left_join(bias_words, total_words)
+
+head(bias_words, 25)
+```
+
+## Term Frequency
+
+```{r}
+#| warning: false
+
+ggplot(bias_words, aes(n/total, fill = art_bias)) +
+  geom_histogram(show.legend = FALSE, bins = 5) +
+  xlim(NA, 0.0009) +
+  facet_wrap(~art_bias, ncol = 2, scales = "free_y")
+```
+
+```{r}
+bias_tf_idf <- bias_words |>
+  bind_tf_idf(word, art_bias, n)
+
+bias_tf_idf |>
+  select(-total) |>
+  arrange(desc(tf_idf)) |>
+  head(25)
+```
+
+```{r}
+bias_tf_idf |>
+  group_by(art_bias) |>
+  slice_max(tf_idf, n = 15) |>
+  ungroup() |>
+  ggplot(aes(tf_idf, forcats::fct_reorder(word, tf_idf), fill = art_bias)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~art_bias, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+```{r}
+#| echo: false
+
+rm(bias_words, bias_tf_idf)
+```
+
+After looking at the initial word token tf-idf data, we can see that there are alot of proper nouns and use of the thinktank or websites name. There are some interesting things to be seen in the initial data. Since this is a helpful technique for language classification, I plan on using this as the initial modeling vectorization for my non-deep learning modeling. 
+
+This tf-idf chart also shows that their is a global nature to these proper nouns. This may be due to the nature of the sources selected and the amount of the corpus that is contributing to each side. I am currently working to expand the corpus to include more American centric think tanks. This will hopefully dull some of the global nature of the proper nouns used. However, this could lead to *different* questions like "do left wing sites choose to cover more international events than right wing?"
+
+Fortunately, these data don't seem to have high valuation for numbers. This is different from my experience using the `NLTK` framework in Python on my initial look. However, I did my exploratory data analysis post modeling and under different conditions aka the deliverable was different. 
+
+## n-grams
+```{r}
+bias_bigrams <- text_condensed_full_corpus |>
+  unnest_tokens(bigram, full_text, token = "ngrams", n = 2) |>
+  filter(!is.na(bigram))
+
+bigrams_separated <- bias_bigrams |>
+  lazy_dt() |>
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+bigrams_filtered <- bigrams_separated |>
+  filter(!word1 %in% stop_words$word) |>
+  filter(!word2 %in% stop_words$word)
+
+bigrams_united <- bigrams_filtered |>
+  mutate(bigram = paste(word1, word2, sep = " ")) |>
+  as_tibble()
+```
+
+```{r}
+#| echo: false
+
+rm(bigrams_filtered, bigrams_separated, bias_bigrams)
+```
+
+
+```{r}
+bigram_tf_idf <- bigrams_united |>
+  count(art_bias, bigram) |>
+  bind_tf_idf(bigram, art_bias, n) |>
+  arrange(desc(tf_idf))
+
+head(bigram_tf_idf, 25)
+```
+```{r}
+#| echo: false
+
+rm(bigrams_united)
+```
+
+
+```{r}
+bigram_tf_idf |>
+  group_by(art_bias) |>
+  slice_max(tf_idf, n = 15) |>
+  ungroup() |>
+  ggplot(aes(tf_idf, forcats::fct_reorder(bigram, tf_idf), fill = art_bias)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~art_bias, ncol = 2, scales = "free") +
+  labs(x = "tf-idf", y = NULL)
+```
+
+n-grams characterize speech in phrases. In TF-IDF, this provides context. When a word token might capture one of the words in a proper noun or part of speech, n-grams allow us to see more of that context. This is a lighter approximation of word embedding, but where embedding and transformers are far more mathematically and theory based, n-gram analysis in this case is more based on intuition and subject matter expertise. Some of the bigrams present in the figure show that there are non-proper nouns that show up in the analysis. We could use these to draw some conclusions about what certain organizations like to talk about or what they don't like to talk about. It is certainly interesting that the Right-wing has a top 15 that is mainly proper nouns, whereas the left has more sayings or talking points. I don't want to draw too many conclusions however, because that is not the current scope of the question, the current is whether political speech can classify bias. Another interesting question would be whether or not one side spends time addressing the other side or vice versa. 
+
+# NLP Technique
+
+The NLP technique that I am using to solve my question is modeling via TF-idf vectorization. I think this suites my question well and I have already seen some promising initial tests prior to this class. My end goal of this capstone is to ultimately build a political lexicon by which to classify speech in the future. 
+
+As this is part of a larger capstone project, I am currently adding and expanding my corpus. I am collecting links and will be scraping for more data soon. With the size of the current corpus, I may need to look at new data management techniques to speed the process along for exploratory data analysis. Luckily, with `dtplyr` I can do many of the data manipulation steps neccessary, but I may need to look at additional parallel processing to help.
+
+I will also be expanding this out to look at deep learning techniques and embeddings. I already have some code which I can use to create my own embeddings specific to this corpus. I plan on looking at a bit more vectorization techniques prior to actual modeling. 
