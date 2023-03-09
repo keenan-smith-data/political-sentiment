@@ -5,7 +5,9 @@ format: html
 ---
 
 ```{r Library Initiation}
+here::i_am("content/sitemap_links/sitemap_cleanup_linkchecker.qmd")
 library(tidyverse)
+library(here)
 ```
 
 
@@ -13,7 +15,7 @@ library(tidyverse)
 #| label: Jacobin Sitemap
 #| eval: false
 
-jacobin_raw <- read_rds("C:/Users/slaps/OneDrive/Documents/Programming/Data/jacobin_unfiltered.rds")
+jacobin_raw <- read_rds(here("data","jacobin_unfiltered.rds"))
 
 jacobin_exclude <- c(
   "wp-content", "format", "category", "jpg", "png", "gif",
@@ -39,7 +41,7 @@ jacobin_mod <-
   filter(year > 2018) |>
   arrange(desc(year))
 
-write_rds(jacobin_mod, "data/jacobin.rds", "gz", compression = 9L)
+write_rds(jacobin_mod, here("data", "jacobin.rds"), "gz", compression = 9L)
 ```
 
 
@@ -50,7 +52,7 @@ write_rds(jacobin_mod, "data/jacobin.rds", "gz", compression = 9L)
 # brookings_raw <- read_delim("~/brookings.csv", delim = ";", show_col_types = FALSE)
 # write_rds(brookings_raw, "data/brookings_raw.rds", "gz", compression = 9L)
 
-brookings_raw <- read_rds("data/brookings_raw.rds")
+brookings_raw <- read_rds(here("data", "brookings_raw.rds"))
 
 brookings_exclude <- c(
   "com$", "/experts/", "html$", "#",
@@ -110,11 +112,11 @@ brookings_pdf <-
   distinct(url) |>
   arrange(url)
 
-write_rds(brookings_blog, "data/brookings_blog.rds", "gz", compression = 9L)
-write_rds(brookings_testimonies, "data/brookings_testimonies.rds", "gz", compression = 9L)
-write_rds(brookings_research, "data/brookings_research.rds", "gz", compression = 9L)
-write_rds(brookings_book, "data/brookings_book.rds", "gz", compression = 9L)
-write_rds(brookings_pdf, "data/brookings_pdf.rds", "gz", compression = 9L)
+write_rds(brookings_blog, here("data", "brookings_blog.rds"), "gz", compression = 9L)
+write_rds(brookings_testimonies, here("data", "brookings_testimonies.rds"), "gz", compression = 9L)
+write_rds(brookings_research, here("data", "brookings_research.rds"), "gz", compression = 9L)
+write_rds(brookings_book, here("data", "brookings_book.rds"), "gz", compression = 9L)
+write_rds(brookings_pdf, here("data", "brookings_pdf.rds"), "gz", compression = 9L)
 
 ```
 
@@ -123,7 +125,7 @@ write_rds(brookings_pdf, "data/brookings_pdf.rds", "gz", compression = 9L)
 #| label: The Nation Sitemap
 #| eval: false
 
-thenation_raw <- read_rds("C:/Users/slaps/OneDrive/Documents/Programming/Data/thenation_unfilted.rds")
+thenation_raw <- read_rds(here("data", "thenation_unfilted.rds"))
 
 thenation_exclude <- c(
   "wp-", "com$", "/feed/$", "html$", "tnamp/$", "#",
@@ -145,7 +147,7 @@ thenation_mod <-
   distinct(url) |>
   arrange(url)
 
-write_rds(thenation_mod, "data/thenation.rds", "gz", compression = 9L)
+write_rds(thenation_mod, here("data", "thenation.rds"), "gz", compression = 9L)
 ```
 
 
@@ -153,10 +155,10 @@ write_rds(thenation_mod, "data/thenation.rds", "gz", compression = 9L)
 #| label: Claremont and American Mind Data Read In
 #| eval: false
 
-features_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/americanmindfeatures.csv", delim = ";", show_col_types = FALSE)
-memos_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/americanmindmemos.csv", delim = ";", show_col_types = FALSE)
-salvos_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/americanmindsalvos.csv", delim = ";", show_col_types = FALSE)
-claremont_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/claremontreviewessays.csv", delim = ";", show_col_types = FALSE)
+features_raw <- read_delim(here("data", "americanmindfeatures.csv"), delim = ";", show_col_types = FALSE)
+memos_raw <- read_delim(here("data", "americanmindmemos.csv"), delim = ";", show_col_types = FALSE)
+salvos_raw <- read_delim(here("data", "americanmindsalvos.csv"), delim = ";", show_col_types = FALSE)
+claremont_raw <- read_delim(here("data", "claremontreviewessays.csv"), delim = ";", show_col_types = FALSE)
 ```
 
 
@@ -177,7 +179,7 @@ features <-
   distinct(url) |>
   arrange(url)
 
-write_rds(features, "data/americanmindfeatures.rds", "gz", compression = 9L)
+write_rds(features, here("data", "americanmindfeatures.rds"), "gz", compression = 9L)
 ```
 
 
@@ -194,7 +196,7 @@ memos <-
   distinct(url) |>
   arrange(url)
 
-write_rds(memos, "data/americanmindmemos.rds", "gz", compression = 9L)
+write_rds(memos, here("data", "americanmindmemos.rds"), "gz", compression = 9L)
 ```
 
 
@@ -211,7 +213,7 @@ salvos <-
   distinct(url) |>
   arrange(url)
 
-write_rds(salvos, "data/americanmindsalvos.rds", "gz", compression = 9L)
+write_rds(salvos, here("data", "americanmindsalvos.rds"), "gz", compression = 9L)
 ```
 
 
@@ -237,7 +239,7 @@ claremont <-
   distinct(url) |>
   arrange(url)
 
-write_rds(claremont, "data/claremontreviewessays.rds", "gz", compression = 9L)
+write_rds(claremont, here("data", "claremontreviewessays.rds"), "gz", compression = 9L)
 ```
 
 
@@ -245,7 +247,7 @@ write_rds(claremont, "data/claremontreviewessays.rds", "gz", compression = 9L)
 #| label: Heritage Sitemap
 #| eval: false
 
-heritage_raw <- read_rds("C:/Users/slaps/OneDrive/Documents/Programming/Data/heritage.rds")
+heritage_raw <- read_rds(here("Data", "heritage.rds"))
 
 heritage_exclude <- c("mailto", "staff", "wp-", "\\.com", "html$", "#", "\\?", "%", "=")
 heritage_include <- c("commentary", "report")
@@ -273,15 +275,15 @@ heritage_report <-
   heritage_final |>
   filter(str_detect(url, "report"))
 
-write_rds(heritage_commentary, "data/heritage_commentary.rds", "gz", compression = 9L)
-write_rds(heritage_report, "data/heritage_report.rds", "gz", compression = 9L)
+write_rds(heritage_commentary, here("data", "heritage_commentary.rds"), "gz", compression = 9L)
+write_rds(heritage_report, here("data", "heritage_report.rds"), "gz", compression = 9L)
 ```
 
 ```{r}
 #| label: National Review Politics and Policy Sitemap
 #| eval: false
 
-nr_pol_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/nationalreviewpol.csv", delim = ";", show_col_types = FALSE)
+nr_pol_raw <- read_delim(here("data", "nationalreviewpol.csv"), delim = ";", show_col_types = FALSE)
 
 nr_pol <-
   nr_pol_raw |>
@@ -293,14 +295,14 @@ nr_pol <-
   distinct(url) |>
   arrange(url)
 
-write_rds(nr_pol, "data/nationalreview_pol_policy.rds", "gz", compression = 9L)
+write_rds(nr_pol, here("data", "nationalreview_pol_policy.rds"), "gz", compression = 9L)
 ```
 
 ```{r}
 #| label: National Review Courts Sitemap
 #| eval: false
 
-nr_law_courts_raw <- read_delim("C:/Users/slaps/OneDrive/Documents/Programming/Data/nationalreviewlawcourts.csv", delim = ";", show_col_types = FALSE)
+nr_law_courts_raw <- read_delim(here("data", "nationalreviewlawcourts.csv"), delim = ";", show_col_types = FALSE)
 
 nr_law_courts <-
   nr_law_courts_raw |>
@@ -312,5 +314,5 @@ nr_law_courts <-
   distinct(url) |>
   arrange(url)
 
-write_rds(nr_law_courts, "data/nationalreview_law_courts.rds", "gz", compression = 9L)
+write_rds(nr_law_courts, here("data", "nationalreview_law_courts.rds"), "gz", compression = 9L)
 ```

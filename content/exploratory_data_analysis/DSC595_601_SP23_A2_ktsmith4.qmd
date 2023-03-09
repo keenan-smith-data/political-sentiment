@@ -160,6 +160,12 @@ bias_words <- left_join(bias_words, total_words)
 head(bias_words, 25)
 ```
 
+```{r}
+write_rds(bias_words, here("data", "text_words_freq_unfiltered.rds"),  
+          "gz", compression = 9L)
+```
+
+
 ## Term Frequency
 
 ```{r}
@@ -194,6 +200,9 @@ bias_tf_idf |>
 
 ```{r}
 #| echo: false
+
+write_rds(bias_tf_idf, here("data", "text_token_tf_idf_unfiltered.rds"),  
+          "gz", compression = 9L)
 
 rm(bias_words, bias_tf_idf)
 ```
@@ -265,3 +274,9 @@ The NLP technique that I am using to solve my question is modeling via TF-idf ve
 As this is part of a larger capstone project, I am currently adding and expanding my corpus. I am collecting links and will be scraping for more data soon. With the size of the current corpus, I may need to look at new data management techniques to speed the process along for exploratory data analysis. Luckily, with `dtplyr` I can do many of the data manipulation steps neccessary, but I may need to look at additional parallel processing to help.
 
 I will also be expanding this out to look at deep learning techniques and embeddings. I already have some code which I can use to create my own embeddings specific to this corpus. I plan on looking at a bit more vectorization techniques prior to actual modeling. 
+
+```{r}
+write_rds(bigram_tf_idf, here("data", "text_bigram_tf_idf_unfiltered.rds"),  
+          "gz", compression = 9L)
+```
+

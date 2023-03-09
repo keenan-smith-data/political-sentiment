@@ -1,0 +1,50 @@
+---
+title: "Political Sentiment NLP"
+author: "Keenan Smith"
+format:
+  revealjs:
+    theme: serif
+    logo: ncstate-type-2x2-red.png
+    footer: DSC595_601_SP23_A3_ktsmith4
+---
+
+```{r}
+#| include: false
+here::i_am("content/exploratory_data_analysis/DSC595_601_SP23_A3_ktsmith4.qmd")
+library(readr)
+text_token_tf_idf <- read_rds(here::here("data", "text_token_tf_idf_unfiltered.rds"))
+text_bigram_tf_idf <- read_rds(here::here("data", "text_bigram_tf_idf_unfiltered.rds"))
+text_words_freq <- read_rds(here::here("data", "text_words_freq_unfiltered.rds"))
+```
+
+
+
+## Introduction of the Problem {.smaller}
+
+
+
+## NLP as a Solution
+
+- Bleh
+- Bloog
+
+## The Data
+
+- good
+- g00d
+- g0de
+
+
+## Clean-up Steps
+
+
+
+## Data Summary
+
+
+## Text Representation
+
+
+## Output & the Research Question
+
+

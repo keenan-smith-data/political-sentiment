@@ -9,7 +9,7 @@ Loading the Libraries required to start work.
 
 ```{r}
 library(xml2)
-library(tidyverse)
+library(tidytable)
 library(googledrive)
 library(googlesheets4)
 ```
@@ -38,37 +38,43 @@ sitemap_function_1 <- function(sitemap,
                                unnest.col = "sitemapindex",
                                filter.col = "loc")
   {
-  read_xml(sitemap) |>
-    as_list() |>
-    as_tibble() |>
-    unnest_longer(unnest.col) |>
-    filter(sitemapindex_id == filter.col) |>
-    unnest(unnest.col)
+  xml2::read_xml(sitemap) |>
+    xml2::as_list() |>
+    tibble::as_tibble() |>
+    tidyr::unnest_longer(unnest.col) |>
+    tidytable::filter(sitemapindex_id == filter.col) |>
+    tidyr::unnest(unnest.col) |>
+    tidytable::as_tidytable() |>
+    tidytable::mutate(sitemapindex = as.character(sitemapindex))
 }
 
 sitemap_function_2 <- function(sitemap, 
                                unnest.col = "urlset",
                                filter.col = "loc")
   {
-  read_xml(sitemap) |>
-    as_list() |>
-    as_tibble() |>
-    unnest_longer(unnest.col) |>
-    filter(urlset_id == filter.col) |> # Change in XML format
-    unnest(unnest.col)
+  xml2::read_xml(sitemap) |>
+    xml2::as_list() |>
+    tibble::as_tibble() |>
+    tidyr::unnest_longer(unnest.col) |>
+    tidytable::filter(urlset_id == filter.col) |> # Change in XML format
+    tidyr::unnest(unnest.col) |>
+    tidytable::as_tidytable() |>
+    tidytable::mutate(urlset = as.character(urlset))
 }
 
 sitemap_function_3 <- function(sitemap, 
                                unnest.col = "urlset",
                                filter.col = "loc")
   {
-  read_xml(sitemap) |>
-    as_list() |>
-    as_tibble() |>
-    slice(2:n()) |> # Comment in the First Row
-    unnest_longer(unnest.col) |>
-    filter(urlset_id == filter.col) |>
-    unnest(unnest.col)
+  xml2::read_xml(sitemap) |>
+    xml2::as_list() |>
+    tibble::as_tibble() |>
+    tidytable::slice(2:n()) |> # Comment in the First Row
+    tidyr::unnest_longer(unnest.col) |>
+    tidytable::filter(urlset_id == filter.col) |>
+    tidyr::unnest(unnest.col) |>
+    tidytable::as_tidytable() |>
+    tidytable::mutate(urlset = as.character(urlset))
 }
 ```
 
@@ -96,6 +102,21 @@ manhattan_sitemap <- gathered_sitemaps[[12,1]]
 ```
 
 ```{r}
+#| label: Testing for Sitemap Pull Functions
+#| eval: false
+heritage_sitemap_links <- read_xml(heritage_sitemap) |> 
+  xml2::as_list() |> 
+  tibble::as_tibble() |> 
+  tidyr::unnest_longer(sitemapindex) |> 
+  tidytable::filter(sitemapindex_id == "loc") |> 
+  tidyr::unnest(sitemapindex)
+  
+
+class(heritage_sitemap_links)
+```
+
+
+```{r}
 #| label: First Function Sitemap Acquisition
 heritage_sitemap_links <- sitemap_function_1(heritage_sitemap)
 cato_sitemap_links <- sitemap_function_1(cato_sitemap)
@@ -119,16 +140,37 @@ discovery_sitemap_links <- sitemap_function_3(discovery_sitemap)
 ```
 
 
-# Issues
+# Staging for Sitemap Link Collection
 
 ```{r}
+heritage_links <- heritage_sitemap_links[[1]]
 
+
+heritage_all_links <- map(.x = heritage_links, .f = xml2::read_xml)
 ```
 
-# Fixing Stage
+# Unnesting
 
 ```{r}
-read_xml("https://www.epi.org/wp-sitemap.xml")
+xml_to_tibble <- function(xml) {
+  xml |>
+    xml2::as_list() |>
+    tibble::as_tibble()
+}
+
+test <- map_df(.x = heritage_all_links, .f = xml_to_tibble)
+
+test2 <- test |>
+  tibble::rowid_to_column() |>
+  tidyr::unnest_longer(urlset) |>
+  tidytable::filter(urlset_id %in% c("loc","lastmod")) |> # Change in XML format
+  tidyr::unnest(cols = urlset) |>
+  tidyr::pivot_wider(names_from = urlset_id, values_from = urlset, values_fill = NA) |>
+  tidytable::mutate(lastmod = lubridate::ymd_hms(lastmod),
+                    loc = as.character(loc)) |>
+  tidytable::distinct(loc, .keep_all = TRUE)
+
+class(test2)
 ```
 
 ```{r}
