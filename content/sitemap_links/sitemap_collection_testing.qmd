@@ -31,11 +31,12 @@ ss <- drive_get("political-sentiment-sheet")
 gathered_sitemaps <- read_sheet(ss)
 ```
 
-This will be changed as the sitemaps are developed and tested so that it can be used conditionally.
 
 ```{r}
 #| label: Function Block
 
+# These functions can be refactored to take in the names function to
+# filter based off column names rather than it being an argument
 sitemap_helper_urlset <- function(df, unnest.col, filter.col) {
   df |>
     tidyr::unnest_longer(unnest.col) |>
@@ -54,10 +55,7 @@ sitemap_helper_sitemapindex <- function(df, unnest.col, filter.col) {
     tidytable::mutate(sitemapindex = as.character(sitemapindex))
 }
 
-sitemap_function <- function(sitemap,
-                             sitemap_index = TRUE,
-                             filter_col = "loc",
-                             skip = FALSE)
+sitemap_function <- function(sitemap, skip = FALSE)
 {
   xml_tibble <- xml2::read_xml(sitemap) |>
     xml2::as_list() |>
@@ -65,11 +63,13 @@ sitemap_function <- function(sitemap,
   if (skip == TRUE) {
     xml_tibble <- tidytable::slice(xml_tibble, 2:n())
   }
-  if (sitemap_index == TRUE) {
+  col_names <- names(xml_tibble)
+  filter_col <- "loc"
+  if (col_names[1] == "sitemapindex") {
     unnest_col = "sitemapindex"
     result <- sitemap_helper_sitemapindex(xml_tibble, unnest_col, filter_col)
     return(result)
-  } else {
+  } else  if (col_names[1] == "urlset"){
     unnest_col = "urlset"
     result <- sitemap_helper_urlset(xml_tibble, unnest_col, filter_col)
     return(result)
@@ -104,9 +104,11 @@ xml_to_tibble_epic <- function(xml) {
     tidyr::unnest_longer(urlset) |>
     tidytable::filter(urlset_id %in% c("loc")) |> # Change in XML format
     tidyr::unnest(cols = urlset) |>
-    tidytable::mutate(urlset = as.character(urlset)) |>
+    tidytable::mutate(urlset = as.character(urlset),
+                      lastmod = lubridate::ymd_hms("1970-01-01T00:00:00")) |>
     tidytable::rename(loc = urlset) |>
-    tidytable::distinct(loc, .keep_all = TRUE)
+    tidytable::distinct(loc, .keep_all = TRUE) |>
+    tidytable::select(-urlset_id)
 }
 
 sitemap_to_format <- function(loc_links,
@@ -130,7 +132,7 @@ sitemap_to_format <- function(loc_links,
     tibble::rowid_to_column() |>
     tidytable::select(-col_names[2]) |>
     tidytable::mutate(loc = as.character(loc),
-                      lastmod = lubridate::date("1970-01-01"),
+                      lastmod = lubridate::ymd_hms("1970-01-01T00:00:00"),
                       art_source = art.source,
                       art_bias = art.bias) |>
     tidytable::distinct(loc, .keep_all = TRUE)
@@ -178,10 +180,10 @@ hrw_sitemap_links <- sitemap_function(hrw_sitemap)
 gutt_sitemap_links <- sitemap_function(gutt_sitemap)
 urban_sitemap_links <- sitemap_function(urban_sitemap)
 # Sitemaps that use urlset
-hoover_sitemap_links <- sitemap_function(hoover_sitemap, sitemap_index = FALSE)
+hoover_sitemap_links <- sitemap_function(hoover_sitemap)
 # Sitemaps that Need to skip the first Row
-claremont_sitemap_links <- sitemap_function(claremont_sitemap, sitemap_index = FALSE, skip = TRUE)
-discovery_sitemap_links <- sitemap_function(discovery_sitemap, sitemap_index = FALSE, skip = TRUE)
+claremont_sitemap_links <- sitemap_function(claremont_sitemap, skip = TRUE)
+discovery_sitemap_links <- sitemap_function(discovery_sitemap, skip = TRUE)
 ```
 
 
@@ -224,7 +226,7 @@ links_cato <- links_cato |> mutate(art_source = "Cato Institute",
 fwrite(links_cato, here("data", "links_cato.csv.gz"))
 # Center On Budget and Policy Priorities Link Collection
 links_cbpp <- map_df(.x = cbpp_all_links, .f = xml_to_tibble)
-links_cbpp <- links_cbpp |> mutate(art_souce = "Center on Budget and Policy Priorities",
+links_cbpp <- links_cbpp |> mutate(art_source = "Center on Budget and Policy Priorities",
                                    art_bias = "left-wing")
 fwrite(links_cbpp, here("data", "links_cbpp.csv.gz"))
 # American Enterprise Institute Link Collection
@@ -276,5 +278,18 @@ fwrite(links_claremont, here("data", "links_claremont_sitemap.csv.gz"))
 # Hoover Institute Link Collection
 links_hoover <- sitemap_to_format(hoover_sitemap_links, art.source = "Hoover Institute", art.bias = "right-wing")
 fwrite(links_hoover, here("data", "links_hoover.csv.gz"))
+```
+
+```{r}
+links_sitemap <- tidytable::bind_rows(links_aei, links_am_prog, links_cato,
+                                      links_cbpp, links_claremont, links_discovery,
+                                      links_epic, links_heritage, links_hoover,
+                                      links_hrw, links_manhattan, links_mercatus,
+                                      links_urban) |>
+  tidytable::select(-rowid) |>
+  tidytable::distinct(loc, .keep_all = TRUE) |>
+  tibble::rowid_to_column()
+
+fwrite(links_sitemap, here("data", "links_sitemap.csv.gz"))
 ```
 
