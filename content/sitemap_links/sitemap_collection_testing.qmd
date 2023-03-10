@@ -8,6 +8,8 @@ format: html
 Loading the Libraries required to start work.
 
 ```{r}
+here::i_am("content/sitemap_links/sitemap_collection_testing.qmd")
+library(here)
 library(xml2)
 library(tidytable)
 library(googledrive)
@@ -34,13 +36,17 @@ This will be changed as the sitemaps are developed and tested so that it can be 
 ```{r}
 #| label: Function Block
 
-sitemap_function_1 <- function(sitemap, 
-                               unnest.col = "sitemapindex",
-                               filter.col = "loc")
-  {
-  xml2::read_xml(sitemap) |>
-    xml2::as_list() |>
-    tibble::as_tibble() |>
+sitemap_helper_urlset <- function(df, unnest.col, filter.col) {
+  df |>
+    tidyr::unnest_longer(unnest.col) |>
+    tidytable::filter(urlset_id == filter.col) |>
+    tidyr::unnest(unnest.col) |>
+    tidytable::as_tidytable() |>
+    tidytable::mutate(urlset = as.character(urlset))
+}
+
+sitemap_helper_sitemapindex <- function(df, unnest.col, filter.col) {
+  df |>
     tidyr::unnest_longer(unnest.col) |>
     tidytable::filter(sitemapindex_id == filter.col) |>
     tidyr::unnest(unnest.col) |>
@@ -48,34 +54,88 @@ sitemap_function_1 <- function(sitemap,
     tidytable::mutate(sitemapindex = as.character(sitemapindex))
 }
 
-sitemap_function_2 <- function(sitemap, 
-                               unnest.col = "urlset",
-                               filter.col = "loc")
-  {
-  xml2::read_xml(sitemap) |>
+sitemap_function <- function(sitemap,
+                             sitemap_index = TRUE,
+                             filter_col = "loc",
+                             skip = FALSE)
+{
+  xml_tibble <- xml2::read_xml(sitemap) |>
     xml2::as_list() |>
-    tibble::as_tibble() |>
-    tidyr::unnest_longer(unnest.col) |>
-    tidytable::filter(urlset_id == filter.col) |> # Change in XML format
-    tidyr::unnest(unnest.col) |>
-    tidytable::as_tidytable() |>
-    tidytable::mutate(urlset = as.character(urlset))
+    tibble::as_tibble()
+  if (skip == TRUE) {
+    xml_tibble <- tidytable::slice(xml_tibble, 2:n())
+  }
+  if (sitemap_index == TRUE) {
+    unnest_col = "sitemapindex"
+    result <- sitemap_helper_sitemapindex(xml_tibble, unnest_col, filter_col)
+    return(result)
+  } else {
+    unnest_col = "urlset"
+    result <- sitemap_helper_urlset(xml_tibble, unnest_col, filter_col)
+    return(result)
+  }
 }
 
-sitemap_function_3 <- function(sitemap, 
-                               unnest.col = "urlset",
-                               filter.col = "loc")
-  {
-  xml2::read_xml(sitemap) |>
+sitemap_page_opener <- function(sitemap_links) {
+  links <- sitemap_links[[1]]
+  all_links <- tidytable::map(.x = links, .f = xml2::read_xml)
+  return(all_links)
+}
+
+xml_to_tibble <- function(xml) {
+  xml |>
     xml2::as_list() |>
     tibble::as_tibble() |>
-    tidytable::slice(2:n()) |> # Comment in the First Row
-    tidyr::unnest_longer(unnest.col) |>
-    tidytable::filter(urlset_id == filter.col) |>
-    tidyr::unnest(unnest.col) |>
-    tidytable::as_tidytable() |>
-    tidytable::mutate(urlset = as.character(urlset))
+    tibble::rowid_to_column() |>
+    tidyr::unnest_longer(urlset) |>
+    tidytable::filter(urlset_id %in% c("loc","lastmod")) |> # Change in XML format
+    tidyr::unnest(cols = urlset) |>
+    tidyr::pivot_wider(names_from = urlset_id, values_from = urlset, values_fill = NA) |>
+    tidytable::mutate(lastmod = lubridate::ymd_hms(lastmod),
+                      loc = as.character(loc)) |>
+    tidytable::distinct(loc, .keep_all = TRUE)
 }
+
+xml_to_tibble_epic <- function(xml) {
+  xml |>
+    xml2::as_list() |>
+    tibble::as_tibble() |>
+    tibble::rowid_to_column() |>
+    tidyr::unnest_longer(urlset) |>
+    tidytable::filter(urlset_id %in% c("loc")) |> # Change in XML format
+    tidyr::unnest(cols = urlset) |>
+    tidytable::mutate(urlset = as.character(urlset)) |>
+    tidytable::rename(loc = urlset) |>
+    tidytable::distinct(loc, .keep_all = TRUE)
+}
+
+sitemap_to_format <- function(loc_links,
+                           art.source = NA,
+                           art.bias = NA) {
+  col_names <- names(loc_links)
+  if (col_names[1] == "urlset") {
+    temp <- loc_links |>
+      tidytable::rename(loc = urlset)
+  } else if (col_names[1] == "sitemapindex") {
+    temp <- loc_links |>
+      tidytable::rename(loc = sitemapindex)
+    
+  } else if (col_names[2] == "loc") {
+    temp <- loc_links
+  } else {
+    stop("This sitemap is non-standard")
+  }
+  rm(loc_links)
+  temp <- temp |>
+    tibble::rowid_to_column() |>
+    tidytable::select(-col_names[2]) |>
+    tidytable::mutate(loc = as.character(loc),
+                      lastmod = lubridate::date("1970-01-01"),
+                      art_source = art.source,
+                      art_bias = art.bias) |>
+    tidytable::distinct(loc, .keep_all = TRUE)
+  return(temp)
+} 
 ```
 
 ```{r}
@@ -99,81 +159,122 @@ claremont_sitemap <- gathered_sitemaps[[9,1]]
 mercatus_sitemap <- gathered_sitemaps[[10,1]]
 discovery_sitemap <- gathered_sitemaps[[11,1]]
 manhattan_sitemap <- gathered_sitemaps[[12,1]]
+hrw_sitemap <- gathered_sitemaps[[13,1]]
+gutt_sitemap <- gathered_sitemaps[[14,1]]
+urban_sitemap <- gathered_sitemaps[[15,1]]
 ```
 
 ```{r}
-#| label: Testing for Sitemap Pull Functions
-#| eval: false
-heritage_sitemap_links <- read_xml(heritage_sitemap) |> 
-  xml2::as_list() |> 
-  tibble::as_tibble() |> 
-  tidyr::unnest_longer(sitemapindex) |> 
-  tidytable::filter(sitemapindex_id == "loc") |> 
-  tidyr::unnest(sitemapindex)
-  
-
-class(heritage_sitemap_links)
-```
-
-
-```{r}
-#| label: First Function Sitemap Acquisition
-heritage_sitemap_links <- sitemap_function_1(heritage_sitemap)
-cato_sitemap_links <- sitemap_function_1(cato_sitemap)
-aei_sitemap_links <- sitemap_function_1(aei_sitemap)
-am_prog_sitemap_links <- sitemap_function_1(am_prog_sitemap)
-cbpp_sitemap_links <- sitemap_function_1(cbpp_sitemap)
-epic_sitemap_links <- sitemap_function_1(epic_sitemap)
-mercatus_sitemap_links <- sitemap_function_1(mercatus_sitemap)
-manhattan_sitemap_links <- sitemap_function_1(manhattan_sitemap)
-```
-
-```{r}
-#| label: Second Function Sitemap Acquisition
-hoover_sitemap_links <- sitemap_function_2(hoover_sitemap)
-```
-
-```{r}
-#| label: Third Function Sitemap Acquisition
-claremont_sitemap_links <- sitemap_function_3(claremont_sitemap)
-discovery_sitemap_links <- sitemap_function_3(discovery_sitemap)
+#| label: Sitemap Acquisition
+heritage_sitemap_links <- sitemap_function(heritage_sitemap)
+cato_sitemap_links <- sitemap_function(cato_sitemap)
+aei_sitemap_links <- sitemap_function(aei_sitemap)
+am_prog_sitemap_links <- sitemap_function(am_prog_sitemap)
+cbpp_sitemap_links <- sitemap_function(cbpp_sitemap)
+epic_sitemap_links <- sitemap_function(epic_sitemap)
+mercatus_sitemap_links <- sitemap_function(mercatus_sitemap)
+manhattan_sitemap_links <- sitemap_function(manhattan_sitemap)
+hrw_sitemap_links <- sitemap_function(hrw_sitemap)
+gutt_sitemap_links <- sitemap_function(gutt_sitemap)
+urban_sitemap_links <- sitemap_function(urban_sitemap)
+# Sitemaps that use urlset
+hoover_sitemap_links <- sitemap_function(hoover_sitemap, sitemap_index = FALSE)
+# Sitemaps that Need to skip the first Row
+claremont_sitemap_links <- sitemap_function(claremont_sitemap, sitemap_index = FALSE, skip = TRUE)
+discovery_sitemap_links <- sitemap_function(discovery_sitemap, sitemap_index = FALSE, skip = TRUE)
 ```
 
 
 # Staging for Sitemap Link Collection
 
 ```{r}
-heritage_links <- heritage_sitemap_links[[1]]
-
-
-heritage_all_links <- map(.x = heritage_links, .f = xml2::read_xml)
+#| label: Collecting all Sitemap sub pages
+heritage_all_links <- sitemap_page_opener(heritage_sitemap_links)
+am_prog_all_links <- sitemap_page_opener(am_prog_sitemap_links)
+cato_all_links <- sitemap_page_opener(cato_sitemap_links)
+cbpp_all_links <- sitemap_page_opener(cbpp_sitemap_links)
+aei_all_links <- sitemap_page_opener(aei_sitemap_links)
+epic_all_links <- sitemap_page_opener(epic_sitemap_links)
+manhattan_all_links <- sitemap_page_opener(manhattan_sitemap_links)
+mercatus_all_links <- sitemap_page_opener(mercatus_sitemap_links)
+hrw_all_links <- sitemap_page_opener(hrw_sitemap_links)
+gutt_all_links <- sitemap_page_opener(gutt_sitemap_links)
+urban_all_links <- sitemap_page_opener(urban_sitemap_links)
 ```
 
-# Unnesting
+# Unnesting and Writing to Disk
 
 ```{r}
-xml_to_tibble <- function(xml) {
-  xml |>
-    xml2::as_list() |>
-    tibble::as_tibble()
-}
-
-test <- map_df(.x = heritage_all_links, .f = xml_to_tibble)
-
-test2 <- test |>
-  tibble::rowid_to_column() |>
-  tidyr::unnest_longer(urlset) |>
-  tidytable::filter(urlset_id %in% c("loc","lastmod")) |> # Change in XML format
-  tidyr::unnest(cols = urlset) |>
-  tidyr::pivot_wider(names_from = urlset_id, values_from = urlset, values_fill = NA) |>
-  tidytable::mutate(lastmod = lubridate::ymd_hms(lastmod),
-                    loc = as.character(loc)) |>
-  tidytable::distinct(loc, .keep_all = TRUE)
-
-class(test2)
+#| label: Unnesting and Writing to Disk
+# Heritage Sitemap Link Collection
+links_heritage <- map_df(.x = heritage_all_links, .f = xml_to_tibble)
+links_heritage <- links_heritage |> mutate(art_source = "Heritage Foundation",
+                                           art_bias = "right-wing")
+fwrite(links_heritage, here("data", "links_heritage_sitemap.csv.gz"))
+# Center for American Progress Link Collection
+am_prog_art_sitemaps <- am_prog_all_links[1:51]
+links_am_prog <- map_df(.x = am_prog_art_sitemaps, .f = xml_to_tibble)
+links_am_prog <- links_am_prog |> mutate(art_source = "Center for American Progress",
+                                         art_bias = "left-wing")
+fwrite(links_am_prog, here("data", "links_am_prog_articles.csv.gz"))
+# Cato Institute Link Collection
+links_cato <- map_df(.x = cato_all_links, .f = xml_to_tibble)
+links_cato <- links_cato |> mutate(art_source = "Cato Institute",
+                                   art_bias = "right-wing")
+fwrite(links_cato, here("data", "links_cato.csv.gz"))
+# Center On Budget and Policy Priorities Link Collection
+links_cbpp <- map_df(.x = cbpp_all_links, .f = xml_to_tibble)
+links_cbpp <- links_cbpp |> mutate(art_souce = "Center on Budget and Policy Priorities",
+                                   art_bias = "left-wing")
+fwrite(links_cbpp, here("data", "links_cbpp.csv.gz"))
+# American Enterprise Institute Link Collection
+links_aei <- map_df(.x = aei_all_links, .f = xml_to_tibble)
+links_aei <- links_aei |> mutate(art_source = "American Enterprise Institute",
+                                 art_bias = "right-wing")
+fwrite(links_aei, here("data", "links_aei.csv.gz"))
+# Epic Link Collection
+# Needs Special Attention
+links_epic <- map_df(.x = epic_all_links, .f = xml_to_tibble_epic)
+links_epic <- links_epic |> mutate(art_source = "EPIC",
+                                   art_bias = "right-wing")
+fwrite(links_epic, here("data", "links_epic.csv.gz"))
+# Manhattan Institute Link Collection
+links_manhattan <- map_df(.x = manhattan_all_links, .f = xml_to_tibble)
+links_manhattan <- links_manhattan |> mutate(art_source = "Manhattan Institute",
+                                             art_bias = "right-wing")
+fwrite(links_manhattan, here("data", "links_manhattan.csv.gz"))
+# Mercatus Institute Link Collection
+links_mercatus <- map_df(.x = mercatus_all_links, .f = xml_to_tibble)
+links_mercatus <- links_mercatus |> mutate(art_source = "Mercatus Institute",
+                                           art_bias = "right-wing")
+fwrite(links_mercatus, here("data", "links_mercatus.csv.gz"))
+# Human Rights Watch Link Collection
+links_hrw <- map_df(.x = hrw_all_links, .f = xml_to_tibble)
+links_hrw <- links_hrw |> mutate(art_source = "Human Rights Watch",
+                                 art_bias = "left-wing")
+fwrite(links_hrw, here("data", "links_hrw.csv.gz"))
+# Guttmacher Institute Link Collection
+links_gutt <- map_df(.x = gutt_all_links, .f = xml_to_tibble)
+links_gutt <- links_gutt |> mutate(art_source = "Guttmacher Institute",
+                                   art_bias = "left-wing")
+fwrite(links_gutt, here("data", "links_gutt.csv.gz"))
+# Urban Institute Link Collection
+links_urban <- map_df(.x = urban_all_links, .f = xml_to_tibble)
+links_urban <- links_urban |> mutate(art_source = "Urban Institute", 
+                                     art_bias = "left-wing")
+fwrite(links_urban, here("data", "links_urban.csv.gz"))
 ```
 
 ```{r}
-
+#| label: Converting Unnested Sitemaps to same format as Nested and Writing to Disk
+# Discovery Institute Link Collection
+links_discovery <- sitemap_to_format(discovery_sitemap_links, art.source = "Discovery Institute", art.bias = "right-wing")
+fwrite(links_discovery, here("data", "links_discovery.csv.gz"))
+# Claremont Institute Link Collection
+links_claremont <- sitemap_to_format(claremont_sitemap_links, art.source = "Claremont Institute", art.bias = "right-wing")
+fwrite(links_claremont, here("data", "links_claremont_sitemap.csv.gz"))
+# Hoover Institute Link Collection
+links_hoover <- sitemap_to_format(hoover_sitemap_links, art.source = "Hoover Institute", art.bias = "right-wing")
+fwrite(links_hoover, here("data", "links_hoover.csv.gz"))
 ```
 
