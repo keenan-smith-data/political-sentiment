@@ -10,41 +10,135 @@ format:
 
 ```{r}
 #| include: false
+set.seed(4)
 here::i_am("content/exploratory_data_analysis/DSC595_601_SP23_A3_ktsmith4.qmd")
 library(readr)
-text_token_tf_idf <- read_rds(here::here("data", "text_token_tf_idf_unfiltered.rds"))
-text_bigram_tf_idf <- read_rds(here::here("data", "text_bigram_tf_idf_unfiltered.rds"))
-text_words_freq <- read_rds(here::here("data", "text_words_freq_unfiltered.rds"))
+text_full_corpus <- read_rds(here::here("data", "text_full_corpus.rds"))
+sample_text <- dplyr::sample_n(text_full_corpus, 3)
 ```
 
 
 
-## Introduction of the Problem {.smaller}
+## The Project {.smaller}
+
+:::: {.columns}
+
+::: {.column width="60%"}
+
+- A Data Science Project that examines the question "Does Political Speech indicate political bias?"
+- The Data are pulled from top U.S. Think Tanks ^[[Think Tank Rankings](https://academicinfluence.com/inflection/study-guides/influential-think-tanks)]
+- Think Tanks were chosen due to their:
+  - Intellectual capacity
+  - Mostly Free Article Content
+  - Ideological Identity
+- No Think Tanks were chosen that identify as "non-partisan", "centrist", or "independent"
+
+:::
 
 
+::: {.column width="40%"}
 
-## NLP as a Solution
+**Why NLP?**
 
-- Bleh
-- Bloog
+- NLP is the logical choice
+  - The data to be modeled is text data
+  - The question revolves around human communication and bias
 
-## The Data
+:::
 
-- good
-- g00d
-- g0de
+::::
+
+## The Data {.smaller}
+
+The Dataset Consists of Metadata and Text Data
+
+- Metadata ^[Some of this data is intended to be used in further research questions]
+  - Article Link `art_link`
+  - Article Date `art_date`
+  - Article Author(s) `art_author`
+  - Art Topic `art_topic`
+  - Article Source `art_source`
+  - Article Bias `art_bias`
+- Data
+  - Text
+
+## Clean-up Steps {.smaller}
+
+To collect the data, there are numerous cleaning steps. 
+
+- Links must be collected
+  - Links were collected in two ways: Sitemaps or [Linkchecker](https://linkchecker.github.io/linkchecker/)
+  - Sitemap Data are easier to obtain and clean
+  - Linkchecker data is an exhaustive set of links but its collection method is messier since its not optimized for search engines
+  - Below is a snippet of code that shows some of the link cleaning steps
+  
+```{r}
+#| eval: false
+#| echo: true
+heritage_exclude <- c("mailto", "staff", "wp-", "\\.com", "html$", "#", "\\?", "%", "=")
+heritage_include <- c("commentary", "report")
+
+heritage <-
+  heritage_raw |>
+  filter(
+    valid == TRUE,
+    str_detect(infostring, "denied", negate = TRUE),
+    str_detect(url, "www\\.heritage\\.org"),
+    str_detect(url, paste(heritage_exclude, collapse = "|"), negate = TRUE),
+    str_detect(url, paste(heritage_include, collapse = "|"))
+  )
+```
+
+- Links are then validated with testing and then the article data is collected using map functions
+
+::: footer
+:::
+
+## Data Summary {.scrollable}
+
+```{r}
+kableExtra::kbl(sample_text) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 7)
+```
+
+## Text Representation {.smaller}
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+- The Plan
+  - For stopword analysis and classical modeling
+    - Bigram TF-idf with Lemmatization ^[This provides traditional models with a lot of information without being computationally as expensive]
+  - Embeddings
+    - Derive my own relational [embeddings](https://smltar.com/embeddings.html) ^[There is a simpler way to do this positionally in R]
+    - Transfomers ^[Most likely an educated decision on using Hugging Face pre-trained]
+
+:::
 
 
-## Clean-up Steps
+::: {.column width="60%"}
+
+**Why NLP?**
+
+![Left-Right TF-idf Bigrams](leftright_bigram.png)
+
+:::
+
+::::
 
 
+## Output & the Research Question {.smaller}
 
-## Data Summary
+- The output are trained classification models
+  - Classically trained classification models
+    - Random Forest
+    - Logistic Regression
+    - Support Vector Classification
+    - Regularization
+    - Unsupervised Learning Pre-processing
+  - Deep Learning Transformer-based model
+- Additionally I intend to create a Shiny Dashboard for Others to examine the data and model outputs
 
-
-## Text Representation
-
-
-## Output & the Research Question
 
 

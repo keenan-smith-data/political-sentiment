@@ -36,7 +36,7 @@ editor_options:
 ## Scope
 
 -   I will be building a data science solution that encompasses a large corpus of political speech web scraped from top think tanks with clear ideological leanings. This project will encapsulate the entire data science spectrum from data collection, data cleaning, data exploration, data modeling, and model deployment.
--   Data has already been collected from 4 sources and preliminary data modeling has occured. The lessons learned from that initial analysis will be pulled through into this project. 
+-   Data has already been collected from 4 sources and preliminary data modeling has occurred. The lessons learned from that initial analysis will be pulled through into this project. 
     -   Additional data will be acquired through similar means as the first 4 data sources. 
 -   The end product will most likely be a series of deployed models using the `vetiver` library
 -   If there is additional time, I will attempt to create a `shiny` application that allows ease of access to the models and the data for stakeholders to explore but this may go out of scope as time permits.

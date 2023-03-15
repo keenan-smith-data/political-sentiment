@@ -4,10 +4,116 @@ author: "Keenan Smith"
 format: html
 ---
 
-```{r Library Initiation}
+```{r}
+#| label: Library Initiation
+
 here::i_am("content/sitemap_links/sitemap_cleanup_linkchecker.qmd")
-library(tidyverse)
+library(tidytable)
 library(here)
+library(googledrive)
+library(stringr)
+```
+
+```{r}
+#| label: Downloading Data from Google Drive
+drive_auth(token = drive_token())
+```
+
+Only Run when needed to pull down from drive
+
+```{r}
+#| label: Downloading csv data off Google Drive
+#| eval: false
+links_raw <- drive_find(pattern = "links_raw")
+
+raw_links_download <- function(drive_link) {
+  drive_download(drive_link, path = here::here("data", drive_link))
+}
+
+purrr::map(.x = links_raw$name, raw_links_download)
+```
+
+Only needed until Drive is updated with new dataset
+
+```{r}
+#| label: Editing old Raw American Mind Links
+#| eval: false
+links_raw_am_mind <- fread(here("data", "links_raw_americanmindlinks.csv"), header = TRUE)
+links_edited_am_mind <-
+  links_raw_am_mind |>
+    select(1:17)
+fwrite(links_edited_am_mind, here("data", "links_raw_americanmindlinks.csv"))
+```
+
+
+```{r}
+#| label: Pull Filenames and Files to List
+files <- fs::dir_ls(here("data", "linkchecker"), regexp = "\\.csv$")
+
+links_raw_test <- map(.x = files, .f = fread, header = TRUE, fill = TRUE)
+```
+```{r}
+links_raw_linkcheck <- bind_rows(links_raw_test)
+
+filtered_linkcheck <- links_raw_linkcheck |>
+  filter(result == "200 OK") |>
+  distinct(url, .keep_all = TRUE) |>
+  select(parentname, result, infostring, url, size) |>
+  mutate(test_source = as.factor(case_when(
+           str_detect(parentname, "americanmind.org") ~ "American Mind",
+           str_detect(parentname, "claremontreviewofbooks.com") ~ "Claremont Institute",
+           str_detect(parentname, "jacobin.com") ~ "Jacobin",
+           str_detect(parentname, "commonwealthfund.org") ~ "Commonwealth Fund",
+           str_detect(parentname, "epi.org") ~ "EPI",
+           str_detect(parentname, "heritage.org") ~ "Heritage Foundation",
+           str_detect(parentname, "nationalreview.com") ~ "National Review",
+           str_detect(parentname, "opensocietyfoundations.org") ~ "Open Society Foundations",
+           str_detect(parentname, "thenation.com") ~ "The Nation"
+         ))) |>
+  filter(!is.na(test_source))
+
+fwrite(filtered_linkcheck, here("data", "linkchecker", "links_pre-filtered_linkchecker.csv"))
+```
+
+
+```{r}
+#| label: Link Data Import
+#| eval: false
+
+# Think Tank Sources Import
+links_raw_am_mind <- fread(here("data", "links_raw_americanmindlinks.csv"), header = TRUE)
+links_raw_claremont <- fread(here("data", "links_raw_claremontreviewessays.csv"), header = TRUE, fill = TRUE)
+links_raw_commonwealth <- fread(here("data", "links_raw_commonwealthblog.csv"), header = TRUE, fill = TRUE)
+links_raw_epi <- fread(here("data", "links_raw_epiblog.csv"), header = TRUE, fill = TRUE)
+links_raw_opensoc_pubs <- fread(here("data", "links_raw_opensocietypublications.csv"), header = TRUE, fill = TRUE)
+links_raw_opensoc_voices <- fread(here("data", "links_raw_opensocietyvoices_edited.csv"), header = TRUE, fill = TRUE)
+# News Sources Import
+links_raw_jacobin <- fread(here("data", "links_raw_jacobinblog.csv"), header = TRUE)
+links_raw_nr_law <- fread(here("data", "links_raw_nationalreviewlawcourts.csv"), header = TRUE, fill = TRUE)
+links_raw_nr_politics <- fread(here("data", "links_raw_nationalreviewpol.csv"), header = TRUE, fill = TRUE)
+links_raw_nation <- fread(here("data", "links_raw_thenationpolitics.csv"), header = TRUE, fill = TRUE)
+```
+
+```{r}
+#| label: Horizontal Join of two sources
+links_raw_opensoc <- bind_rows(links_raw_opensoc_pubs, links_raw_opensoc_voices)
+links_raw_nr <- bind_rows(links_raw_nr_law, links_raw_nr_politics)
+```
+
+```{r}
+links_raw <- bind_rows()
+```
+
+
+```{r}
+link_clean_up <- function(links_raw) {
+  links_raw |>
+    tidytable::filter(result == "200 OK")
+}
+
+
+
+
 ```
 
 

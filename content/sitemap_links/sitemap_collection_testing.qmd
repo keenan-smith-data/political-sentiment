@@ -69,7 +69,7 @@ sitemap_function <- function(sitemap, skip = FALSE)
     unnest_col = "sitemapindex"
     result <- sitemap_helper_sitemapindex(xml_tibble, unnest_col, filter_col)
     return(result)
-  } else  if (col_names[1] == "urlset"){
+  } else  if (col_names[1] == "urlset") {
     unnest_col = "urlset"
     result <- sitemap_helper_urlset(xml_tibble, unnest_col, filter_col)
     return(result)
@@ -164,6 +164,7 @@ manhattan_sitemap <- gathered_sitemaps[[12,1]]
 hrw_sitemap <- gathered_sitemaps[[13,1]]
 gutt_sitemap <- gathered_sitemaps[[14,1]]
 urban_sitemap <- gathered_sitemaps[[15,1]]
+am_mind_sitemap <- gathered_sitemaps[[16,1]]
 ```
 
 ```{r}
@@ -179,6 +180,7 @@ manhattan_sitemap_links <- sitemap_function(manhattan_sitemap)
 hrw_sitemap_links <- sitemap_function(hrw_sitemap)
 gutt_sitemap_links <- sitemap_function(gutt_sitemap)
 urban_sitemap_links <- sitemap_function(urban_sitemap)
+am_mind_sitemap_links <- sitemap_function(am_mind_sitemap)
 # Sitemaps that use urlset
 hoover_sitemap_links <- sitemap_function(hoover_sitemap)
 # Sitemaps that Need to skip the first Row
@@ -202,6 +204,7 @@ mercatus_all_links <- sitemap_page_opener(mercatus_sitemap_links)
 hrw_all_links <- sitemap_page_opener(hrw_sitemap_links)
 gutt_all_links <- sitemap_page_opener(gutt_sitemap_links)
 urban_all_links <- sitemap_page_opener(urban_sitemap_links)
+am_mind_all_links <- sitemap_page_opener(am_mind_sitemap_links)
 ```
 
 # Unnesting and Writing to Disk
@@ -265,6 +268,12 @@ links_urban <- map_df(.x = urban_all_links, .f = xml_to_tibble)
 links_urban <- links_urban |> mutate(art_source = "Urban Institute", 
                                      art_bias = "left-wing")
 fwrite(links_urban, here("data", "links_urban.csv.gz"))
+# American Mind Link Collection
+am_mind_url_sitemaps <- am_mind_all_links[-1]
+links_am_mind <- map_df(.x = am_mind_url_sitemaps, .f = xml_to_tibble)
+links_am_mind <- links_am_mind |> mutate(art_source = "American Mind",
+                                         art_bias = "right-wing")
+fwrite(links_am_mind, here("data", "links_am_mind.csv.gz"))
 ```
 
 ```{r}
@@ -285,7 +294,7 @@ links_sitemap <- tidytable::bind_rows(links_aei, links_am_prog, links_cato,
                                       links_cbpp, links_claremont, links_discovery,
                                       links_epic, links_heritage, links_hoover,
                                       links_hrw, links_manhattan, links_mercatus,
-                                      links_urban) |>
+                                      links_urban, links_am_mind) |>
   tidytable::select(-rowid) |>
   tidytable::distinct(loc, .keep_all = TRUE) |>
   tibble::rowid_to_column()

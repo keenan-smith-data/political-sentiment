@@ -10,4 +10,4 @@ _site
 *.rds
 *.sqlite
 *.duckdb
-*.csv.*
+*.csv*
