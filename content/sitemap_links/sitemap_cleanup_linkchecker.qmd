@@ -52,69 +52,49 @@ files <- fs::dir_ls(here("data", "linkchecker"), regexp = "\\.csv$")
 
 links_raw_test <- map(.x = files, .f = fread, header = TRUE, fill = TRUE)
 ```
+
+
 ```{r}
-links_raw_linkcheck <- bind_rows(links_raw_test)
+links_raw_linkcheck <- tidytable::bind_rows(links_raw_test)
 
 filtered_linkcheck <- links_raw_linkcheck |>
-  filter(result == "200 OK") |>
-  distinct(url, .keep_all = TRUE) |>
-  select(parentname, result, infostring, url, size) |>
-  mutate(test_source = as.factor(case_when(
-           str_detect(parentname, "americanmind.org") ~ "American Mind",
-           str_detect(parentname, "claremontreviewofbooks.com") ~ "Claremont Institute",
-           str_detect(parentname, "jacobin.com") ~ "Jacobin",
-           str_detect(parentname, "commonwealthfund.org") ~ "Commonwealth Fund",
-           str_detect(parentname, "epi.org") ~ "EPI",
-           str_detect(parentname, "heritage.org") ~ "Heritage Foundation",
-           str_detect(parentname, "nationalreview.com") ~ "National Review",
-           str_detect(parentname, "opensocietyfoundations.org") ~ "Open Society Foundations",
-           str_detect(parentname, "thenation.com") ~ "The Nation"
+  tidytable::filter(result == "200 OK") |>
+  tidytable::distinct(url, .keep_all = TRUE) |>
+  tidytable::select(parentname, result, infostring, url, size) |>
+  tidytable::mutate(test_source = as.factor(case_when(
+           stringr::str_detect(parentname, "americanmind.org") ~ "American Mind",
+           stringr::str_detect(parentname, "claremontreviewofbooks.com") ~ "Claremont Institute",
+           stringr::str_detect(parentname, "jacobin.com") ~ "Jacobin",
+           stringr::str_detect(parentname, "commonwealthfund.org") ~ "Commonwealth Fund",
+           stringr::str_detect(parentname, "epi.org") ~ "EPI",
+           stringr::str_detect(parentname, "heritage.org") ~ "Heritage Foundation",
+           stringr::str_detect(parentname, "nationalreview.com") ~ "National Review",
+           stringr::str_detect(parentname, "opensocietyfoundations.org") ~ "Open Society Foundations",
+           stringr::str_detect(parentname, "thenation.com") ~ "The Nation"
          ))) |>
-  filter(!is.na(test_source))
+  tidytable::filter(!is.na(test_source))
 
 fwrite(filtered_linkcheck, here("data", "linkchecker", "links_pre-filtered_linkchecker.csv"))
 ```
 
-
 ```{r}
-#| label: Link Data Import
-#| eval: false
-
-# Think Tank Sources Import
-links_raw_am_mind <- fread(here("data", "links_raw_americanmindlinks.csv"), header = TRUE)
-links_raw_claremont <- fread(here("data", "links_raw_claremontreviewessays.csv"), header = TRUE, fill = TRUE)
-links_raw_commonwealth <- fread(here("data", "links_raw_commonwealthblog.csv"), header = TRUE, fill = TRUE)
-links_raw_epi <- fread(here("data", "links_raw_epiblog.csv"), header = TRUE, fill = TRUE)
-links_raw_opensoc_pubs <- fread(here("data", "links_raw_opensocietypublications.csv"), header = TRUE, fill = TRUE)
-links_raw_opensoc_voices <- fread(here("data", "links_raw_opensocietyvoices_edited.csv"), header = TRUE, fill = TRUE)
-# News Sources Import
-links_raw_jacobin <- fread(here("data", "links_raw_jacobinblog.csv"), header = TRUE)
-links_raw_nr_law <- fread(here("data", "links_raw_nationalreviewlawcourts.csv"), header = TRUE, fill = TRUE)
-links_raw_nr_politics <- fread(here("data", "links_raw_nationalreviewpol.csv"), header = TRUE, fill = TRUE)
-links_raw_nation <- fread(here("data", "links_raw_thenationpolitics.csv"), header = TRUE, fill = TRUE)
+unique_parents <- filtered_test |>
+  distinct(parentname)
 ```
 
 ```{r}
-#| label: Horizontal Join of two sources
-links_raw_opensoc <- bind_rows(links_raw_opensoc_pubs, links_raw_opensoc_voices)
-links_raw_nr <- bind_rows(links_raw_nr_law, links_raw_nr_politics)
+drive_upload(here("data", "linkchecker", "links_pre-filtered_linkchecker.csv"), path = "~/political-sentiment/data/links_pre-filtered_linkchecker.csv")
 ```
 
 ```{r}
-links_raw <- bind_rows()
-```
-
-
-```{r}
-link_clean_up <- function(links_raw) {
-  links_raw |>
-    tidytable::filter(result == "200 OK")
+disk_to_drive <- function(file_path, over.write = TRUE) {
+  temp <- stringr::str_split(file_path, "/")[[1]][9]
+  googledrive::drive_upload(file_path, path = glue::glue("~/political-sentiment/data/{temp}"), overwrite = over.write)
 }
 
-
-
-
+map(.x = files, .f = disk_to_drive)
 ```
+
 
 
 ```{r}

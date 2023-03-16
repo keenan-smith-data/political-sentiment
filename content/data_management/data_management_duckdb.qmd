@@ -1,0 +1,82 @@
+---
+title: "data_management_duckdb"
+author: "Keenan Smith"
+---
+
+```{r}
+here::i_am("content/data_management/data_management_duckdb.qmd")
+```
+
+# Library Load
+
+```{r}
+#| label: Library Load
+library(DBI)
+library(tidytable)
+library(duckdb)
+library(here)
+```
+
+# Connecting to the SQLite DB
+
+```{r}
+#| label: Connecting the DB
+corpus_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+```
+
+# Reading Original Corpus
+
+This corpus contains all the viable article text and metadata for the original text corpus. This data includes Brookings Institute, Jacobin, American Mind, and the Heritage Foundation
+
+```{r}
+#| label: Reading in Original 4 source Corpus
+filtered_linkcheck <- fread(here("data", "linkchecker", "links_pre-filtered_linkchecker.csv"))
+```
+
+
+
+# Creating Table in SQLite
+
+```{r}
+#| label: Writing Original Corpus to New SQLite db
+#| eval: false
+
+# dbRemoveTable(corpus_db, "original_corpus")
+
+# dbWriteTable(corpus_db, "original_corpus", original_corpus_date_edited)
+
+# dbListTables(corpus_db)
+
+# dbListFields(corpus_db, "original_corpus")
+```
+
+# Creating Unique Index on Link
+
+```{r}
+#| label: Creating Index on art_link
+#| eval: false
+
+# dbSendStatement(corpus_db, "CREATE UNIQUE INDEX art_link ON original_corpus (art_link)")
+```
+
+# Query Testing
+
+```{r}
+#| label: Testing new DB
+
+dbGetQuery(corpus_db, "SELECT * FROM original_corpus LIMIT 10")
+```
+
+# Testing dbplyr
+
+```{r}
+original_corpus_db_test <- tbl(corpus_db, "original_corpus")
+```
+
+# DB Disconnect
+
+```{r}
+#| label: Disconnect Block
+dbDisconnect(corpus_db)
+```
+
