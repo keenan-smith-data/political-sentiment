@@ -110,7 +110,7 @@ Creating Indexes to Speed Up Data Queries
 ```{r}
 #| label: Creating Index on art_link
 
-dbSendStatement(pol_sent_db, "ALTER TABLE source_table ADD PRIMARY KEY (art_source)")
+# dbSendStatement(pol_sent_db, "ALTER TABLE source_table ADD PRIMARY KEY (art_source)")
 
 dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX link_idx ON linkchecker_data (url, art_source)")
 dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX site_idx ON sitemap_data (url, art_source)") 

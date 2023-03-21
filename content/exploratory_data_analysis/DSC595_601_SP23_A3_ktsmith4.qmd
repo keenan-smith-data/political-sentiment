@@ -13,7 +13,7 @@ format:
 set.seed(4)
 here::i_am("content/exploratory_data_analysis/DSC595_601_SP23_A3_ktsmith4.qmd")
 library(readr)
-text_full_corpus <- read_rds(here::here("data", "text_full_corpus.rds"))
+text_full_corpus <- read_rds(here::here("data", "text", "text_full_corpus.rds"))
 sample_text <- dplyr::sample_n(text_full_corpus, 3)
 ```
 

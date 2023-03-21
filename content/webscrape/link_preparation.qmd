@@ -43,14 +43,14 @@ sitemap_viable_links <- function(df, short.source = NULL, art.source = NULL, url
   }
 }
 
-initial_helper <- function(df, short.source = NULL, art.source = NULL) {
+initial_helper <- function(.df, short.source = NULL, art.source = NULL) {
     if (is.null(art.source)) {
-    df |>
+    .df |>
       dplyr::left_join(source_table, by = source_table$art_source) |>  
       dplyr::filter(short_source == short.source) |>
       dplyr::collect()
   } else if (is.null(short.source)) {
-    df |>
+    .df |>
       dplyr::filter(art_source == art.source) |>
       dplyr::collect()
   }

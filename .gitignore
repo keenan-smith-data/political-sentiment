@@ -5,9 +5,10 @@
 
 /.quarto/
 *.pdf
-_site
 
 *.rds
 *.sqlite
-*.duckdb
+*.duckdb*
 *.csv*
+
+_site

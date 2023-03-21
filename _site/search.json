@@ -82,5 +82,26 @@
     "title": "Political Sentiment NLP",
     "section": "The Project",
     "text": "The Project\n\n\n\nA Data Science Project that examines the question “Does Political Speech indicate political bias?”\nThe Data are pulled from top U.S. Think Tanks 1\nThink Tanks were chosen due to their:\n\nIntellectual capacity\nMostly Free Article Content\nIdeological Identity\n\nNo Think Tanks were chosen that identify as “non-partisan”, “centrist”, or “independent”\n\n\nWhy NLP?\n\nNLP is the logical choice\n\nThe data to be modeled is text data\nThe question revolves around human communication and bias\n\n\n\n\nThink Tank Rankings"
+  },
+  {
+    "objectID": "content/exploratory_data_analysis/DSC595_601_SP23_Project_Proposal_ktsmith4.html#the-project",
+    "href": "content/exploratory_data_analysis/DSC595_601_SP23_Project_Proposal_ktsmith4.html#the-project",
+    "title": "Political Sentiment NLP",
+    "section": "The Project",
+    "text": "The Project\n\n\n\nA Data Science Project that examines the question “Does Political Speech indicate political bias?”\nThe Data are pulled from top U.S. Think Tanks\nThink Tanks were chosen due to their:\n\nIntellectual capacity\nMostly Free Article Content\nIdeological Identity\n\nNo Think Tanks were chosen that identify as “non-partisan”, “centrist”, or “independent”\nat least 100k articles\n\n\nWhy NLP?\n\nNLP is the logical choice\n\nThe data to be modeled is text data\nThe question revolves around human communication and bias\n\n\nBias in Data\n\nAttempt to have roughly equal sample sizes from left and right\nPolitics is a spectrum not a binary\n\nSimplification of complex ideas"
+  },
+  {
+    "objectID": "content/exploratory_data_analysis/DSC595_601_SP23_Project_Proposal_ktsmith4.html#text-representation",
+    "href": "content/exploratory_data_analysis/DSC595_601_SP23_Project_Proposal_ktsmith4.html#text-representation",
+    "title": "Political Sentiment NLP",
+    "section": "Text Representation",
+    "text": "Text Representation\n\n\nModels to be Utilized\n\nClassically trained classification models\n\nRandom Forest\nLogistic Regression\nSupport Vector Classification\nRegularization\nUnsupervised Learning Pre-processing\n\nDeep Learning Transformer-based model\n\n\nAn Early Look\n\n\n\nLeft-Right TF-idf Bigrams\n\n\n\n\n\n\n\nDSC595_601_SP23_Project_Proposal_ktsmith4"
+  },
+  {
+    "objectID": "content/exploratory_data_analysis/DSC595_601_SP23_Project_Proposal_ktsmith4.html#output-the-research-question",
+    "href": "content/exploratory_data_analysis/DSC595_601_SP23_Project_Proposal_ktsmith4.html#output-the-research-question",
+    "title": "Political Sentiment NLP",
+    "section": "Output & the Research Question",
+    "text": "Output & the Research Question\n\nThe output are trained classification models\n\nClassically trained classification models\n\nRandom Forest\nLogistic Regression\nSupport Vector Classification\nRegularization\nUnsupervised Learning Pre-processing\n\nDeep Learning Transformer-based model\n\nAdditionally I intend to create a Shiny Dashboard for Others to examine the data and model outputs\n\n\n\n\nDSC595_601_SP23_Project_Proposal_ktsmith4"
   }
 ]
