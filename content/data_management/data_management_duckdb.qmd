@@ -3,80 +3,141 @@ title: "data_management_duckdb"
 author: "Keenan Smith"
 ---
 
-```{r}
-here::i_am("content/data_management/data_management_duckdb.qmd")
-```
-
 # Library Load
 
 ```{r}
 #| label: Library Load
+
+here::i_am("content/data_management/data_management_duckdb.qmd")
 library(DBI)
 library(tidytable)
 library(duckdb)
 library(here)
+library(dm)
 ```
 
-# Connecting to the SQLite DB
+# Connecting to the DuckDB
 
 ```{r}
 #| label: Connecting the DB
-corpus_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
 ```
 
-# Reading Original Corpus
-
-This corpus contains all the viable article text and metadata for the original text corpus. This data includes Brookings Institute, Jacobin, American Mind, and the Heritage Foundation
+# Reading in the Sitemap and Linkchecker Data
 
 ```{r}
 #| label: Reading in Original 4 source Corpus
 filtered_linkcheck <- fread(here("data", "linkchecker", "links_pre-filtered_linkchecker.csv"))
+sitemap_collection <- fread(here("data", "sitemap", "links_sitemap.csv.gz"))
+
+source_table <- tidytable(art_source = as.factor(c("American Enterprise Institute", "Cato Institute",
+                                         "Human Rights Watch", "Heritage Foundation",
+                                         "Center for American Progress", "Urban Institute",
+                                         "Mercatus Institute", "Manhattan Institute",
+                                         "Center on Budget and Policy Priorities", "American Mind",
+                                         "Discovery Institute", "EPIC", "Hoover Institute",
+                                         "Claremont Institute", "National Review", "Jacobin",
+                                         "Commonwealth Fund", "EPI", "Open Society Foundations",
+                                         "The Nation", "Guttmacher Institute")),
+                          short_source = as.factor(c("aei", "cato", "hrw", "heritage", "cap", "urban", "merc", "mani",
+                                           "cbpp", "am", "disc", "epic", "hoov", "clare", "natr",
+                                           "jacob", "comf", "epi", "osf", "tnat", "gutt")),
+                          source_bias = as.factor(c("right-wing", "right-wing", "left-wing", "right-wing",
+                                                    "left-wing", "left-wing", "right-wing", "right-wing",
+                                                    "left-wing", "right-wing", "right-wing", "right-wing",
+                                                    "right-wing", "right-wing", "right-wing", "left-wing",
+                                                    "left-wing", "left-wing", "left-wing", "left-wing", "left-wing"))) |>
+  tibble::as_tibble()
 ```
 
+```{r}
+#| label: Manipulating Data to be entered into DB
 
+linkchecker_data <- filtered_linkcheck |>
+  tibble::rowid_to_column() |>
+  rename(art_source = test_source) |>
+  mutate(art_source = as.factor(art_source)) |>
+  distinct(url, .keep_all = TRUE) |>
+  tibble::as_tibble()
+
+sitemap_data <- sitemap_collection |>
+  rename(url = loc) |>
+  select(-art_bias) |>
+  mutate(art_source = as.factor(art_source)) |>
+  distinct(url, .keep_all = TRUE) |>
+  tibble::as_tibble()
+```
+
+```{r}
+links_no_keys <- dm(linkchecker_data, sitemap_data, source_table)
+
+links_primary_keys <- links_no_keys |>
+  dm_add_pk(table = source_table, columns = art_source)
+
+links_all_keys <- links_primary_keys |>
+  dm_add_fk(linkchecker_data, art_source, source_table) |>
+  dm_add_fk(sitemap_data, art_source, source_table)
+
+links_all_keys |>
+  dm_draw()
+
+links_all_keys |>
+  dm_examine_constraints()
+```
 
 # Creating Table in SQLite
 
 ```{r}
 #| label: Writing Original Corpus to New SQLite db
-#| eval: false
 
-# dbRemoveTable(corpus_db, "original_corpus")
+dbRemoveTable(pol_sent_db, "linkchecker_data")
+dbRemoveTable(pol_sent_db, "sitemap_data")
+dbRemoveTable(pol_sent_db, "source_table")
 
-# dbWriteTable(corpus_db, "original_corpus", original_corpus_date_edited)
+dbListTables(pol_sent_db)
 
-# dbListTables(corpus_db)
+dbWriteTable(pol_sent_db, "linkchecker_data", linkchecker_data)
+dbWriteTable(pol_sent_db, "sitemap_data", sitemap_data)
+dbWriteTable(pol_sent_db, "source_table", source_table)
 
-# dbListFields(corpus_db, "original_corpus")
+dbListTables(pol_sent_db)
 ```
 
 # Creating Unique Index on Link
 
+Creating Indexes to Speed Up Data Queries
+
 ```{r}
 #| label: Creating Index on art_link
-#| eval: false
 
-# dbSendStatement(corpus_db, "CREATE UNIQUE INDEX art_link ON original_corpus (art_link)")
+dbSendStatement(pol_sent_db, "ALTER TABLE source_table ADD PRIMARY KEY (art_source)")
+
+dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX link_idx ON linkchecker_data (url, art_source)")
+dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX site_idx ON sitemap_data (url, art_source)") 
+dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX source_idx ON source_table (art_source)") 
 ```
 
 # Query Testing
 
 ```{r}
 #| label: Testing new DB
-
-dbGetQuery(corpus_db, "SELECT * FROM original_corpus LIMIT 10")
+dbGetQuery(pol_sent_db, "SELECT * FROM linkchecker_data")
 ```
 
-# Testing dbplyr
-
 ```{r}
-original_corpus_db_test <- tbl(corpus_db, "original_corpus")
+dbGetQuery(pol_sent_db, "SELECT * FROM sitemap_data")
 ```
 
 # DB Disconnect
 
 ```{r}
 #| label: Disconnect Block
-dbDisconnect(corpus_db)
+dbDisconnect(pol_sent_db)
+```
+
+```{r}
+#| eval: false
+#| echo: false
+# .rs.restartR()
 ```
 

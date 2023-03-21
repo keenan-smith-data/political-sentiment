@@ -1,0 +1,126 @@
+---
+title: "Link Preparation"
+author: "Keenan Smith"
+---
+
+```{r}
+here::i_am("content/webscrape/link_preparation.qmd")
+library(here)
+library(DBI)
+library(duckdb)
+library(tidytable)
+```
+
+# Connecting to DuckDB
+
+```{r}
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+```
+
+# Loading Lazy DB for dbplyr
+
+```{r}
+sitemaps <- dplyr::tbl(pol_sent_db, "sitemap_data")
+linkchecker <- dplyr::tbl(pol_sent_db, "linkchecker_data")
+source_table <- dplyr::tbl(pol_sent_db, "source_table")
+```
+
+# Function Block for Scraping
+
+```{r}
+sitemap_viable_links <- function(df, short.source = NULL, art.source = NULL, url.filter) {
+    url.filter <- paste(url.filter, collapse = "|")
+    if (is.null(art.source)) {
+    df |>
+      dplyr::left_join(source_table, by = source_table$art_source) |>  
+      dplyr::filter(short_source == short.source,
+                    stringr::str_detect(url, url.filter)) |>
+      dplyr::collect()
+  } else if (is.null(short.source)) {
+    df |>
+      dplyr::filter(art_source == art.source) |>
+      dplyr::collect()
+  }
+}
+
+initial_helper <- function(df, short.source = NULL, art.source = NULL) {
+    if (is.null(art.source)) {
+    df |>
+      dplyr::left_join(source_table, by = source_table$art_source) |>  
+      dplyr::filter(short_source == short.source) |>
+      dplyr::collect()
+  } else if (is.null(short.source)) {
+    df |>
+      dplyr::filter(art_source == art.source) |>
+      dplyr::collect()
+  }
+}
+
+initial_look <- function(.df, short.source) {
+  temp <- initial_helper(.df, short.source)
+  urls <- tidytable::map_df(.x = temp$url, .f = xml2::url_parse)
+  return(urls)
+}
+
+path_examination <- function(.df) {
+  .df |>
+    tidytable::separate_wider_delim(path, "/") |>
+    tidytable::group_by(path2) |>
+    tidytable::count(sort = T)
+}
+```
+
+# Building SQL for Functions
+
+```{r}
+aei_include <- c("articles", "carpe-diem", "op-eds")
+
+filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter = aei_include)
+
+
+```
+
+# Printing Source Table for Reference
+
+```{r}
+source_table
+```
+
+
+
+
+# AEI Link Exploration
+
+```{r}
+initial_look(sitemaps, "aei") |>
+  path_examination()
+```
+
+# Cato Link Exploration
+
+```{r}
+initial_look(sitemaps, "cato") |> 
+  path_examination()
+```
+
+# HRW Link Exploration
+
+```{r}
+initial_look(sitemaps, "hrw") |> 
+  path_examination()
+```
+
+# Heritage Link Exploration
+
+```{r}
+initial_look(sitemaps, "heritage") |>
+  path_examination()
+```
+
+
+# Disconnect
+
+```{r}
+#| label: Disconnect Block
+dbDisconnect(pol_sent_db)
+```

@@ -31,6 +31,7 @@ ss <- drive_get("political-sentiment-sheet")
 gathered_sitemaps <- read_sheet(ss)
 ```
 
+[XML to df](https://urbandatapalette.com/post/2021-03-xml-dataframe-r/)
 
 ```{r}
 #| label: Function Block
@@ -151,7 +152,7 @@ gathered_sitemaps
 #| label: Assigning Sitemaps to Variables
 heritage_sitemap <- gathered_sitemaps[[1,1]]
 cato_sitemap <- gathered_sitemaps[[2,1]]
-brookings_sitemap_2022 <- gathered_sitemaps[[3,1]]
+brookings_sitemap_2022 <- gathered_sitemaps[[3,1]] # Brookings Sitemap has Issues
 aei_sitemap <- gathered_sitemaps[[4,1]]
 am_prog_sitemap <- gathered_sitemaps[[5,1]]
 cbpp_sitemap <- gathered_sitemaps[[6,1]]
