@@ -121,11 +121,11 @@ dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX source_idx ON source_table (ar
 
 ```{r}
 #| label: Testing new DB
-dbGetQuery(pol_sent_db, "SELECT * FROM linkchecker_data")
+dbGetQuery(pol_sent_db, "SELECT * FROM linkchecker_data LIMIT 10")
 ```
 
 ```{r}
-dbGetQuery(pol_sent_db, "SELECT * FROM sitemap_data")
+dbGetQuery(pol_sent_db, "SELECT * FROM sitemap_data LIMIT 10")
 ```
 
 # DB Disconnect
