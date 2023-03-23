@@ -12,3 +12,5 @@
 *.csv*
 
 _site
+
+.tmp.driveupload
