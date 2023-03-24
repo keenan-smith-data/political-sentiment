@@ -1,5 +1,5 @@
 # Library Initiation
-here::i_am("R/linkchecker_combined.R")
+here::i_am("R/linkchecker_data_combine.R")
 library(tidytable)
 library(here)
 library(googledrive)
