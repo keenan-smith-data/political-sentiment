@@ -1,90 +1,166 @@
 ---
-title: "Lexicon Text Scraping"
+title: "Web Text Test Scraping"
 author: "Keenan Smith"
 format: html
 ---
 
 ```{r}
 #| label: Library Initiation
+here::i_am("content/webscrape/web_scraping_testing.qmd")
+source(here::here("R", "viable_links.R"))
+```
 
-library(tidyverse)
+
+```{r}
+detach(package:DBI, unload = TRUE)
+library(tidytable)
 library(rvest)
 ```
 
+# Scrape Helper Functions
 
 ```{r}
-#| label: Importing Cleaned Sitemaps
+element_pull <- function(e.html, css.tag) {
+  e.html |>
+    rvest::html_elements(css = css.tag) |>
+    rvest::html_text2()
+}
 
-jacobin <- read_rds("data/jacobin.rds")
-features <- read_rds("data/americanmindfeatures.rds")
-memos <- read_rds("data/americanmindmemos.rds")
-salvos <- read_rds("data/americanmindsalvos.rds")
-h_commentary <- read_rds("data/heritage_commentary.rds")
-h_report <- read_rds("data/heritage_report.rds")
-b_blog <- read_rds("data/brookings_blog.rds")
+text_pull <- function(s.html, text.css = NA) {
+  if (is.na(text.css)) {
+    s.html |>
+      rvest::html_nodes("p") |>
+      rvest::html_text2() |>
+      tidytable::as_tidytable()
+  } else {
+    s.html |>
+      rvest::html_element(css = text.css) |>
+      rvest::html_nodes("p") |>
+      rvest::html_text2() |>
+      tidytable::as_tidytable()
+  }
+  
+}
 
-source("scraping_functions.R")
+date_pull <- function(s.html, date.css) {
+  date.text <- element_pull(e.html = s.html, css.tag = date.css)
+  date.text <- date.text[1]
+  art_date <- lubridate::mdy(date.text)
+  return(art_date)
+}
+
+author_pull <- function(s.html, author.css, art.source) {
+  if (length(author.css) > 1) {
+    art.authors <- tidytable::map_chr(.x = author.css, element_pull, e.html = s.html)
+    art_author <- paste(art.authors, collapse = ",")
+  } else if (length(author.css)  == 1) {
+    art.author <- element_pull(s.html, author.css)
+    art_author <- paste(art.author, collapse = ", ")
+  } else {
+    art_author <- art.source
+  }
+  return(art_author)
+}
+
+topic_pull <- function(s.html, topic.css = NA) {
+  if (is.na(topic.css)) {
+    art_topic <- NA
+  } else {
+  art.topic <- element_pull(s.html, topic.css)
+  if (length(art.topic) > 1) {
+    art_topic <- paste(art.topic, collapse = ", ")
+  } else if (length(art.topic) == 1) {
+    art_topic <- art.topic
+  } else {
+    art_topic <- NA
+  }
+  }
+  return(art_topic)
+}
 ```
 
+# Main Scraper Function
 
 ```{r}
-#| label: Test Links
+article_pull <- function(hyperlink,
+                         title.css.tag,
+                         text.css.tag = NA,
+                         date.css.tag,
+                         author.css.tags,
+                         topic.css.tags,
+                         art.source) {
+  browser()
+  source.html <- xml2::read_html(hyperlink)
+  art_title <- element_pull(e.html = source.html,
+                            css.tag = title.css.tag)
+  art_text <- text_pull(s.html = source.html,
+                        text.css = text.css.tag)
+  art_date <- date_pull(s.html = source.html,
+                        date.css = date.css.tag)
+  art_author <- author_pull(s.html = source.html,
+                            author.css = author.css.tags,
+                            art.source = art.source)
+  art_topic <- topic_pull(s.html = source.html,
+                          topic.css = topic.css.tags)
+  final_data <- art_text |>
+    tidytable::mutate(
+      art_link = hyperlink,
+      art_title = art_title,
+      art_author = art_author,
+      art_date = art_date,
+      art_topic = art_topic,
+      art_source = art.source
+    )
+  return(final_data)
+  
+}
+```
 
-j_tl <- sample(jacobin$url, 1)
-j_tl_2 <- sample(jacobin$url, 1)
-j_tl_3 <- sample(jacobin$url, 1)
-j_tl_wrong <- "https://jacobin.com/2022/06/american-exceptionae-off-the-rails"
+```{r}
+sample_helper <- function(df) {
+  df |>
+    slice_sample(n = 10, .by = url_type)
+}
 
-h_com_tl <- sample(h_commentary$url, 1)
-h_com_tl_2 <- sample(h_commentary$url, 1)
-h_com_tl_3 <- sample(h_commentary$url, 1)
-h_com_tl_wrong <- "https://www.heritage.org/american-founders/commentary/pulitzer-overlooks-eggious-errors-award-prize-new-york-times-fatally"
+#| label: Sample Test Links
+aei_sample <- sample_helper(filtered_aei)
+am_sample <- sample_helper(filtered_am)
+cap_sample <- sample_helper(filtered_cap)
+cato_sample <- sample_helper(filtered_cato)
+cbpp_sample <- sample_helper(filtered_cbpp)
+comf_sample <- sample_helper(filtered_comf)
+disc_sample <- sample_helper(filtered_disc)
+epi_sample <- sample_helper(filtered_epi)
 
-h_rep_tl <- sample(h_report$url, 1)
-h_rep_tl_2 <- sample(h_report$url, 1)
-h_rep_tl_3 <- sample(h_report$url, 1)
-h_rep_tl_wrong <- "https://www.heritage.org/arms-control/report/arms-cont-the-heritage-foundation-recommendations"
+gutt_sample <- sample_helper(filtered_gutt)
+heritage_sample <- sample_helper(filtered_heritage)
+hrw_sample <- sample_helper(filtered_hrw)
+mani_sample <- sample_helper(filtered_mani)
+merc_sample <- sample_helper(filtered_merc)
+osf_sample <- sample_helper(filtered_osf)
+tnat_sample <- sample_helper(filtered_tnat)
+urban_sample <- sample_helper(filtered_urban)
 
-b_tl <- sample(b_blog$url, 1)
-b_tl_2 <- sample(b_blog$url, 1)
-b_tl_3 <- sample(b_blog$url, 1)
-
-memo_tl <- sample(memos$url, 1)
-memo_tl_2 <- sample(memos$url, 1)
-
-salvo_tl <- sample(salvos$url, 1)
-salvo_tl_2 <- sample(salvos$url, 1)
-
-feature_tl <- sample(features$url, 1)
-feature_tl <- sample(features$url, 1)
-
-j_test_vec <- sample(jacobin$url, 10)
-h_com_test_vec <- sample(h_commentary$url, 10)
-h_rep_test_vec <- sample(h_report$url, 10)
-b_test_vec <- sample(b_blog$url, 10)
 
 ```
 
 ```{r}
 #| label: Testing Web Scrapes
+test_aei_title <- ".entry-title"
+test_aei_date <- ".date"
+test_aei_tags <- ".tag"
+test_aei_author <- ".author-link"
+test_aei_text <- ""
 
-b_test <- b_pull_try(b_tl)
-b_test_2 <- b_pull_try(b_tl_2)
+article_pull(aei_sample$url[[11]], title.css.tag = test_aei_title,
+             date.css.tag = test_aei_date,
+             author.css.tags = test_aei_author, topic.css.tags = test_aei_tags,
+             art.source = aei_sample$art_source[[1]])
 
-memo_test <- am_mind_pull_try(memo_tl)
-salvo_test_2 <- am_mind_pull_try(salvo_tl)
-feature_test_3 <- am_mind_pull_try(feature_tl)
 
-jac_test <- j_pull_try(j_tl)
-jac_test_2 <- j_pull_try(j_tl_2)
-jac_test_3 <- j_pull_try(j_tl_3)
-
-h_com_test <- h_com_pull_try(h_com_tl)
-h_com_test_2 <- h_com_pull_try(h_com_tl_2)
-
-h_rep_test <- h_rep_pull_try(h_rep_tl)
-h_rep_test_2 <- h_rep_pull_try(h_rep_tl_2)
-h_rep_test_3 <- h_rep_pull_try(h_rep_tl_wrong)
+read_html(aei_sample$url[[1]]) |>
+  html_nodes("p") |>
+  html_text2()
 ```
 
 <https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop>
@@ -120,11 +196,6 @@ j_text_test <- bind_rows(j_data_list)
 h_com_text_test <- bind_rows(h_com_data_list)
 h_rep_text_test <- bind_rows(h_rep_data_list)
 b_text_test <- bind_rows(b_data_list)
-
-write_rds(j_text_test, "data/jacobin_text_test.rds", "gz", compression = 9L)
-write_rds(h_com_text_test, "data/heritage_com_text_test.rds", "gz", compression = 9L)
-write_rds(h_rep_text_test, "data/heritage_rep_text_test.rds", "gz", compression = 9L)
-write_rds(b_text_test, "data/brooking_text_test.rds", "gz", compression = 9L)
 ```
 
 
