@@ -7,15 +7,31 @@ format: html
 ```{r}
 #| label: Library Initiation
 here::i_am("content/webscrape/web_scraping_testing.qmd")
-source(here::here("R", "viable_links.R"))
-```
+suppressMessages(source(here::here("R", "viable_links.R")))
 
-
-```{r}
-detach(package:DBI, unload = TRUE)
+library(foreach)
+library(progressr)
 library(tidytable)
 library(rvest)
+
+n.cores <- parallel::detectCores() - 1
+my.cluster <- parallel::makeCluster(
+  n.cores,
+  type = "PSOCK"
+)
+
+doParallel::registerDoParallel(cl = my.cluster)
 ```
+
+# Sampling Function
+
+```{r}
+sample_helper <- function(df) {
+  df |>
+    slice_sample(n = 10, .by = url_type)
+}
+```
+
 
 # Scrape Helper Functions
 
@@ -27,19 +43,22 @@ element_pull <- function(e.html, css.tag) {
 }
 
 text_pull <- function(s.html, text.css = NA) {
-  if (is.na(text.css)) {
-    s.html |>
-      rvest::html_nodes("p") |>
-      rvest::html_text2() |>
-      tidytable::as_tidytable()
-  } else {
-    s.html |>
+  final.data <- s.html |>
+    rvest::html_element(css = text.css) |>
+    rvest::html_elements("p") |>
+    rvest::html_text2() |>
+    tidytable::na_if("")
+  if (all(is.na(final.data))) {
+    final.data <- s.html |>
       rvest::html_element(css = text.css) |>
-      rvest::html_nodes("p") |>
+      rvest::html_elements("div") |>
       rvest::html_text2() |>
-      tidytable::as_tidytable()
-  }
-  
+      tidytable::na_if("")
+  } 
+  final.data <- final.data |>
+    tidytable::as_tidytable() |>
+    tidytable::drop_na(x)
+  return(final.data)
 }
 
 date_pull <- function(s.html, date.css) {
@@ -82,14 +101,16 @@ topic_pull <- function(s.html, topic.css = NA) {
 # Main Scraper Function
 
 ```{r}
-article_pull <- function(hyperlink,
-                         title.css.tag,
-                         text.css.tag = NA,
-                         date.css.tag,
-                         author.css.tags,
-                         topic.css.tags,
-                         art.source) {
-  browser()
+article_pull_df <- function(df) {
+  hyperlink <- df$url[[1]]
+  title.css.tag <- df$css_title[[1]]
+  text.css.tag <- df$css_text[[1]]
+  date.css.tag <- df$css_date[[1]]
+  author.css.tags <- df$css_author[[1]]
+  art.source <- df$art_source[[1]]
+  topic.css.tags <- df$css_topics[[1]]
+  rm(df)
+  
   source.html <- xml2::read_html(hyperlink)
   art_title <- element_pull(e.html = source.html,
                             css.tag = title.css.tag)
@@ -102,7 +123,8 @@ article_pull <- function(hyperlink,
                             art.source = art.source)
   art_topic <- topic_pull(s.html = source.html,
                           topic.css = topic.css.tags)
-  final_data <- art_text |>
+  final.data <- art_text |>
+    tidytable::rename(text = x) |>
     tidytable::mutate(
       art_link = hyperlink,
       art_title = art_title,
@@ -111,16 +133,32 @@ article_pull <- function(hyperlink,
       art_topic = art_topic,
       art_source = art.source
     )
+  return(final.data)
+}
+```
+
+
+```{r}
+text_coll_foreach <- function(df) {
+  p <- progressr::progressor(along = df$url)
+  final_data <- foreach::foreach(i = seq_along(df$url), .combine = rbind) %do% {
+    p()
+    article_pull_df(df[i])
+  }
   return(final_data)
-  
 }
 ```
 
 ```{r}
-sample_helper <- function(df) {
-  df |>
-    slice_sample(n = 10, .by = url_type)
-}
+filtered_aei$css_title <- ".entry-title"
+filtered_aei$css_date <- "p.date"
+filtered_aei$css_topics <- ".p-3"
+filtered_aei$css_author <- "p.author"
+filtered_aei$css_text <- ".entry-content"
+```
+
+```{r}
+
 
 #| label: Sample Test Links
 aei_sample <- sample_helper(filtered_aei)
@@ -140,64 +178,16 @@ merc_sample <- sample_helper(filtered_merc)
 osf_sample <- sample_helper(filtered_osf)
 tnat_sample <- sample_helper(filtered_tnat)
 urban_sample <- sample_helper(filtered_urban)
-
-
 ```
 
 ```{r}
-#| label: Testing Web Scrapes
-test_aei_title <- ".entry-title"
-test_aei_date <- ".date"
-test_aei_tags <- ".tag"
-test_aei_author <- ".author-link"
-test_aei_text <- ""
-
-article_pull(aei_sample$url[[11]], title.css.tag = test_aei_title,
-             date.css.tag = test_aei_date,
-             author.css.tags = test_aei_author, topic.css.tags = test_aei_tags,
-             art.source = aei_sample$art_source[[1]])
-
-
-read_html(aei_sample$url[[1]]) |>
-  html_nodes("p") |>
-  html_text2()
+# progressr::handlers(global = TRUE)
+handlers("cli")
+foreach_test <- text_coll_foreach(aei_sample)
 ```
 
 <https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop>
 Absolute Legend of Help for R ways of doing loops
-
-```{r}
-#| label: Testing Iterations
-
-j_data_list <- list()
-h_com_data_list <- list()
-h_rep_data_list <- list()
-b_data_list <- list()
-
-for (i in seq_along(j_test_vec)) {
-  j_test_df <- j_pull_try(j_test_vec[i])
-  j_test_df$i <- i
-  j_data_list[[i]] <- j_test_df
-  
-  h_com_test_df <- h_com_pull_try(h_com_test_vec[i])
-  h_com_test_df$i <- i
-  h_com_data_list[[i]] <- h_com_test_df
-  
-  h_rep_test_df <- h_rep_pull_try(h_rep_test_vec[i])
-  h_rep_test_df$i <- i
-  h_rep_data_list[[i]] <- h_rep_test_df
-  
-  b_test_df <- b_pull_try(b_test_vec[i])
-  b_test_df$i <- i
-  b_data_list[[i]] <- b_test_df
-}
-
-j_text_test <- bind_rows(j_data_list)
-h_com_text_test <- bind_rows(h_com_data_list)
-h_rep_text_test <- bind_rows(h_rep_data_list)
-b_text_test <- bind_rows(b_data_list)
-```
-
 
 ```{r}
 #| label: Testing Webscraping Loops

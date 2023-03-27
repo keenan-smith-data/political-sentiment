@@ -28,45 +28,18 @@ source_table <- dplyr::tbl(pol_sent_db, "source_table")
 # Function Block for Scraping
 
 ```{r}
-sitemap_viable_links <- function(df,
-                                 short.source = NULL,
-                                 art.source = NULL,
-                                 url.filter,
-                                 exclude = FALSE) {
-    # Defining OR statement here since DBplyr doesn't like it
-    url.filter <- stringr::str_c(stringr::regex("\\w/"),
-                                 url.filter,
-                                 stringr::regex("/\\w"),
-                                 collapse = "|")
-    # Checking if art.source exists
+sitemap_viable_links <- function(df, short.source = NULL, art.source = NULL, url.filter) {
+    url.filter <- paste(url.filter, collapse = "|")
     if (is.null(art.source)) {
-      # Checking if strings are inclusion or exclusion
-      if (exclude == FALSE) {
-        # Inclusion
-        df |>
-          dplyr::left_join(source_table, by = source_table$art_source) |>  
-          dplyr::filter(short_source == short.source,
-                        stringr::str_detect(url, url.filter),
-                        stringr::str_detect(url, "page=", negate = TRUE)) |>
-          dplyr::collect() |>
-          tidytable::distinct(url, .keep_all = TRUE)
-      } else {
-        # Exclusion
-        df |>
-          dplyr::left_join(source_table, by = source_table$art_source) |>  
-          dplyr::filter(short_source == short.source,
-                        stringr::str_detect(url, url.filter, negate = TRUE)) |>
-          dplyr::collect() |>
-          tidytable::distinct(url, .keep_all = TRUE)
-      }
-  # If short.source is not used    
+    df |>
+      dplyr::left_join(source_table, by = source_table$art_source) |>  
+      dplyr::filter(short_source == short.source,
+                    stringr::str_detect(url, url.filter)) |>
+      dplyr::collect()
   } else if (is.null(short.source)) {
     df |>
-      dplyr::filter(art_source == art.source,
-                    stringr::str_detect(url, url.filter),
-                    stringr::str_detect(url, "page=", negate = TRUE)) |>
-      dplyr::collect() |>
-      tidytable::distinct(url, .keep_all = TRUE)
+      dplyr::filter(art_source == art.source) |>
+      dplyr::collect()
   }
 }
 
@@ -97,12 +70,23 @@ path_examination <- function(.df) {
 }
 ```
 
+# Building SQL for Functions
+
+```{r}
+aei_include <- c("articles", "carpe-diem", "op-eds")
+
+filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter = aei_include)
+
+
+```
 
 # Printing Source Table for Reference
 
 ```{r}
 source_table
 ```
+
+
 
 
 # AEI Link Exploration
@@ -131,263 +115,6 @@ initial_look(sitemaps, "hrw") |>
 ```{r}
 initial_look(sitemaps, "heritage") |>
   path_examination()
-
-# url_look_heritage <- initial_look(sitemaps, "heritage")
-```
-
-# CAP Link Exploration
-
-```{r}
-initial_look(sitemaps, "cap") |>
-  path_examination()
-```
-
-# Urban Institute Link Exploration
-
-```{r}
-initial_look(sitemaps, "urban") |>
-  path_examination()
-```
-
-# Merc Institute Link Exploration
-
-```{r}
-initial_look(sitemaps, "merc") |>
-  path_examination()
-```
-
-# Manhattan Institute Link Exploration
-
-```{r}
-initial_look(sitemaps, "mani") |>
-  path_examination()
-
-# url_look_mani <- initial_look(sitemaps, "mani")
-```
-
-# CBPP Link Exploration
-
-```{r}
-initial_look(sitemaps, "cbpp") |>
-  path_examination()
-```
-
-# American Mind Link Exploration
-
-```{r}
-initial_look(sitemaps, "am") |>
-  path_examination()
-```
-
-# Discovery Institute Link Exploration
-
-```{r}
-initial_look(sitemaps, "disc") |>
-  path_examination()
-
-# url_look_disc <- initial_look(sitemaps, "disc")
-```
-
-# EPIC Link Exploration
-
-```{r}
-initial_look(sitemaps, "epic") |>
-  path_examination()
-
-# url_look_epic <- initial_look(sitemaps, "epic")
-```
-
-# Hoover Institute Link Exploration
-
-After exploring the link data, data acquisition seems not to add value to the whole project. Many of the links point off to PDF documents with an overview on the page, but does not seem within the current set data acquisition strategy.
-
-```{r}
-initial_look(sitemaps, "hoov") |>
-  path_examination()
-
-# url_look_hoov <- initial_look(sitemaps, "hoov")
-```
-
-# Claremont Institute Link Exploration
-
-After exploring the link data, Claremont is a very small dataset from which to collect. It may be included in future work but is deemed unneccessary for current collection.
-
-```{r}
-initial_look(sitemaps, "clare") |>
-  path_examination()
-```
-
-# Guttmacher Institute Link Exploration
-
-```{r}
-initial_look(sitemaps, "gutt") |>
-  path_examination()
-```
-
-# National Review Link Exploration
-
-National Review is a paid news publication and though the data would be valuable, it is not easy to scrape effectively.
-
-```{r}
-initial_look(linkchecker, "natr") |>
-  path_examination()
-```
-
-# Jacobin Link Exploration
-
-Data has already been collected. 
-
-```{r}
-initial_look(linkchecker, "jacob") |>
-  path_examination()
-```
-
-# Commonwealth Fund Link Exploration
-
-```{r}
-initial_look(linkchecker, "comf") |>
-  path_examination()
-
-# url_look_comf <- initial_look(linkchecker, "comf")
-```
-
-# EPI Link Exploration
-
-```{r}
-initial_look(linkchecker, "epi") |>
-  path_examination()
-
-# url_look_epi <- initial_look(linkchecker, "epi")
-```
-
-# Open Society Foundations Link Exploration
-
-```{r}
-initial_look(linkchecker, "osf") |>
-  path_examination()
-
-# url_look_osf <- initial_look(linkchecker, "osf")
-```
-
-# The Nation Link Exploration
-
-```{r}
-initial_look(linkchecker, "tnat") |>
-  path_examination()
-
-# url_look_tnat <- initial_look(linkchecker, "tnat")
-```
-
-# Inclusion and Exclusion Vectors
-
-Inclusion and Exclusion criteria is based on number of articles containing text data and decisions were made based on how many steps would have to be taken to parse the HTML post acquisition to obtain the required metadata and text data based off CSS selectors.
-
-```{r}
-aei_include <- c("articles", "carpe-diem", "op-eds")
-
-cato_include <- c("blog", "commentary")
-
-hrw_include <- c("news", "report", "world-report")
-
-heritage_include <- c("commentary", "report")
-
-cap_include <- c("article")
-
-urban_include <- c("research")
-
-merc_include <- c("economic-insights", "research")
-
-mani_include <- c("html")
-
-cbpp_include <- c("blog", "research", "press")
-
-am_include <- c("salvo", "features", "memo", "feature")
-
-disc_include <- c("a")
-
-epic_filter <- initial_look(sitemaps, "epic") |>
-  path_examination() |>
-  filter(n > 1)
-
-epic_exclude <- epic_filter[[1]][-1]
-
-gutt_include <- c("journals", "article", "news-release", "report")
-
-comf_include <- c("blog", "publications", "feed")
-
-epi_include <- c("blog")
-
-osf_include <- c("voices", "publications")
-
-tnat_include <- c("article")
-```
-
-# Viable Links
-
-```{r}
-filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter = aei_include)
-
-filtered_cato <- sitemap_viable_links(sitemaps, short.source = "cato", url.filter = cato_include)
-
-filtered_hrw <- sitemap_viable_links(sitemaps, short.source = "hrw", url.filter = hrw_include)
-
-filtered_heritage <- sitemap_viable_links(sitemaps, short.source = "heritage", url.filter = heritage_include)
-
-filtered_cap <- sitemap_viable_links(sitemaps, short.source = "cap", url.filter = cap_include)
-
-filtered_urban <- sitemap_viable_links(sitemaps, short.source = "urban", url.filter = urban_include)
-
-filtered_merc <- sitemap_viable_links(sitemaps, short.source = "merc", url.filter = merc_include)
-
-filtered_mani <- sitemap_viable_links(sitemaps, short.source = "mani", url.filter = mani_include)
-
-filtered_cbpp <- sitemap_viable_links(sitemaps, short.source = "cbpp", url.filter = cbpp_include)
-
-filtered_am <- sitemap_viable_links(sitemaps, short.source = "am", url.filter = am_include)
-
-filtered_disc <- sitemap_viable_links(sitemaps, short.source = "disc", url.filter = disc_include)
-
-filtered_epic <- sitemap_viable_links(sitemaps, short.source = "epic", url.filter = epic_exclude, exclude = TRUE)
-
-# filtered_hoov <- sitemap_viable_links(sitemaps, short.source = "hoov", url.filter = )
-
-# filtered_clare <- sitemap_viable_links(sitemaps, short.source = "clare", url.filter = )
-
-filtered_gutt <- sitemap_viable_links(sitemaps, short.source = "gutt", url.filter = gutt_include)
-
-filtered_comf <- sitemap_viable_links(linkchecker, short.source = "comf", url.filter = comf_include) |>
-  filter(size > 1)
-
-filtered_epi <- sitemap_viable_links(linkchecker, short.source = "epi", url.filter = epi_include) |>
-  filter(size > 1)
-
-filtered_osf <- sitemap_viable_links(linkchecker, short.source = "osf", url.filter = osf_include) |>
-  filter(size > 1)
-```
-
-Counting Total Number of Viable Links
-
-```{r}
-total_links <- length(filtered_aei$url) +
-  length(filtered_cato$url) +
-  length(filtered_hrw$url) +
-  length(filtered_heritage$url) +
-  length(filtered_cap$url) +
-  length(filtered_urban$url) +
-  length(filtered_merc$url) +
-  length(filtered_mani$url) +
-  length(filtered_cbpp$url) +
-  length(filtered_am$url) +
-  length(filtered_disc$url) +
-  length(filtered_epic$url) +
-  length(filtered_gutt$url) +
-  length(filtered_comf$url) +
-  length(filtered_epi$url) +
-  length(filtered_osf$url)
-
-total_links
-
-total_links * 4 / (1048576)
 ```
 
 
