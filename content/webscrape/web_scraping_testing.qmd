@@ -28,7 +28,7 @@ doParallel::registerDoParallel(cl = my.cluster)
 ```{r}
 sample_helper <- function(df) {
   df |>
-    slice_sample(n = 10, .by = url_type)
+    tidytable::slice_sample(n = 10, .by = url_type)
 }
 ```
 
@@ -102,6 +102,7 @@ topic_pull <- function(s.html, topic.css = NA) {
 
 ```{r}
 article_pull_df <- function(df) {
+  browser()
   hyperlink <- df$url[[1]]
   title.css.tag <- df$css_title[[1]]
   text.css.tag <- df$css_text[[1]]
@@ -132,11 +133,15 @@ article_pull_df <- function(df) {
       art_date = art_date,
       art_topic = art_topic,
       art_source = art.source
-    )
+    ) |> tidytable::group_by(art_link, art_date, art_author, art_topic, art_title, art_source) |> # These are the metadata tags REFACTOR in future
+    tidytable::summarise(full_text = paste(text, collapse = " "), 
+                         .groups = "drop")
+  
   return(final.data)
 }
 ```
 
+# Foreach Looping Article Pull
 
 ```{r}
 text_coll_foreach <- function(df) {
@@ -149,17 +154,9 @@ text_coll_foreach <- function(df) {
 }
 ```
 
-```{r}
-filtered_aei$css_title <- ".entry-title"
-filtered_aei$css_date <- "p.date"
-filtered_aei$css_topics <- ".p-3"
-filtered_aei$css_author <- "p.author"
-filtered_aei$css_text <- ".entry-content"
-```
+# Creating Testing Samples
 
 ```{r}
-
-
 #| label: Sample Test Links
 aei_sample <- sample_helper(filtered_aei)
 am_sample <- sample_helper(filtered_am)
@@ -169,7 +166,6 @@ cbpp_sample <- sample_helper(filtered_cbpp)
 comf_sample <- sample_helper(filtered_comf)
 disc_sample <- sample_helper(filtered_disc)
 epi_sample <- sample_helper(filtered_epi)
-
 gutt_sample <- sample_helper(filtered_gutt)
 heritage_sample <- sample_helper(filtered_heritage)
 hrw_sample <- sample_helper(filtered_hrw)
@@ -180,11 +176,78 @@ tnat_sample <- sample_helper(filtered_tnat)
 urban_sample <- sample_helper(filtered_urban)
 ```
 
+# Adding CSS Tags to Dataframes
+
+```{r}
+filtered_aei$css_title <- ".entry-title"
+filtered_aei$css_date <- "p.date"
+filtered_aei$css_topics <- ".p-3"
+filtered_aei$css_author <- "p.author"
+filtered_aei$css_text <- ".entry-content"
+```
+
+```{r}
+cap_sample$css_text <- '[class="wysiwyg -xw:4 -mx:a"]'
+cap_sample$css_title <- ".header2-title"
+cap_sample$css_date <- '[class="-t:9 -tt:u -c:d2t"]'
+cap_sample$css_author <- '[class="authors1-list -as:2 -t:10"]'
+cap_sample$css_topics <- '[class="-c:a5t term_link_listing"]'
+```
+
+# Opening Sample Links in Browser
+
+```{r}
+purrr::walk(cato_sample$url, browseURL)
+```
+
+
+
+# Testing Individual Articles
+
+```{r}
+cato_sample <- cato_sample |>
+  mutate(css_text = case_when(
+    url_type == "report" ~ ".article-title",
+    url_type == "blog" ~ ".body-text"
+  ),
+  css_title = case_when(
+    url_type == "report" ~ ".article-title",
+    url_type == "blog" ~ ".h2"
+  ),
+  css_date = case_when(
+    url_type == "report" ~ '[property="article:published_time"]',
+    url_type == "blog" ~ ".date-time__date"
+  ),
+  css_author = case_when(
+    url_type == "report" ~ ".mb-2",
+    url_type == "blog" ~ "a.me-4"
+  ),
+  css_topics = case_when(
+    url_type == "report" ~ NA,
+    url_type == "blog" ~ ".block--inner"
+  ))
+```
+
+```{r}
+
+test <- article_pull_df(cato_sample[11,])
+```
+
+
+
+# Testing Loops
+
 ```{r}
 # progressr::handlers(global = TRUE)
 handlers("cli")
-foreach_test <- text_coll_foreach(aei_sample)
+foreach_test <- text_coll_foreach(cap_sample)
 ```
+
+```{r}
+
+```
+
+
 
 <https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop>
 Absolute Legend of Help for R ways of doing loops

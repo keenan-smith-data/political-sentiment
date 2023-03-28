@@ -1565,7 +1565,7 @@
       "RemoteUsername": "markfairbanks",
       "RemotePkgRef": "markfairbanks/tidytable",
       "RemoteRef": "HEAD",
-      "RemoteSha": "c433b95e94b4e51d0b841a0d35532c8ac29ac5fb",
+      "RemoteSha": "1db124716740f9557acc2efe9110ed5631dd1e77",
       "Requirements": [
         "data.table",
         "glue",
@@ -1576,7 +1576,7 @@
         "tidyselect",
         "vctrs"
       ],
-      "Hash": "97c6e58305f43df086fe0dfc67b28995"
+      "Hash": "a6c6ccb19a4d716d7e7c3e4faa12ee1e"
     },
     "tidytext": {
       "Package": "tidytext",
