@@ -71,6 +71,27 @@
       ],
       "Hash": "45f0398006e83a5b10b72a90663d8d8c"
     },
+    "RSelenium": {
+      "Package": "RSelenium",
+      "Version": "1.7.9",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "RSelenium",
+      "RemoteUsername": "ropensci",
+      "RemotePkgRef": "ropensci/RSelenium",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "8b18e4c78cd47a223711c20d3ed02ae83bdf9ad1",
+      "Requirements": [
+        "R",
+        "caTools",
+        "httr",
+        "methods",
+        "utils",
+        "wdman"
+      ],
+      "Hash": "0197aef2454b7e12382df98f9f3180a1"
+    },
     "Rcpp": {
       "Package": "Rcpp",
       "Version": "1.0.10",
@@ -99,6 +120,22 @@
       ],
       "Hash": "e8a22846fff485f0be3770c2da758713"
     },
+    "assertthat": {
+      "Package": "assertthat",
+      "Version": "0.2.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "assertthat",
+      "RemoteRef": "assertthat",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "0.2.1",
+      "Requirements": [
+        "tools"
+      ],
+      "Hash": "50c838a310445e954bc13f26f26a6ecf"
+    },
     "backports": {
       "Package": "backports",
       "Version": "1.4.1",
@@ -118,6 +155,31 @@
         "R"
       ],
       "Hash": "543776ae6848fde2f48ff3816d0628bc"
+    },
+    "binman": {
+      "Package": "binman",
+      "Version": "0.1.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "binman",
+      "RemoteRef": "binman",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "0.1.3",
+      "Requirements": [
+        "R",
+        "assertthat",
+        "httr",
+        "jsonlite",
+        "rappdirs",
+        "semver",
+        "stats",
+        "utils",
+        "xml2",
+        "yaml"
+      ],
+      "Hash": "36668971df260c1a5af77bfb92b1dbf5"
     },
     "bit": {
       "Package": "bit",
@@ -142,6 +204,19 @@
         "utils"
       ],
       "Hash": "9fe98599ca456d6552421db0d6772d8f"
+    },
+    "bitops": {
+      "Package": "bitops",
+      "Version": "1.0-7",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "bitops",
+      "RemoteRef": "bitops",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "1.0-7",
+      "Hash": "b7d8d8ee39869c18d8846a184dd8a1af"
     },
     "blob": {
       "Package": "blob",
@@ -195,6 +270,23 @@
         "sass"
       ],
       "Hash": "a7fbf03946ad741129dc81098722fca1"
+    },
+    "caTools": {
+      "Package": "caTools",
+      "Version": "1.18.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "caTools",
+      "RemoteRef": "caTools",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "1.18.2",
+      "Requirements": [
+        "R",
+        "bitops"
+      ],
+      "Hash": "34d90fa5845004236b9eacafc51d07b2"
     },
     "cachem": {
       "Package": "cachem",
@@ -1425,6 +1517,24 @@
       ],
       "Hash": "3838071b66e0c566d55cc26bd6e27bf4"
     },
+    "semver": {
+      "Package": "semver",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "semver",
+      "RemoteRef": "semver",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "0.2.0",
+      "Requirements": [
+        "Rcpp",
+        "assertthat",
+        "utils"
+      ],
+      "Hash": "767de4760297e70995edb7b30fbda816"
+    },
     "stringi": {
       "Package": "stringi",
       "Version": "1.7.12",
@@ -1755,6 +1865,28 @@
         "withr"
       ],
       "Hash": "7015a74373b83ffaef64023f4a0f5033"
+    },
+    "wdman": {
+      "Package": "wdman",
+      "Version": "0.2.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "wdman",
+      "RemoteRef": "wdman",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "0.2.6",
+      "Requirements": [
+        "R",
+        "assertthat",
+        "binman",
+        "processx",
+        "semver",
+        "utils",
+        "yaml"
+      ],
+      "Hash": "cf0c1b51d169b354f561f73ee2761c18"
     },
     "webshot": {
       "Package": "webshot",

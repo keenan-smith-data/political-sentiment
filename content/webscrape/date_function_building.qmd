@@ -1,0 +1,88 @@
+---
+title: "Date Function"
+author: "Keenan Smith"
+---
+
+```{r}
+here::i_am("content/webscrape/date_function_building.qmd")
+
+library(tidytable)
+library(rvest)
+library(stringr)
+```
+
+Problem
+You want to validate dates in the traditional formats mm/dd/yy, mm/dd/yyyy,
+dd/mm/yy, and dd/mm/yyyy. You want to use a simple regex that simply checks
+whether the input looks like a date, without trying to weed out things such as February
+31st.
+
+```{r}
+traddateformat <- regex("(?:(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])|(3[01]|[12][0-9]|0?[1-9])/(1[0-2]|0?[1-9]))/(?:[0-9]{2})?[0-9]{2}")
+yyyymmdd <- regex("([0-9]{4})-?(1[0-2]|0[1-9])-?(3[01]|0[1-9]|[12][0-9])")
+monthddyyyy <- regex("(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?),?\\s+(\\d{1,2}),?\\s+(\\d{4})")
+
+hypothetical <- "m 05/16/2022"
+hypo2 <- "m 2022-05-05"
+hypo3 <- "mMay, 16 2022"
+str_detect(hypothetical, trad.date.format)
+str_detect(hypo2, yyyymmdd)
+str_detect(hypo3, monthddyyyy)
+str_extract(hypothetical, trad.date.format)
+str_extract(hypo2, yyyymmdd)
+str_extract(hypo3, monthddyyyy)
+```
+
+
+```{r}
+
+date_pull_testing <- function(s.html, date.css) {
+  browser()
+  trad.date.format <- stringr::regex("^(?:(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])|(3[01]|[12][0-9]|0?[1-9])/(1[0-2]|0?[1-9]))/(?:[0-9]{2})?[0-9]{2}$")
+  yyyy.mm.dd <- stringr::regex("([0-9]{4})-?(1[0-2]|0[1-9])-?(3[01]|0[1-9]|[12][0-9])")
+  month.dd.yyyy <- stringr::regex("(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?),?\\s+(\\d{1,2}),?\\s+(\\d{4})")
+  
+  date.text <- element_pull(e.html = s.html, css.tag = date.css)
+  date.test <- tidytable::case_when(
+    stringr::str_detect(date.text, trad.date.format) ~ stringr::str_extract(date.text, trad.date.format),
+    stringr::str_detect(date.text, yyyy.mm.dd) ~ stringr::str_extract(date.text, yyyy.mm.dd),
+    stringr::str_detect(date.text, month.dd.yyyy) ~ stringr::str_extract(date.text, month.dd.yyyy)
+  )
+  art_date <- lubridate::mdy(date.test)
+  return(art_date)
+}
+
+date_pull_special <- function(s.html, date.css) {
+  date.text <- rvest::html_elements(s.html, css = date.css)
+  date.text <- xml2::xml_attrs(date.text[[1]])[1]
+  date.text <- stringr::str_extract(date.text, stringr::regex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
+  art_date <- lubridate::mdy(date.text)
+  return(date.text)
+}
+
+date_pull <- function(s.html, date.css) {
+  date.text <- element_pull(e.html = s.html, css.tag = date.css)
+  date.text <- date.text[1]
+  art_date <- lubridate::mdy(date.text)
+  return(art_date)
+}
+```
+
+```{r}
+article_date_pull <- function(df) {
+  hyperlink <- df$url[[1]]
+  date.css.tag <- df$css_date[[1]]
+  rm(df)
+  
+  source.html <- xml2::read_html(hyperlink)
+  art_date <- date_pull_testing(s.html = source.html,
+                        date.css = date.css.tag)
+  
+  return(art_date)
+}
+```
+
+```{r}
+date_test <- article_date_pull(sample_aei[1])
+```
+

@@ -13,14 +13,6 @@ library(foreach)
 library(progressr)
 library(tidytable)
 library(rvest)
-
-n.cores <- parallel::detectCores() - 1
-my.cluster <- parallel::makeCluster(
-  n.cores,
-  type = "PSOCK"
-)
-
-doParallel::registerDoParallel(cl = my.cluster)
 ```
 
 # Sampling Function
@@ -32,6 +24,37 @@ sample_helper <- function(df) {
 }
 ```
 
+# Creating Testing Samples
+
+```{r}
+#| label: Sample Test Links
+sample_aei <- sample_helper(filtered_aei)
+sample_am <- sample_helper(filtered_am)
+sample_cap <- sample_helper(filtered_cap)
+sample_cato <- sample_helper(filtered_cato)
+sample_cbpp <- sample_helper(filtered_cbpp)
+sample_comf <- sample_helper(filtered_comf)
+sample_disc <- sample_helper(filtered_disc)
+sample_epi <- sample_helper(filtered_epi)
+sample_gutt <- sample_helper(filtered_gutt)
+sample_heritage <- sample_helper(filtered_heritage)
+sample_hrw <- sample_helper(filtered_hrw)
+sample_mani <- sample_helper(filtered_mani)
+sample_merc <- sample_helper(filtered_merc)
+sample_osf <- sample_helper(filtered_osf)
+sample_tnat <- sample_helper(filtered_tnat)
+sample_urban <- sample_helper(filtered_urban)
+```
+
+# RSelenium Testing
+
+```{r}
+library(RSelenium)
+
+driver <- rsDriver(browser = "firefox", chromever = NULL, verbose = FALSE)
+
+remote_driver <- driver[["client"]]
+```
 
 # Scrape Helper Functions
 
@@ -45,20 +68,38 @@ element_pull <- function(e.html, css.tag) {
 text_pull <- function(s.html, text.css = NA) {
   final.data <- s.html |>
     rvest::html_element(css = text.css) |>
-    rvest::html_elements("p") |>
     rvest::html_text2() |>
     tidytable::na_if("")
-  if (all(is.na(final.data))) {
-    final.data <- s.html |>
-      rvest::html_element(css = text.css) |>
-      rvest::html_elements("div") |>
-      rvest::html_text2() |>
-      tidytable::na_if("")
-  } 
   final.data <- final.data |>
     tidytable::as_tidytable() |>
     tidytable::drop_na(x)
   return(final.data)
+}
+
+date_pull_testing <- function(s.html, date.css) {
+#  browser()
+  trad.date.format <- stringr::regex("^(?:(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])|(3[01]|[12][0-9]|0?[1-9])/(1[0-2]|0?[1-9]))/(?:[0-9]{2})?[0-9]{2}$")
+  yyyy.mm.dd <- stringr::regex("([0-9]{4})-?(1[0-2]|0[1-9])-?(3[01]|0[1-9]|[12][0-9])")
+  month.dd.yyyy <- stringr::regex("(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?),?\\s+(\\d{1,2}),?\\s+(\\d{4})")
+  
+  date.text <- element_pull(e.html = s.html, css.tag = date.css)
+  date.test <- tidytable::case_when(
+    stringr::str_detect(date.text, trad.date.format) ~ stringr::str_extract(date.text, trad.date.format),
+    stringr::str_detect(date.text, yyyy.mm.dd) ~ stringr::str_extract(date.text, yyyy.mm.dd),
+    stringr::str_detect(date.text, month.dd.yyyy) ~ stringr::str_extract(date.text, month.dd.yyyy),
+    .default = as.character("1970-01-01")
+  )
+  art_date <- lubridate::mdy(date.test)
+  art_date <- art_date[[1]]
+  return(art_date)
+}
+
+date_pull_special <- function(s.html, date.css) {
+  date.text <- rvest::html_elements(s.html, css = date.css)
+  date.text <- xml2::xml_attrs(date.text[[1]])[1]
+  date.text <- stringr::str_extract(date.text, stringr::regex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
+  art_date <- lubridate::mdy(date.text)
+  return(date.text)
 }
 
 date_pull <- function(s.html, date.css) {
@@ -98,6 +139,16 @@ topic_pull <- function(s.html, topic.css = NA) {
 }
 ```
 
+# JS Bypass Function
+
+```{r}
+js_get_page_source <- function(hypelink, remDr) {
+  remDr$navigate(hypelink)
+  temp <- remDr$getPageSource()
+  return(rvest::read_html(temp[[1]]))
+}
+```
+
 # Main Scraper Function
 
 ```{r}
@@ -117,7 +168,7 @@ article_pull_df <- function(df) {
                             css.tag = title.css.tag)
   art_text <- text_pull(s.html = source.html,
                         text.css = text.css.tag)
-  art_date <- date_pull(s.html = source.html,
+  art_date <- date_pull_testing(s.html = source.html,
                         date.css = date.css.tag)
   art_author <- author_pull(s.html = source.html,
                             author.css = author.css.tags,
@@ -141,39 +192,70 @@ article_pull_df <- function(df) {
 }
 ```
 
+# JS Pull Function
+
+```{r}
+article_pull_js <- function(df, remDr) {
+#  browser()
+  hyperlink <- df$url[[1]]
+  source.html <- js_get_page_source(hyperlink, remDr)
+  title.css.tag <- df$css_title[[1]]
+  text.css.tag <- df$css_text[[1]]
+  date.css.tag <- df$css_date[[1]]
+  author.css.tags <- df$css_author[[1]]
+  art.source <- df$art_source[[1]]
+  topic.css.tags <- df$css_topics[[1]]
+  rm(df)
+  
+  art_title <- element_pull(e.html = source.html,
+                            css.tag = title.css.tag)
+  art_text <- text_pull(s.html = source.html,
+                        text.css = text.css.tag)
+  art_date <- date_pull_testing(s.html = source.html,
+                        date.css = date.css.tag)
+  art_author <- author_pull(s.html = source.html,
+                            author.css = author.css.tags,
+                            art.source = art.source)
+  art_topic <- topic_pull(s.html = source.html,
+                          topic.css = topic.css.tags)
+  final.data <- art_text |>
+    tidytable::rename(text = x) |>
+    tidytable::mutate(
+      art_link = hyperlink,
+      art_title = art_title,
+      art_author = art_author,
+      art_date = art_date,
+      art_topic = art_topic,
+      art_source = art.source
+    ) |> tidytable::group_by(art_link, art_date, art_author, art_topic, art_title, art_source) |> # These are the metadata tags REFACTOR in future
+    tidytable::summarise(full_text = paste(text, collapse = " "), 
+                         .groups = "drop")
+  
+  return(final.data) 
+} 
+```
+
+
 # Foreach Looping Article Pull
 
 ```{r}
 text_coll_foreach <- function(df) {
   p <- progressr::progressor(along = df$url)
-  final_data <- foreach::foreach(i = seq_along(df$url), .combine = rbind) %do% {
+  final_data <- foreach::foreach(i = seq_along(df$url), .combine = rbind, .errorhandling = "remove") %do% {
     p()
     article_pull_df(df[i])
   }
   return(final_data)
 }
-```
 
-# Creating Testing Samples
+text_coll_foreach_js <- function(df, remDr) {
+  p <- progressr::progressor(along = df$url)
+  final_data <- foreach::foreach(i = seq_along(df$url), .combine = rbind, .errorhandling = "remove") %do% {
+    p()
+    article_pull_js(df[i], remDr) }
+  return(final_data)
+  }
 
-```{r}
-#| label: Sample Test Links
-aei_sample <- sample_helper(filtered_aei)
-am_sample <- sample_helper(filtered_am)
-cap_sample <- sample_helper(filtered_cap)
-cato_sample <- sample_helper(filtered_cato)
-cbpp_sample <- sample_helper(filtered_cbpp)
-comf_sample <- sample_helper(filtered_comf)
-disc_sample <- sample_helper(filtered_disc)
-epi_sample <- sample_helper(filtered_epi)
-gutt_sample <- sample_helper(filtered_gutt)
-heritage_sample <- sample_helper(filtered_heritage)
-hrw_sample <- sample_helper(filtered_hrw)
-mani_sample <- sample_helper(filtered_mani)
-merc_sample <- sample_helper(filtered_merc)
-osf_sample <- sample_helper(filtered_osf)
-tnat_sample <- sample_helper(filtered_tnat)
-urban_sample <- sample_helper(filtered_urban)
 ```
 
 # Adding CSS Tags to Dataframes
@@ -187,52 +269,116 @@ filtered_aei$css_text <- ".entry-content"
 ```
 
 ```{r}
-cap_sample$css_text <- '[class="wysiwyg -xw:4 -mx:a"]'
-cap_sample$css_title <- ".header2-title"
-cap_sample$css_date <- '[class="-t:9 -tt:u -c:d2t"]'
-cap_sample$css_author <- '[class="authors1-list -as:2 -t:10"]'
-cap_sample$css_topics <- '[class="-c:a5t term_link_listing"]'
+sample_cap$css_text <- '[class="wysiwyg -xw:4 -mx:a"]'
+sample_cap$css_title <- ".header2-title"
+sample_cap$css_date <- '[class="-t:9 -tt:u -c:d2t"]'
+sample_cap$css_author <- '[class="authors1-list -as:2 -t:10"]'
+sample_cap$css_topics <- '[class="-c:a5t term_link_listing"]'
+```
+
+```{r}
+sample_cato <- sample_cato |>
+  mutate(css_text = case_when(
+    url_type == "commentary" ~ ".fs-lg",
+    url_type == "blog" ~ ".fs-lg"
+  ),
+  css_title = case_when(
+    url_type == "commentary" ~ ".article-title",
+    url_type == "blog" ~ ".h2"
+  ),
+  css_date = case_when(
+    url_type == "commentary" ~ '.meta',
+    url_type == "blog" ~ ".date-time__date"
+  ),
+  css_author = case_when(
+    url_type == "commentary" ~ ".mb-2",
+    url_type == "blog" ~ ".me-4"
+  ),
+  css_topics = case_when(
+    url_type == "commentary" ~ NA,
+    url_type == "blog" ~ ".content-reference-link"
+  ))
+```
+
+```{r}
+sample_cbpp <- sample_cbpp |>
+  mutate(css_text = case_when(
+    url_type == "blog" ~ '[class="block block-layout-builder block-field-blocknodeblogbody"]',
+    url_type == "research" ~ '[class="block block-layout-builder block-field-blocknoderich-contentbody"]',
+    url_type == "press/statements" ~ '[class="block block-layout-builder block-field-blocknoderich-contentbody"]',
+    url_type == "press/press-releases" ~ '[class="block block-layout-builder block-field-blocknodepress-releasebody"]'
+  ),
+  css_title = case_when(
+    url_type == "blog" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]',
+    url_type == "research" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]',
+    url_type == "press/statements" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]',
+    url_type == "press/press-releases" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]'
+  ),
+  css_date = case_when(
+    url_type == "blog" ~ '.datetime',
+    url_type == "research" ~ ".datetime",
+    url_type == "press/statements" ~ '[class="field field--name-field-statement-note field--type-text field--label-hidden field__item"]',
+    url_type == "press/press-releases" ~ ".datetime"
+  ),
+  css_author = case_when(
+    url_type == "blog" ~ '[class="field field--name-field-display-title field--type-string field--label-hidden field__item"]',
+    url_type == "research" ~ ".rich-content-author",
+    url_type == "press/statements" ~ ".rich-content-author",
+    url_type == "press/press-releases" ~ ".node__title"
+  ),
+  css_topics = case_when(
+    url_type == "blog" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-inline field__items"]',
+    url_type == "research" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-above field__items"]',
+    url_type == "press/statements" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-above field__items"]',
+    url_type == "press/press-releases" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-above field__items"]'
+  ))
+```
+
+```{r}
+sample_comf <- sample_comf |>
+  mutate(css_text = case_when(
+    url_type == "publications" ~ '.article-body__content',
+    url_type == "blog" ~ ".article-body__content"
+  ),
+  css_title = case_when(
+    url_type == "publications" ~ ".publication-hero__title",
+    url_type == "blog" ~ ".publication-hero__title"
+  ),
+  css_date = case_when(
+    url_type == "publications" ~ '[datetime]',
+    url_type == "blog" ~ "[datetime]"
+  ),
+  css_author = case_when(
+    url_type == "publications" ~ ".authors__links",
+    url_type == "blog" ~ ".experts-siderail__name"
+  ),
+  css_topics = case_when(
+    url_type == "publications" ~ ".publication-details__topics",
+    url_type == "blog" ~ ".publication-details__topics"
+  ))
 ```
 
 # Opening Sample Links in Browser
 
 ```{r}
-purrr::walk(cato_sample$url, browseURL)
+purrr::walk(sample_comf$url, browseURL)
 ```
-
-
 
 # Testing Individual Articles
 
 ```{r}
-cato_sample <- cato_sample |>
-  mutate(css_text = case_when(
-    url_type == "report" ~ ".article-title",
-    url_type == "blog" ~ ".body-text"
-  ),
-  css_title = case_when(
-    url_type == "report" ~ ".article-title",
-    url_type == "blog" ~ ".h2"
-  ),
-  css_date = case_when(
-    url_type == "report" ~ '[property="article:published_time"]',
-    url_type == "blog" ~ ".date-time__date"
-  ),
-  css_author = case_when(
-    url_type == "report" ~ ".mb-2",
-    url_type == "blog" ~ "a.me-4"
-  ),
-  css_topics = case_when(
-    url_type == "report" ~ NA,
-    url_type == "blog" ~ ".block--inner"
-  ))
+
+```
+
+
+
+```{r}
+test <- article_pull_js(sample_comf[11], remote_driver)
 ```
 
 ```{r}
-
-test <- article_pull_df(cato_sample[11,])
+test
 ```
-
 
 
 # Testing Loops
@@ -240,42 +386,17 @@ test <- article_pull_df(cato_sample[11,])
 ```{r}
 # progressr::handlers(global = TRUE)
 handlers("cli")
-foreach_test <- text_coll_foreach(cap_sample)
+test_foreach <- text_coll_foreach(sample_cbpp)
+
+test_foreach_js <-text_coll_foreach_js(sample_comf, remote_driver)
 ```
+
+# Shutting Down Selenium Server
 
 ```{r}
-
+remote_driver$close()
+# stop the selenium server
+driver[["server"]]$stop()
 ```
 
-
-
-<https://stackoverflow.com/questions/29402528/append-data-frames-together-in-a-for-loop>
-Absolute Legend of Help for R ways of doing loops
-
-```{r}
-#| label: Testing Webscraping Loops
-#| eval: false
-
-j_wrong <- list()
-h_com_wrong <- list()
-h_rep_wrong <- list()
-
-for (i in seq_along(j_test_wrong)) {
-  j_test_df_wrong <- j_pull_try(j_test_wrong[i])
-  j_test_df_wrong$i <- i
-  j_wrong[[i]] <- j_test_df_wrong
-  
-  h_com_test_df_wrong <- h_com_pull_try(h_com_test_wrong[i])
-  h_com_test_df_wrong$i <- i
-  h_com_wrong[[i]] <- h_com_test_df_wrong
-  
-  h_rep_test_df_wrong <- h_rep_pull_try(h_rep_test_wrong[i])
-  h_rep_test_df_wrong$i <- i
-  h_rep_wrong[[i]] <- h_rep_test_df_wrong
-}
-
-j_text_wrong <- bind_rows(j_wrong)
-h_com_text_wrong <- bind_rows(h_com_wrong)
-h_rep_text_wrong <- bind_rows(h_rep_wrong)
-```
 

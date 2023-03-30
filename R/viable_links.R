@@ -83,16 +83,13 @@ path_examination <- function(.df) {
 }
 # Inclusion and Exclusion Vectors
 aei_include <- c("articles", "carpe-diem", "op-eds")
-cato_include <- c("blog", "commentary")
-hrw_include <- c("news", "report", "world-report")
-heritage_include <- c("commentary", "report")
-cap_include <- c("article")
-urban_include <- c("research")
-merc_include <- c("economic-insights", "research")
-mani_include <- c("html")
-cbpp_include <- c("blog", "research", "press")
 am_include <- c("salvo", "features", "memo")
+cap_include <- c("article")
+cato_include <- c("blog", "commentary")
+cbpp_include <- c("blog", "research", "press/statements", "press/press-releases")
+comf_include <- c("blog", "publications")
 disc_include <- c("a")
+epi_include <- c("blog")
 
 epic_filter <- initial_look(sitemaps, "epic") |>
   path_examination() |>
@@ -102,10 +99,13 @@ epic_exclude <- epic_filter[[1]][-1]
 rm(epic_filter)
 
 gutt_include <- c("journals", "article", "news-release", "report")
-comf_include <- c("blog", "publications", "feed")
-epi_include <- c("blog")
+heritage_include <- c("commentary", "report")
+hrw_include <- c("news", "report", "world-report")
+mani_include <- c("html")
+merc_include <- c("economic-insights", "research")
 osf_include <- c("voices", "publications")
 tnat_include <- c("article")
+urban_include <- c("research")
 
 # Viable Links
 filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter = aei_include) |>
@@ -122,76 +122,138 @@ filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter 
     css_text = ".entry-content"
   )
 
-filtered_cato <- sitemap_viable_links(sitemaps, short.source = "cato", url.filter = cato_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), cato_include[1], stringr::regex("/\\w"))) ~ cato_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), cato_include[2], stringr::regex("/\\w"))) ~ cato_include[2]
-  ))
-
-filtered_hrw <- sitemap_viable_links(sitemaps, short.source = "hrw", url.filter = hrw_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), hrw_include[1], stringr::regex("/\\w"))) ~ hrw_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), hrw_include[2], stringr::regex("/\\w"))) ~ hrw_include[2],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), hrw_include[3], stringr::regex("/\\w"))) ~ hrw_include[3]
-  ))
-
-filtered_heritage <- sitemap_viable_links(sitemaps, short.source = "heritage", url.filter = heritage_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), heritage_include[1], stringr::regex("/\\w"))) ~ heritage_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), heritage_include[2], stringr::regex("/\\w"))) ~ heritage_include[2]
-  ))
-
-filtered_cap <- sitemap_viable_links(sitemaps, short.source = "cap", url.filter = cap_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), cap_include[1], stringr::regex("/\\w"))) ~ cap_include[1]
-  ),
-  css_text = '[class="wysiwyg -xw:4 -mx:a"]',
-  css_title = ".header2-title",
-  css_date = '[class="-t:9 -tt:u -c:d2t"]',
-  css_author = '[class="authors1-list -as:2 -t:10"]',
-  css_topics = '[class="-c:a5t term_link_listing"]'
+filtered_am <- sitemap_viable_links(sitemaps, short.source = "am", url.filter = am_include) |>
+  tidytable::mutate(
+    url_type = tidytable::case_when(
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[1], stringr::regex("/\\w"))) ~ am_include[1],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[2], stringr::regex("/\\w"))) ~ am_include[2],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[3], stringr::regex("/\\w"))) ~ am_include[3],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[4], stringr::regex("/\\w"))) ~ am_include[4]
+    ),
+    css_title = ".tam__single-header-title",
+    css_date = ".tam__single-header-meta-date",
+    css_topics = ".tam__single-content-tags",
+    css_author = ".tam__single-header-author",
+    css_text = ".tam__single-content-output"
   )
 
-filtered_urban <- sitemap_viable_links(sitemaps, short.source = "urban", url.filter = urban_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), urban_include[1], stringr::regex("/\\w"))) ~ urban_include[1]
-  ))
+filtered_cap <- sitemap_viable_links(sitemaps, short.source = "cap", url.filter = cap_include) |>
+  tidytable::mutate(
+    url_type = tidytable::case_when(
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cap_include[1], stringr::regex("/\\w"))) ~ cap_include[1]
+    ),
+    css_text = '[class="wysiwyg -xw:4 -mx:a"]',
+    css_title = ".header2-title",
+    css_date = '[class="-t:9 -tt:u -c:d2t"]',
+    css_author = '[class="authors1-list -as:2 -t:10"]',
+    css_topics = '[class="-c:a5t term_link_listing"]'
+  )
 
-filtered_merc <- sitemap_viable_links(sitemaps, short.source = "merc", url.filter = merc_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), merc_include[1], stringr::regex("/\\w"))) ~ merc_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), merc_include[2], stringr::regex("/\\w"))) ~ merc_include[2]
-  ))
-
-filtered_mani <- sitemap_viable_links(sitemaps, short.source = "mani", url.filter = mani_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), mani_include[1], stringr::regex("/\\w"))) ~ mani_include[1]
-  ))
+filtered_cato <- sitemap_viable_links(sitemaps, short.source = "cato", url.filter = cato_include) |>
+  tidytable::mutate(
+    url_type = tidytable::case_when(
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cato_include[1], stringr::regex("/\\w"))) ~ cato_include[1],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cato_include[2], stringr::regex("/\\w"))) ~ cato_include[2]
+    ), css_text = tidytable::case_when(
+      url_type == "commentary" ~ ".fs-lg",
+      url_type == "blog" ~ ".fs-lg"
+    ),
+    css_title = tidytable::case_when(
+      url_type == "commentary" ~ ".article-title",
+      url_type == "blog" ~ ".h2"
+    ),
+    css_date = tidytable::case_when(
+      url_type == "commentary" ~ ".meta",
+      url_type == "blog" ~ ".date-time__date"
+    ),
+    css_author = tidytable::case_when(
+      url_type == "commentary" ~ ".mb-2",
+      url_type == "blog" ~ ".me-4"
+    ),
+    css_topics = tidytable::case_when(
+      url_type == "commentary" ~ NA,
+      url_type == "blog" ~ ".content-reference-link"
+    )
+  )
 
 filtered_cbpp <- sitemap_viable_links(sitemaps, short.source = "cbpp", url.filter = cbpp_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[1], stringr::regex("/\\w"))) ~ cbpp_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[2], stringr::regex("/\\w"))) ~ cbpp_include[2],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[3], stringr::regex("/\\w"))) ~ cbpp_include[3]
-  ))
+  tidytable::mutate(
+    url_type = tidytable::case_when(
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[1], stringr::regex("/\\w"))) ~ cbpp_include[1],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[2], stringr::regex("/\\w"))) ~ cbpp_include[2],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[3], stringr::regex("/\\w"))) ~ cbpp_include[3],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), cbpp_include[4], stringr::regex("/\\w"))) ~ cbpp_include[4]
+    ),
+    css_text = tidytable::case_when(
+      url_type == "blog" ~ '[class="block block-layout-builder block-field-blocknodeblogbody"]',
+      url_type == "research" ~ '[class="block block-layout-builder block-field-blocknoderich-contentbody"]',
+      url_type == "press/statements" ~ '[class="block block-layout-builder block-field-blocknoderich-contentbody"]',
+      url_type == "press/press-releases" ~ '[class="block block-layout-builder block-field-blocknodepress-releasebody"]'
+    ),
+    css_title = tidytable::case_when(
+      url_type == "blog" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]',
+      url_type == "research" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]',
+      url_type == "press/statements" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]',
+      url_type == "press/press-releases" ~ '[class="block block-cbpp-core block-cbpp-formatted-title"]'
+    ),
+    css_date = tidytable::case_when(
+      url_type == "blog" ~ ".datetime",
+      url_type == "research" ~ ".datetime",
+      url_type == "press/statements" ~ '[class="field field--name-field-statement-note field--type-text field--label-hidden field__item"]',
+      url_type == "press/press-releases" ~ ".datetime"
+    ),
+    css_author = tidytable::case_when(
+      url_type == "blog" ~ '[class="field field--name-field-display-title field--type-string field--label-hidden field__item"]',
+      url_type == "research" ~ ".rich-content-author",
+      url_type == "press/statements" ~ ".rich-content-author",
+      url_type == "press/press-releases" ~ ".node__title"
+    ),
+    css_topics = tidytable::case_when(
+      url_type == "blog" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-inline field__items"]',
+      url_type == "research" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-above field__items"]',
+      url_type == "press/statements" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-above field__items"]',
+      url_type == "press/press-releases" ~ '[class="field field--name-field-topics field--type-entity-reference field--label-above field__items"]'
+    )
+  )
 
-filtered_am <- sitemap_viable_links(sitemaps, short.source = "am", url.filter = am_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[1], stringr::regex("/\\w"))) ~ am_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[2], stringr::regex("/\\w"))) ~ am_include[2],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[3], stringr::regex("/\\w"))) ~ am_include[3],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), am_include[4], stringr::regex("/\\w"))) ~ am_include[4]
-  ),
-  css_title = ".tam__single-header-title",
-  css_date = ".tam__single-header-meta-date",
-  css_topics = ".tam__single-content-tags",
-  css_author = ".tam__single-header-author",
-  css_text = ".tam__single-content-output"
-)
+filtered_comf <- sitemap_viable_links(linkchecker, short.source = "comf", url.filter = comf_include) |>
+  tidytable::filter(size > 1) |>
+  tidytable::mutate(
+    url_type = tidytable::case_when(
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), comf_include[1], stringr::regex("/\\w"))) ~ comf_include[1],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), comf_include[2], stringr::regex("/\\w"))) ~ comf_include[2],
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), comf_include[3], stringr::regex("/\\w"))) ~ comf_include[3]
+    ), css_text = tidytable::case_when(
+      url_type == "publications" ~ ".article-body__content",
+      url_type == "blog" ~ ".article-body__content"
+    ),
+    css_title = tidytable::case_when(
+      url_type == "publications" ~ ".publication-hero__title",
+      url_type == "blog" ~ ".publication-hero__title"
+    ),
+    css_date = tidytable::case_when(
+      url_type == "publications" ~ "[datetime]",
+      url_type == "blog" ~ "[datetime]"
+    ),
+    css_author = tidytable::case_when(
+      url_type == "publications" ~ ".authors__links",
+      url_type == "blog" ~ ".experts-siderail__name"
+    ),
+    css_topics = tidytable::case_when(
+      url_type == "publications" ~ ".publication-details__topics",
+      url_type == "blog" ~ ".publication-details__topics"
+    )
+  )
 
 filtered_disc <- sitemap_viable_links(sitemaps, short.source = "disc", url.filter = disc_include) |>
   tidytable::mutate(url_type = tidytable::case_when(
     stringr::str_detect(url, paste0(stringr::regex("\\w/"), disc_include[1], stringr::regex("/\\w"))) ~ disc_include[1]
+  ))
+
+filtered_epi <- sitemap_viable_links(linkchecker, short.source = "epi", url.filter = epi_include) |>
+  tidytable::filter(size > 1) |>
+  tidytable::mutate(url_type = tidytable::case_when(
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), epi_include[1], stringr::regex("/\\w"))) ~ epi_include[1]
   ))
 
 filtered_epic <- sitemap_viable_links(sitemaps, short.source = "epic", url.filter = epic_exclude, exclude = TRUE)
@@ -204,18 +266,28 @@ filtered_gutt <- sitemap_viable_links(sitemaps, short.source = "gutt", url.filte
     stringr::str_detect(url, paste0(stringr::regex("\\w/"), gutt_include[4], stringr::regex("/\\w"))) ~ gutt_include[4]
   ))
 
-filtered_comf <- sitemap_viable_links(linkchecker, short.source = "comf", url.filter = comf_include) |>
-  tidytable::filter(size > 1) |>
+filtered_heritage <- sitemap_viable_links(sitemaps, short.source = "heritage", url.filter = heritage_include) |>
   tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), comf_include[1], stringr::regex("/\\w"))) ~ comf_include[1],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), comf_include[2], stringr::regex("/\\w"))) ~ comf_include[2],
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), comf_include[3], stringr::regex("/\\w"))) ~ comf_include[3]
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), heritage_include[1], stringr::regex("/\\w"))) ~ heritage_include[1],
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), heritage_include[2], stringr::regex("/\\w"))) ~ heritage_include[2]
   ))
 
-filtered_epi <- sitemap_viable_links(linkchecker, short.source = "epi", url.filter = epi_include) |>
-  tidytable::filter(size > 1) |>
+filtered_hrw <- sitemap_viable_links(sitemaps, short.source = "hrw", url.filter = hrw_include) |>
   tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), epi_include[1], stringr::regex("/\\w"))) ~ epi_include[1]
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), hrw_include[1], stringr::regex("/\\w"))) ~ hrw_include[1],
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), hrw_include[2], stringr::regex("/\\w"))) ~ hrw_include[2],
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), hrw_include[3], stringr::regex("/\\w"))) ~ hrw_include[3]
+  ))
+
+filtered_mani <- sitemap_viable_links(sitemaps, short.source = "mani", url.filter = mani_include) |>
+  tidytable::mutate(url_type = tidytable::case_when(
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), mani_include[1], stringr::regex("/\\w"))) ~ mani_include[1]
+  ))
+
+filtered_merc <- sitemap_viable_links(sitemaps, short.source = "merc", url.filter = merc_include) |>
+  tidytable::mutate(url_type = tidytable::case_when(
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), merc_include[1], stringr::regex("/\\w"))) ~ merc_include[1],
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), merc_include[2], stringr::regex("/\\w"))) ~ merc_include[2]
   ))
 
 filtered_osf <- sitemap_viable_links(linkchecker, short.source = "osf", url.filter = osf_include) |>
@@ -228,6 +300,11 @@ filtered_osf <- sitemap_viable_links(linkchecker, short.source = "osf", url.filt
 filtered_tnat <- sitemap_viable_links(linkchecker, short.source = "tnat", url.filter = tnat_include) |>
   tidytable::mutate(url_type = tidytable::case_when(
     stringr::str_detect(url, paste0(stringr::regex("\\w/"), tnat_include[1], stringr::regex("/\\w"))) ~ tnat_include[1],
+  ))
+
+filtered_urban <- sitemap_viable_links(sitemaps, short.source = "urban", url.filter = urban_include) |>
+  tidytable::mutate(url_type = tidytable::case_when(
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), urban_include[1], stringr::regex("/\\w"))) ~ urban_include[1]
   ))
 
 # Disconnecting from DuckDB
