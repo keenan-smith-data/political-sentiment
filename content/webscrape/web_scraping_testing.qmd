@@ -153,7 +153,7 @@ js_get_page_source <- function(hypelink, remDr) {
 
 ```{r}
 article_pull_df <- function(df) {
-  browser()
+#  browser()
   hyperlink <- df$url[[1]]
   title.css.tag <- df$css_title[[1]]
   text.css.tag <- df$css_text[[1]]
@@ -358,22 +358,33 @@ sample_comf <- sample_comf |>
   ))
 ```
 
+```{r}
+sample_disc$css_text <- ".article-center"
+sample_disc$css_title <- ".article-title"
+sample_disc$css_date <- ".article-date"
+sample_disc$css_author <- ".article-author"
+sample_disc$css_topics <- ".article-categories"
+```
+
 # Opening Sample Links in Browser
 
 ```{r}
-purrr::walk(sample_comf$url, browseURL)
+purrr::walk(sample_epi$url, browseURL)
 ```
 
 # Testing Individual Articles
 
 ```{r}
-
+sample_epi$css_text <- ".article-center"
+sample_epi$css_title <- ".article-title"
+sample_epi$css_date <- ".article-date"
+sample_epi$css_author <- ".article-author"
+sample_epi$css_topics <- ".article-categories"
 ```
 
 
-
 ```{r}
-test <- article_pull_js(sample_comf[11], remote_driver)
+test <- article_pull_df(sample_epi[1])
 ```
 
 ```{r}
@@ -386,7 +397,7 @@ test
 ```{r}
 # progressr::handlers(global = TRUE)
 handlers("cli")
-test_foreach <- text_coll_foreach(sample_cbpp)
+test_foreach <- text_coll_foreach(sample_disc)
 
 test_foreach_js <-text_coll_foreach_js(sample_comf, remote_driver)
 ```

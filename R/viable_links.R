@@ -246,14 +246,21 @@ filtered_comf <- sitemap_viable_links(linkchecker, short.source = "comf", url.fi
   )
 
 filtered_disc <- sitemap_viable_links(sitemaps, short.source = "disc", url.filter = disc_include) |>
-  tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), disc_include[1], stringr::regex("/\\w"))) ~ disc_include[1]
-  ))
+  tidytable::mutate(
+    url_type = tidytable::case_when(
+      stringr::str_detect(url, paste0(stringr::regex("\\w/"), disc_include[1], stringr::regex("/\\w"))) ~ disc_include[1]
+    ), css_text = ".article-center",
+    css_title = ".article-title",
+    css_date = ".article-date",
+    css_author = ".article-author",
+    css_topics = ".article-categories"
+  )
 
 filtered_epi <- sitemap_viable_links(linkchecker, short.source = "epi", url.filter = epi_include) |>
-  tidytable::filter(size > 1) |>
+  tidytable::filter(size > 1,
+                    stringr::str_detect(url, "wp-json|page|wp-content|/feed/", negate = TRUE)) |>
   tidytable::mutate(url_type = tidytable::case_when(
-    stringr::str_detect(url, paste0(stringr::regex("\\w/"), epi_include[1], stringr::regex("/\\w"))) ~ epi_include[1]
+    stringr::str_detect(url, paste0(stringr::regex("\\w/"), epi_include[1], stringr::regex("/\\w"))) ~ epi_include[1],
   ))
 
 filtered_epic <- sitemap_viable_links(sitemaps, short.source = "epic", url.filter = epic_exclude, exclude = TRUE)
