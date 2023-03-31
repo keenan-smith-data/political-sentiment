@@ -6,6 +6,9 @@ format: html
 
 ```{r}
 #| label: Library Initiation
+
+# progressr::handlers(global = TRUE)
+
 here::i_am("content/webscrape/web_scraping_testing.qmd")
 suppressMessages(source(here::here("R", "viable_links.R")))
 
@@ -295,7 +298,6 @@ test
 # Testing Loops
 
 ```{r}
-# progressr::handlers(global = TRUE)
 handlers("cli")
 test_foreach <- text_coll_foreach(sample_urban)
 
@@ -313,6 +315,7 @@ driver[["server"]]$stop()
 # Archive Adding CSS Tags to Dataframes
 
 ```{r}
+#| eval: false
 filtered_aei$css_title <- ".entry-title"
 filtered_aei$css_date <- "p.date"
 filtered_aei$css_topics <- ".p-3"
@@ -321,6 +324,7 @@ filtered_aei$css_text <- ".entry-content"
 ```
 
 ```{r}
+#| eval: false
 sample_cap$css_text <- '[class="wysiwyg -xw:4 -mx:a"]'
 sample_cap$css_title <- ".header2-title"
 sample_cap$css_date <- '[class="-t:9 -tt:u -c:d2t"]'
@@ -329,6 +333,7 @@ sample_cap$css_topics <- '[class="-c:a5t term_link_listing"]'
 ```
 
 ```{r}
+#| eval: false
 sample_cato <- sample_cato |>
   mutate(css_text = case_when(
     url_type == "commentary" ~ ".fs-lg",
@@ -353,6 +358,7 @@ sample_cato <- sample_cato |>
 ```
 
 ```{r}
+#| eval: false
 sample_cbpp <- sample_cbpp |>
   mutate(css_text = case_when(
     url_type == "blog" ~ '[class="block block-layout-builder block-field-blocknodeblogbody"]',
@@ -387,6 +393,7 @@ sample_cbpp <- sample_cbpp |>
 ```
 
 ```{r}
+#| eval: false
 sample_comf <- sample_comf |>
   mutate(css_text = case_when(
     url_type == "publications" ~ '.article-body__content',
@@ -411,6 +418,7 @@ sample_comf <- sample_comf |>
 ```
 
 ```{r}
+#| eval: false
 sample_disc$css_text <- ".article-center"
 sample_disc$css_title <- ".article-title"
 sample_disc$css_date <- ".article-date"
@@ -419,6 +427,7 @@ sample_disc$css_topics <- ".article-categories"
 ```
 
 ```{r}
+#| eval: false
 sample_epi$css_text <- ".blog-the_content"
 sample_epi$css_title <- "h2"
 sample_epi$css_date <- ".blog-byline"
@@ -427,6 +436,7 @@ sample_epi$css_topics <- ".blog-tags"
 ```
 
 ```{r}
+#| eval: false
 sample_gutt$css_text <- ".c-content"
 sample_gutt$css_title <- ".c-page-title--article-title"
 sample_gutt$css_date <- ".c-metadata-tag--solid-black"
@@ -435,6 +445,7 @@ sample_gutt$css_topics <- ".field__item"
 ```
 
 ```{r}
+#| eval: false
 sample_heritage <- sample_heritage |>
   mutate(css_text = case_when(
     url_type == "commentary" ~ '.article__body-copy',
@@ -459,6 +470,7 @@ sample_heritage <- sample_heritage |>
 ```
 
 ```{r}
+#| eval: false
 sample_hrw <- sample_hrw |>
   mutate(css_text = case_when(
     url_type == "report" ~ '[class="rich-text mx-auto"]',
@@ -488,6 +500,7 @@ sample_hrw <- sample_hrw |>
 ```
 
 ```{r}
+#| eval: false
 sample_merc$css_text <- '.coh-ce-cpt_text-ec73cf93'
 sample_merc$css_title <- "h1.coh-heading"
 sample_merc$css_date <- '[datetime]'
