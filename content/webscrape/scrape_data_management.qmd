@@ -1,0 +1,116 @@
+---
+title: "Scrape Data Management Functions"
+author: "Keenan Smith"
+---
+
+```{r}
+#| label: Library Initiation
+
+# progressr::handlers(global = TRUE)
+
+here::i_am("content/webscrape/scrape_data_management.qmd")
+suppressMessages(source(here::here("R", "viable_links.R")))
+
+library(tidytable)
+```
+
+```{r}
+#| label: Connecting the DB
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+```
+
+```{r}
+dbListTables(pol_sent_db)
+```
+
+
+```{r}
+create_art_table <- function(tbl_name, con) {
+  glue::glue_sql("
+                 CREATE TABLE {tbl_name} (
+                 art_link VARCHAR,
+                 art_date DATE,
+                 art_author VARCHAR,
+                 art_title VARCHAR,
+                 art_source VARCHAR,
+                 full_text VARCHAR,
+                 pull_index INTEGER
+                 )",
+                 .con = con
+  )
+}
+
+insert_into_art_table <- function(df, tbl_name, con) {
+  glue::glue_sql("
+                 INSERT INTO {tbl_name} (art_link, art_date, art_author, art_title, art_source, full_text, pull_index)
+                 VALUES ({df$art_link}, {df$art_date}, {df$art_author}, {df$art_title}, {df$art_source}, {df$full_text}, {df$pull_index}
+                 ",
+                 .con = con)
+}
+```
+
+
+```{r}
+article_pull_try_html <- function(df) {
+  tryCatch(
+    expr = {
+      message(paste("Trying", df$url))
+      article_pull_html(df)
+    },
+    error = function(cond) {
+      message(paste("This URL has caused an error:", df$url))
+      message(cond)
+      tibble::tibble(
+        art_link= df$url, art_date = lubridate::date("1970-01-01"),
+        art_author = "error", art_title = "error", art_source = df$art_source,
+        full_text = "error"
+      )
+    },
+    warning = function(cond) {
+      message(paste("URL has a warning:", df$url))
+      message(cond)
+      tibble::tibble(
+        art_link= df$url, art_date = lubridate::date("1970-01-01"),
+        art_author = character(), art_title = character(), art_source = character(),
+        full_text = character()
+      )
+    },
+    finally = {
+      message(paste("\nProcessed URL:", df$url))
+    }
+  )
+}
+```
+
+```{r}
+article_pull_try_js <- function(df) {
+  tryCatch(
+    expr = {
+      message(paste("Trying", df$url))
+      article_pull_js(df)
+    },
+    error = function(cond) {
+      message(paste("This URL has caused an error:", df$url))
+      message(cond)
+      tibble::tibble(
+        art_link= df$url, art_date = lubridate::date("1970-01-01"),
+        art_author = "error", art_title = "error", art_source = df$art_source,
+        full_text = "error"
+      )
+    },
+    warning = function(cond) {
+      message(paste("URL has a warning:", df$url))
+      message(cond)
+      tibble::tibble(
+        art_link= df$url, art_date = lubridate::date("1970-01-01"),
+        art_author = character(), art_title = character(), art_source = character(),
+        full_text = character()
+      )
+    },
+    finally = {
+      message(paste("\nProcessed URL:", df$url))
+    }
+  )
+}
+```
+

@@ -7,10 +7,8 @@ sitemaps <- dplyr::tbl(pol_sent_db, "sitemap_data")
 source_table <- dplyr::tbl(pol_sent_db, "source_table")
 # Function Block for Obtaining Viable Links
 source(here::here("R", "sitemap_viable_links.R"))
-
 # Inclusion and Exclusion Vectors
 aei_include <- c("articles", "carpe-diem", "op-eds")
-
 # Viable Links
 filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter = aei_include) |>
   tidytable::mutate(
@@ -28,11 +26,3 @@ filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter 
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
-
-rm(
-  pol_sent_db,
-  sitemaps,
-  source_table,
-  sitemap_viable_links,
-  aei_include,
-)

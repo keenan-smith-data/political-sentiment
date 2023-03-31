@@ -9,7 +9,6 @@ source_table <- dplyr::tbl(pol_sent_db, "source_table")
 source(here::here("R", "sitemap_viable_links.R"))
 # Inclusion and Exclusion Vectors
 cato_include <- c("blog", "commentary")
-
 # Viable Links
 filtered_cato <- sitemap_viable_links(sitemaps, short.source = "cato", url.filter = cato_include) |>
   tidytable::mutate(
@@ -40,12 +39,3 @@ filtered_cato <- sitemap_viable_links(sitemaps, short.source = "cato", url.filte
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
-
-rm(
-  pol_sent_db,
-  sitemaps,
-  linkchecker,
-  source_table,
-  sitemap_viable_links,
-  cato_include
-)

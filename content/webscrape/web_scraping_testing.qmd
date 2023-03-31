@@ -6,16 +6,50 @@ format: html
 
 ```{r}
 #| label: Library Initiation
-
-# progressr::handlers(global = TRUE)
-
 here::i_am("content/webscrape/web_scraping_testing.qmd")
-suppressMessages(source(here::here("R", "viable_links.R")))
+suppressMessages(source(here::here("R", "viable_links_original.R")))
+source(here::here("R", "scraping_helpers.R"))
+source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "article_pull_js.R"))
 
-library(foreach)
-library(progressr)
+
 library(tidytable)
 library(rvest)
+```
+
+```{r}
+#| label: Connecting the DB
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+```
+
+```{r}
+dbListTables(pol_sent_db)
+```
+
+
+```{r}
+create_art_table <- function(tbl_name, con) {
+  glue::glue_sql("
+                 CREATE TABLE {tbl_name} (
+                 art_link VARCHAR,
+                 art_date DATE,
+                 art_author VARCHAR,
+                 art_title VARCHAR,
+                 art_source VARCHAR,
+                 full_text VARCHAR,
+                 pull_index INTEGER
+                 )",
+                 .con = con
+  )
+}
+
+insert_into_art_table <- function(df, tbl_name, con) {
+  glue::glue_sql("
+                 INSERT INTO {tbl_name} (art_link, art_date, art_author, art_title, art_source, full_text, pull_index)
+                 VALUES ({df$art_link}, {df$art_date}, {df$art_author}, {df$art_title}, {df$art_source}, {df$full_text}, {df$pull_index}
+                 ",
+                 .con = con)
+}
 ```
 
 # Sampling Function
@@ -60,195 +94,6 @@ driver <- rsDriver(browser = "firefox", chromever = NULL, verbose = FALSE)
 remote_driver <- driver[["client"]]
 ```
 
-# Scrape Helper Functions
-
-```{r}
-element_pull <- function(e.html, css.tag) {
-  e.html |>
-    rvest::html_elements(css = css.tag) |>
-    rvest::html_text2()
-}
-
-title_pull <- function(s.html, css.tag) {
-#  browser()
-  title.text <- element_pull(s.html, css.tag)
-  art_title <- title.text[[1]]
-  return(art_title)
-}
-
-text_pull <- function(s.html, text.css = NA) {
-  final.data <- s.html |>
-    rvest::html_element(css = text.css) |>
-    rvest::html_text2() |>
-    tidytable::na_if("")
-  final.data <- final.data |>
-    tidytable::as_tidytable() |>
-    tidytable::drop_na(x)
-  return(final.data)
-}
-
-date_pull_testing <- function(s.html, date.css) {
-#  browser()
-  trad.date.format <- stringr::regex("^(?:(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])|(3[01]|[12][0-9]|0?[1-9])/(1[0-2]|0?[1-9]))/(?:[0-9]{2})?[0-9]{2}$")
-  yyyy.mm.dd <- stringr::regex("([0-9]{4})-?(1[0-2]|0[1-9])-?(3[01]|0[1-9]|[12][0-9])")
-  month.dd.yyyy <- stringr::regex("(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?),?\\s+(\\d{1,2}),?\\s+(\\d{4})")
-  yyyy <- stringr::regex("\\b\\d{4}\\b")
-  
-  date.text <- element_pull(e.html = s.html, css.tag = date.css)
-  date.test <- tidytable::case_when(
-    stringr::str_detect(date.text, trad.date.format) ~ stringr::str_extract(date.text, trad.date.format),
-    stringr::str_detect(date.text, yyyy.mm.dd) ~ stringr::str_extract(date.text, yyyy.mm.dd),
-    stringr::str_detect(date.text, month.dd.yyyy) ~ stringr::str_extract(date.text, month.dd.yyyy),
-    stringr::str_detect(date.text, yyyy) ~ paste0("12-31-",stringr::str_extract(date.text, yyyy)),
-    .default = as.character("1970-01-01")
-  )
-  art_date <- lubridate::mdy(date.test)
-  art_date <- art_date[[1]]
-  return(art_date)
-}
-
-date_pull_special <- function(s.html, date.css) {
-  date.text <- rvest::html_elements(s.html, css = date.css)
-  date.text <- xml2::xml_attrs(date.text[[1]])[1]
-  date.text <- stringr::str_extract(date.text, stringr::regex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
-  art_date <- lubridate::mdy(date.text)
-  return(date.text)
-}
-
-date_pull <- function(s.html, date.css) {
-  date.text <- element_pull(e.html = s.html, css.tag = date.css)
-  date.text <- date.text[1]
-  art_date <- lubridate::mdy(date.text)
-  return(art_date)
-}
-
-author_pull <- function(s.html, author.css, art.source) {
-  if (length(author.css) > 1) {
-    art.authors <- tidytable::map_chr(.x = author.css, element_pull, e.html = s.html)
-    art_author <- paste(art.authors, collapse = ",")
-  } else if (length(author.css)  == 1) {
-    art.author <- element_pull(s.html, author.css)
-    art_author <- paste(art.author, collapse = ", ")
-  } else {
-    art_author <- art.source
-  }
-  return(art_author)
-}
-
-topic_pull <- function(s.html, topic.css = NA) {
-  if (is.na(topic.css)) {
-    art_topic <- NA
-  } else {
-  art.topic <- element_pull(s.html, topic.css)
-  if (length(art.topic) > 1) {
-    art_topic <- paste(art.topic, collapse = ", ")
-  } else if (length(art.topic) == 1) {
-    art_topic <- art.topic
-  } else {
-    art_topic <- NA
-  }
-  }
-  return(art_topic)
-}
-```
-
-# JS Bypass Function
-
-```{r}
-js_get_page_source <- function(hypelink, remDr) {
-  remDr$navigate(hypelink)
-  temp <- remDr$getPageSource()
-  return(rvest::read_html(temp[[1]]))
-}
-```
-
-# Main Scraper Function
-
-```{r}
-article_pull_df <- function(df) {
-#  browser()
-  hyperlink <- df$url[[1]]
-  title.css.tag <- df$css_title[[1]]
-  text.css.tag <- df$css_text[[1]]
-  date.css.tag <- df$css_date[[1]]
-  author.css.tags <- df$css_author[[1]]
-  art.source <- df$art_source[[1]]
-  topic.css.tags <- df$css_topics[[1]]
-  rm(df)
-  
-  source.html <- xml2::read_html(hyperlink)
-  art_title <- title_pull(s.html = source.html,
-                          css.tag = title.css.tag)
-  art_text <- text_pull(s.html = source.html,
-                        text.css = text.css.tag)
-  art_date <- date_pull_testing(s.html = source.html,
-                        date.css = date.css.tag)
-  art_author <- author_pull(s.html = source.html,
-                            author.css = author.css.tags,
-                            art.source = art.source)
-  art_topic <- topic_pull(s.html = source.html,
-                          topic.css = topic.css.tags)
-  final.data <- art_text |>
-    tidytable::rename(text = x) |>
-    tidytable::mutate(
-      art_link = hyperlink,
-      art_title = art_title,
-      art_author = art_author,
-      art_date = art_date,
-      art_topic = art_topic,
-      art_source = art.source
-    ) |> tidytable::group_by(art_link, art_date, art_author, art_topic, art_title, art_source) |> # These are the metadata tags REFACTOR in future
-    tidytable::summarise(full_text = paste(text, collapse = " "), 
-                         .groups = "drop")
-  
-  return(final.data)
-}
-```
-
-# JS Pull Function
-
-```{r}
-article_pull_js <- function(df, remDr) {
-#  browser()
-  hyperlink <- df$url[[1]]
-  source.html <- js_get_page_source(hyperlink, remDr)
-  title.css.tag <- df$css_title[[1]]
-  text.css.tag <- df$css_text[[1]]
-  date.css.tag <- df$css_date[[1]]
-  author.css.tags <- df$css_author[[1]]
-  art.source <- df$art_source[[1]]
-  topic.css.tags <- df$css_topics[[1]]
-  rm(df)
-  
-  art_title <- title_pull(s.html = source.html,
-                          css.tag = title.css.tag)
-  art_text <- text_pull(s.html = source.html,
-                        text.css = text.css.tag)
-  art_date <- date_pull_testing(s.html = source.html,
-                        date.css = date.css.tag)
-  art_author <- author_pull(s.html = source.html,
-                            author.css = author.css.tags,
-                            art.source = art.source)
-  art_topic <- topic_pull(s.html = source.html,
-                          topic.css = topic.css.tags)
-  final.data <- art_text |>
-    tidytable::rename(text = x) |>
-    tidytable::mutate(
-      art_link = hyperlink,
-      art_title = art_title,
-      art_author = art_author,
-      art_date = art_date,
-      art_topic = art_topic,
-      art_source = art.source
-    ) |> tidytable::group_by(art_link, art_date, art_author, art_topic, art_title, art_source) |> # These are the metadata tags REFACTOR in future
-    tidytable::summarise(full_text = paste(text, collapse = " "), 
-                         .groups = "drop")
-  
-  return(final.data) 
-} 
-```
-
-
 # Foreach Looping Article Pull
 
 ```{r}
@@ -256,7 +101,7 @@ text_coll_foreach <- function(df) {
   p <- progressr::progressor(along = df$url)
   final_data <- foreach::foreach(i = seq_along(df$url), .combine = rbind, .errorhandling = "remove") %do% {
     p()
-    article_pull_df(df[i])
+    article_pull_html(df[i])
   }
   return(final_data)
 }
@@ -280,15 +125,7 @@ purrr::walk(sample_urban$url, browseURL)
 # Testing Individual Articles
 
 ```{r}
-sample_urban$css_text <- '[data-block-plugin-id="urban-blocks-body-or-summary"]'
-sample_urban$css_title <- '[element="h1"]'
-sample_urban$css_date <- '.date'
-sample_urban$css_author <- '.mb-2'
-sample_urban$css_topics <- '[class="inline-block mr-4 mb-4"]'
-```
-
-```{r}
-test <- article_pull_df(sample_urban[1])
+test <- article_pull_html(sample_urban[1])
 ```
 
 ```{r}
@@ -506,4 +343,13 @@ sample_merc$css_title <- "h1.coh-heading"
 sample_merc$css_date <- '[datetime]'
 sample_merc$css_author <- '.coh-style-byline'
 sample_merc$css_topics <- '[data-item="category"]'
+```
+
+```{r}
+#| eval: false
+sample_urban$css_text <- '[data-block-plugin-id="urban-blocks-body-or-summary"]'
+sample_urban$css_title <- '[element="h1"]'
+sample_urban$css_date <- '.date'
+sample_urban$css_author <- '.mb-2'
+sample_urban$css_topics <- '[class="inline-block mr-4 mb-4"]'
 ```
