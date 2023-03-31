@@ -28,25 +28,60 @@ source_table <- dplyr::tbl(pol_sent_db, "source_table")
 # Function Block for Scraping
 
 ```{r}
-sitemap_viable_links <- function(df, short.source = NULL, art.source = NULL, url.filter) {
-    url.filter <- paste(url.filter, collapse = "|")
-    if (is.null(art.source)) {
-    df |>
-      dplyr::left_join(source_table, by = source_table$art_source) |>  
-      dplyr::filter(short_source == short.source,
-                    stringr::str_detect(url, url.filter)) |>
-      dplyr::collect()
+# Function Block for Obtaining Viable Links
+sitemap_viable_links <- function(df,
+                                 short.source = NULL,
+                                 art.source = NULL,
+                                 url.filter,
+                                 exclude = FALSE) {
+  # Defining OR statement here since DBplyr doesn't like it
+  url.filter <- stringr::str_c(stringr::regex("\\w/"),
+    url.filter,
+    stringr::regex("/\\w"),
+    collapse = "|"
+  )
+  # Checking if art.source exists
+  if (is.null(art.source)) {
+    # Checking if strings are inclusion or exclusion
+    if (exclude == FALSE) {
+      # Inclusion
+      df |>
+        dplyr::left_join(source_table, by = source_table$art_source) |>
+        dplyr::filter(
+          short_source == short.source,
+          stringr::str_detect(url, url.filter),
+          stringr::str_detect(url, "page=", negate = TRUE)
+        ) |>
+        dplyr::collect() |>
+        tidytable::distinct(url, .keep_all = TRUE)
+    } else {
+      # Exclusion
+      df |>
+        dplyr::left_join(source_table, by = source_table$art_source) |>
+        dplyr::filter(
+          short_source == short.source,
+          stringr::str_detect(url, url.filter, negate = TRUE)
+        ) |>
+        dplyr::collect() |>
+        tidytable::distinct(url, .keep_all = TRUE)
+    }
+    # If short.source is not used
   } else if (is.null(short.source)) {
     df |>
-      dplyr::filter(art_source == art.source) |>
-      dplyr::collect()
+      dplyr::filter(
+        art_source == art.source,
+        stringr::str_detect(url, url.filter),
+        stringr::str_detect(url, "page=", negate = TRUE)
+      ) |>
+      dplyr::collect() |>
+      tidytable::distinct(url, .keep_all = TRUE)
   }
 }
 
 initial_helper <- function(.df, short.source = NULL, art.source = NULL) {
-    if (is.null(art.source)) {
+  if (is.null(art.source)) {
     .df |>
-      dplyr::left_join(source_table, by = source_table$art_source) |>  
+      dplyr::left_join(source_table, by = source_table$art_source) |>
       dplyr::filter(short_source == short.source) |>
       dplyr::collect()
   } else if (is.null(short.source)) {
@@ -72,55 +107,22 @@ path_examination <- function(.df) {
 
 # Building SQL for Functions
 
-```{r}
-aei_include <- c("articles", "carpe-diem", "op-eds")
-
-filtered_aei <- sitemap_viable_links(sitemaps, short.source = "aei", url.filter = aei_include)
-
-
-```
-
 # Printing Source Table for Reference
 
 ```{r}
 source_table
 ```
 
-
-
-
-# AEI Link Exploration
+# Link Exploration
 
 ```{r}
-initial_look(sitemaps, "aei") |>
+initial_look(sitemaps, "urban") |>
   path_examination()
 ```
-
-# Cato Link Exploration
-
-```{r}
-initial_look(sitemaps, "cato") |> 
-  path_examination()
-```
-
-# HRW Link Exploration
-
-```{r}
-initial_look(sitemaps, "hrw") |> 
-  path_examination()
-```
-
-# Heritage Link Exploration
-
-```{r}
-initial_look(sitemaps, "heritage") |>
-  path_examination()
-```
-
 
 # Disconnect
 
 ```{r}
 #| label: Disconnect Block
-dbDisconnect(pol_sent_db)
+dbDisconnect(pol_sent_db, shutdown = TRUE)
 ```
