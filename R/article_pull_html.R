@@ -1,5 +1,5 @@
 article_pull_html <- function(df) {
-  #  browser()
+  # browser()
   hyperlink <- df$url[[1]]
   title.css.tag <- df$css_title[[1]]
   text.css.tag <- df$css_text[[1]]
@@ -8,7 +8,8 @@ article_pull_html <- function(df) {
   art.source <- df$art_source[[1]]
   topic.css.tags <- df$css_topics[[1]]
   
-  source.html <- xml2::read_html(hyperlink)
+  source.html <- polite::bow(hyperlink) |>
+    polite::scrape(verbose = TRUE)
   art_title <- title_pull(s.html = source.html,
                           css.tag = title.css.tag)
   art_text <- text_pull(s.html = source.html,

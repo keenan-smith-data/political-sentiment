@@ -1,4 +1,4 @@
-here::i_am("R/viable_links.R")
+here::i_am("R/viable_links_original.R")
 
 # Connecting to DuckDB
 pol_sent_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data", "political-sentiment.duckdb"))

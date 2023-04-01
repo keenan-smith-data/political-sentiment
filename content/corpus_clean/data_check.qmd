@@ -1,0 +1,36 @@
+---
+title: "Data Check"
+author: "Keenan Smith"
+---
+
+```{r}
+here::i_am("content/corpus_clean/data_check.qmd")
+library(DBI)
+library(tidytable)
+```
+
+```{r}
+#| label: Connecting the DB
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
+```
+
+```{r}
+dbListTables(pol_sent_db)
+```
+
+```{r}
+osf_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
+gutt_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
+disc_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
+```
+
+```{r}
+dbRemoveTable(pol_sent_db, "text_disc")
+```
+
+
+```{r}
+# Disconnecting from DuckDB
+DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
+```
+

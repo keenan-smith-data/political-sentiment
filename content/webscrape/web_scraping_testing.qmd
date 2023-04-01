@@ -7,19 +7,20 @@ format: html
 ```{r}
 #| label: Library Initiation
 here::i_am("content/webscrape/web_scraping_testing.qmd")
-suppressMessages(source(here::here("R", "viable_links_original.R")))
+source(here::here("R", "viable_links_original.R"))
+
 source(here::here("R", "scraping_helpers.R"))
 source(here::here("R", "article_pull_html.R"))
 source(here::here("R", "article_pull_js.R"))
 
-
+library(DBI)
 library(tidytable)
 library(rvest)
 ```
 
 ```{r}
 #| label: Connecting the DB
-pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
 ```
 
 ```{r}
@@ -129,7 +130,7 @@ test <- article_pull_html(sample_urban[1])
 ```
 
 ```{r}
-test
+
 ```
 
 # Testing Loops

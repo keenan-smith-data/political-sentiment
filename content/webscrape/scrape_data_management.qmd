@@ -5,18 +5,44 @@ author: "Keenan Smith"
 
 ```{r}
 #| label: Library Initiation
-
-# progressr::handlers(global = TRUE)
-
 here::i_am("content/webscrape/scrape_data_management.qmd")
-suppressMessages(source(here::here("R", "viable_links.R")))
+source(here::here("R", "viable_links_original.R"))
 
+source(here::here("R", "scraping_helpers.R"))
+source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "article_pull_js.R"))
+
+library(DBI)
 library(tidytable)
+library(rvest)
+
+sample_helper <- function(df) {
+  df |>
+    tidytable::slice_sample(n = 10, .by = url_type)
+}
+
+sample_aei <- sample_helper(filtered_aei)
+sample_am <- sample_helper(filtered_am)
+sample_cap <- sample_helper(filtered_cap)
+sample_cato <- sample_helper(filtered_cato)
+sample_cbpp <- sample_helper(filtered_cbpp)
+sample_comf <- sample_helper(filtered_comf)
+sample_disc <- sample_helper(filtered_disc)
+sample_epi <- sample_helper(filtered_epi)
+sample_epic <- sample_helper(filtered_epic)
+sample_gutt <- sample_helper(filtered_gutt)
+sample_heritage <- sample_helper(filtered_heritage)
+sample_hrw <- sample_helper(filtered_hrw)
+sample_mani <- sample_helper(filtered_mani)
+sample_merc <- sample_helper(filtered_merc)
+sample_osf <- sample_helper(filtered_osf)
+sample_tnat <- sample_helper(filtered_tnat)
+sample_urban <- sample_helper(filtered_urban)
 ```
 
 ```{r}
 #| label: Connecting the DB
-pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
 ```
 
 ```{r}
@@ -28,7 +54,7 @@ dbListTables(pol_sent_db)
 create_art_table <- function(tbl_name, con) {
   glue::glue_sql("
                  CREATE TABLE {tbl_name} (
-                 art_link VARCHAR,
+                 art_link VARCHAR PRIMARY KEY,
                  art_date DATE,
                  art_author VARCHAR,
                  art_title VARCHAR,
@@ -43,7 +69,7 @@ create_art_table <- function(tbl_name, con) {
 insert_into_art_table <- function(df, tbl_name, con) {
   glue::glue_sql("
                  INSERT INTO {tbl_name} (art_link, art_date, art_author, art_title, art_source, full_text, pull_index)
-                 VALUES ({df$art_link}, {df$art_date}, {df$art_author}, {df$art_title}, {df$art_source}, {df$full_text}, {df$pull_index}
+                 VALUES ({df$art_link}, {df$art_date}, {df$art_author}, {df$art_title}, {df$art_source}, {df$full_text}, {df$pull_index})
                  ",
                  .con = con)
 }
@@ -51,66 +77,26 @@ insert_into_art_table <- function(df, tbl_name, con) {
 
 
 ```{r}
-article_pull_try_html <- function(df) {
-  tryCatch(
-    expr = {
-      message(paste("Trying", df$url))
-      article_pull_html(df)
-    },
-    error = function(cond) {
-      message(paste("This URL has caused an error:", df$url))
-      message(cond)
-      tibble::tibble(
-        art_link= df$url, art_date = lubridate::date("1970-01-01"),
-        art_author = "error", art_title = "error", art_source = df$art_source,
-        full_text = "error"
-      )
-    },
-    warning = function(cond) {
-      message(paste("URL has a warning:", df$url))
-      message(cond)
-      tibble::tibble(
-        art_link= df$url, art_date = lubridate::date("1970-01-01"),
-        art_author = character(), art_title = character(), art_source = character(),
-        full_text = character()
-      )
-    },
-    finally = {
-      message(paste("\nProcessed URL:", df$url))
-    }
-  )
+library(progress)
+pb <- progress_bar$new(total = nrow(sample_aei))
+
+table_create <- create_art_table("test_text", pol_sent_db)
+DBI::dbExecute(pol_sent_db, table_create)
+
+for (i in seq_along(sample_aei$url)) {
+  pb$tick()
+  iteration_df <- article_pull_try_html(sample_aei[i])
+  iteration_df$pull_index <- i
+  table_insert <- insert_into_art_table(iteration_df, "test_text", pol_sent_db)
+  DBI::dbExecute(pol_sent_db, table_insert)
 }
 ```
 
 ```{r}
-article_pull_try_js <- function(df) {
-  tryCatch(
-    expr = {
-      message(paste("Trying", df$url))
-      article_pull_js(df)
-    },
-    error = function(cond) {
-      message(paste("This URL has caused an error:", df$url))
-      message(cond)
-      tibble::tibble(
-        art_link= df$url, art_date = lubridate::date("1970-01-01"),
-        art_author = "error", art_title = "error", art_source = df$art_source,
-        full_text = "error"
-      )
-    },
-    warning = function(cond) {
-      message(paste("URL has a warning:", df$url))
-      message(cond)
-      tibble::tibble(
-        art_link= df$url, art_date = lubridate::date("1970-01-01"),
-        art_author = character(), art_title = character(), art_source = character(),
-        full_text = character()
-      )
-    },
-    finally = {
-      message(paste("\nProcessed URL:", df$url))
-    }
-  )
-}
+dbGetQuery(pol_sent_db, "SELECT * FROM test_text LIMIT 30")
+```
+
+```{r}
+dbRemoveTable(pol_sent_db, "text_osf")
 ```
 
