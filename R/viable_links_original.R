@@ -251,7 +251,7 @@ filtered_disc <- sitemap_viable_links(sitemaps, short.source = "disc", url.filte
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), disc_include[1], stringr::regex("/\\w"))) ~ disc_include[1]
     ), css_text = ".article-center",
     css_title = ".article-title",
-    css_date = ".article-date",
+    css_date = "dd.article-date",
     css_author = ".article-author",
     css_topics = ".article-categories"
   )

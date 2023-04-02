@@ -37,5 +37,22 @@ filtered_cato <- sitemap_viable_links(sitemaps, short.source = "cato", url.filte
     )
   )
 
+library(RSelenium)
+
+driver <- rsDriver(browser = "firefox", chromever = NULL, verbose = FALSE)
+
+remote_driver <- driver[["client"]]
+
+source(here::here("R", "text_sql_statements.R"))
+source(here::here("R", "scraping_helpers.R"))
+source(here::here("R", "article_pull_js.R"))
+source(here::here("R", "write_to_db_js.R"))
+
+write_to_db_js(filtered_cato, pol_sent_db, "text_cato")
+
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
+
+remote_driver$close()
+# stop the selenium server
+driver[["server"]]$stop()

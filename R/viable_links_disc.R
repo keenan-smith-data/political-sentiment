@@ -24,30 +24,9 @@ filtered_disc <- sitemap_viable_links(sitemaps, short.source = "disc", url.filte
 source(here::here("R", "text_sql_statements.R"))
 source(here::here("R", "scraping_helpers.R"))
 source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "write_to_db.R"))
 
-table_create <- create_art_table("text_disc", pol_sent_db)
-DBI::dbExecute(pol_sent_db, table_create)
-
-for (i in 635:1626) {
-  iteration_df <- article_pull_try_html(filtered_disc[i])
-  iteration_df$pull_index <- i
-  table_insert <- insert_into_art_table(iteration_df, "text_disc", pol_sent_db)
-  tryCatch(
-    {
-      message(paste("Writing to DB", i))
-      DBI::dbExecute(pol_sent_db, table_insert)
-    },
-    error = function(e) {
-      message(e)
-    },
-    warning = function(w) {
-      message(w)
-    }, finally = {
-      message("\nContinuing to Next URL")
-    }
-  )
-}
+write_to_db(filtered_disc, pol_sent_db, "text_disc")
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
-

@@ -44,5 +44,12 @@ filtered_hrw <- sitemap_viable_links(sitemaps, short.source = "hrw", url.filter 
   ) |>
   tidytable::drop_na()
 
+source(here::here("R", "text_sql_statements.R"))
+source(here::here("R", "scraping_helpers.R"))
+source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "write_to_db.R"))
+
+write_to_db(filtered_hrw, pol_sent_db, "text_hrw")
+
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)

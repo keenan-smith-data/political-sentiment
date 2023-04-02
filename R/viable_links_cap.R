@@ -22,5 +22,12 @@ filtered_cap <- sitemap_viable_links(sitemaps, short.source = "cap", url.filter 
     css_topics = '[class="-c:a5t term_link_listing"]'
   )
 
+source(here::here("R", "text_sql_statements.R"))
+source(here::here("R", "scraping_helpers.R"))
+source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "write_to_db.R"))
+
+write_to_db(filtered_gutt, pol_sent_db, "text_cap")
+
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)

@@ -23,7 +23,7 @@ text_pull <- function(s.html, text.css = NA) {
 }
 
 date_pull_testing <- function(s.html, date.css) {
-  #  browser()
+#  browser()
   trad.date.format <- stringr::regex("^(?:(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])|(3[01]|[12][0-9]|0?[1-9])/(1[0-2]|0?[1-9]))/(?:[0-9]{2})?[0-9]{2}$")
   yyyy.mm.dd <- stringr::regex("([0-9]{4})-?(1[0-2]|0[1-9])-?(3[01]|0[1-9]|[12][0-9])")
   month.dd.yyyy <- stringr::regex("(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?),?\\s+(\\d{1,2}),?\\s+(\\d{4})")
@@ -35,10 +35,10 @@ date_pull_testing <- function(s.html, date.css) {
     stringr::str_detect(date.text, yyyy.mm.dd) ~ stringr::str_extract(date.text, yyyy.mm.dd),
     stringr::str_detect(date.text, month.dd.yyyy) ~ stringr::str_extract(date.text, month.dd.yyyy),
     stringr::str_detect(date.text, yyyy) ~ paste0("12-31-", stringr::str_extract(date.text, yyyy)),
-    .default = as.character("1970-01-01")
+    .default = as.character("01-01-1970")
   )
+  date.test <- date.test[[1]]
   art_date <- lubridate::mdy(date.test)
-  art_date <- art_date[[1]]
   return(art_date)
 }
 

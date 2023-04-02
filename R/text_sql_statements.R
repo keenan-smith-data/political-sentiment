@@ -1,6 +1,6 @@
 create_art_table <- function(tbl_name, con) {
   glue::glue_sql("
-                 CREATE TABLE {tbl_name} (
+                 CREATE OR REPLACE TABLE {tbl_name} (
                  art_link VARCHAR PRIMARY KEY,
                  art_date DATE,
                  art_author VARCHAR,

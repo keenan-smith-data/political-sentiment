@@ -17,6 +17,8 @@ pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-
 
 ```{r}
 dbListTables(pol_sent_db)
+dbRemoveTable(pol_sent_db, "text_disc")
+dbListTables(pol_sent_db)
 ```
 
 ```{r}
@@ -27,20 +29,14 @@ source(here::here("R", "write_to_db.R"))
 ```
 
 ```{r}
-
+test <- article_pull_try_html(filtered_disc[40])
 ```
-
 
 ```{r}
 osf_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
 gutt_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
 disc_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
 ```
-
-```{r}
-dbRemoveTable(pol_sent_db, "text_disc")
-```
-
 
 ```{r}
 # Disconnecting from DuckDB

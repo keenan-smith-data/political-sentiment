@@ -26,20 +26,9 @@ filtered_osf <- sitemap_viable_links(linkchecker, short.source = "osf", url.filt
 source(here::here("R", "text_sql_statements.R"))
 source(here::here("R", "scraping_helpers.R"))
 source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "write_to_db.R"))
 
-library(progress)
-pb <- progress_bar$new(total = nrow(filtered_osf))
-
-table_create <- create_art_table("text_osf", pol_sent_db)
-DBI::dbExecute(pol_sent_db, table_create)
-
-for (i in seq_along(filtered_osf$url)) {
-  pb$tick()
-  iteration_df <- article_pull_try_html(filtered_osf[i])
-  iteration_df$pull_index <- i
-  table_insert <- insert_into_art_table(iteration_df, "text_osf", pol_sent_db)
-  DBI::dbExecute(pol_sent_db, table_insert)
-}
+write_to_db(filtered_osf, pol_sent_db, "text_osf")
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)

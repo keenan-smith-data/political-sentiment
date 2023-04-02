@@ -24,20 +24,9 @@ filtered_gutt <- sitemap_viable_links(sitemaps, short.source = "gutt", url.filte
 source(here::here("R", "text_sql_statements.R"))
 source(here::here("R", "scraping_helpers.R"))
 source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "write_to_db.R"))
 
-library(progress)
-pb <- progress_bar$new(total = nrow(filtered_gutt))
-
-table_create <- create_art_table("text_gutt", pol_sent_db)
-DBI::dbExecute(pol_sent_db, table_create)
-
-for (i in seq_along(filtered_gutt$url)) {
-  pb$tick()
-  iteration_df <- article_pull_try_html(filtered_gutt[i])
-  iteration_df$pull_index <- i
-  table_insert <- insert_into_art_table(iteration_df, "text_gutt", pol_sent_db)
-  DBI::dbExecute(pol_sent_db, table_insert)
-}
+write_to_db(filtered_gutt, pol_sent_db, "text_gutt")
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)

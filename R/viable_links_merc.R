@@ -21,5 +21,12 @@ filtered_merc <- sitemap_viable_links(sitemaps, short.source = "merc", url.filte
     css_topics = '[data-item="category"]'
   )
 
+source(here::here("R", "text_sql_statements.R"))
+source(here::here("R", "scraping_helpers.R"))
+source(here::here("R", "article_pull_html.R"))
+source(here::here("R", "write_to_db.R"))
+
+write_to_db(filtered_merc, pol_sent_db, "text_merc")
+
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
