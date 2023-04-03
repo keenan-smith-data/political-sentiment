@@ -1,5 +1,5 @@
-js_get_page_source <- function(hypelink, remDr) {
-  remDr$navigate(hypelink)
+js_get_page_source <- function(hyperlink, remDr) {
+  remDr$navigate(hyperlink)
   temp <- remDr$getPageSource()
   return(rvest::read_html(temp[[1]]))
 }
@@ -55,11 +55,11 @@ article_pull_js <- function(df, remDr) {
   return(final.data)
 }
 
-article_pull_try_js <- function(df) {
+article_pull_try_js <- function(df, remDr) {
   tryCatch(
     expr = {
       message(paste("Trying", df$url))
-      article_pull_js(df)
+      article_pull_js(df, remDr)
     },
     error = function(cond) {
       message(paste("This URL has caused an error:", df$url))

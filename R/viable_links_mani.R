@@ -21,12 +21,11 @@ filtered_mani <- sitemap_viable_links(sitemaps, short.source = "mani", url.filte
     css_topics = ".topics"
   )
 
-source(here::here("R", "text_sql_statements.R"))
-source(here::here("R", "scraping_helpers.R"))
-source(here::here("R", "article_pull_html.R"))
 source(here::here("R", "write_to_db.R"))
 
-write_to_db(filtered_mani, pol_sent_db, "text_mani")
+write_to_db(filtered_mani, pol_sent_db, "text_mani", loop_start = 1L, loop_end = 5000L)
+Sys.sleep(10)
+write_to_db(filtered_mani, pol_sent_db, "text_mani", loop_start = 5001L)
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)

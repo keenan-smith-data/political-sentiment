@@ -51,9 +51,6 @@ filtered_cbpp <- sitemap_viable_links(sitemaps, short.source = "cbpp", url.filte
     )
   )
 
-source(here::here("R", "text_sql_statements.R"))
-source(here::here("R", "scraping_helpers.R"))
-source(here::here("R", "article_pull_html.R"))
 source(here::here("R", "write_to_db.R"))
 
 write_to_db(filtered_cbpp, pol_sent_db, "text_cbpp")

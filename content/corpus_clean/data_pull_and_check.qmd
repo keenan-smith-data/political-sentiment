@@ -5,7 +5,7 @@ author: "Keenan Smith"
 
 ```{r}
 here::i_am("content/corpus_clean/data_pull_and_check.qmd")
-source(here::here("R", "viable_links_original.R"))
+# source(here::here("R", "viable_links_original.R"))
 library(DBI)
 library(tidytable)
 ```
@@ -16,8 +16,11 @@ pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-
 ```
 
 ```{r}
-dbListTables(pol_sent_db)
-dbRemoveTable(pol_sent_db, "text_disc")
+DBI::dbExecute(pol_sent_db, "EXPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data' (FORMAT PARQUET)")
+```
+
+
+```{r}
 dbListTables(pol_sent_db)
 ```
 
@@ -32,11 +35,35 @@ source(here::here("R", "write_to_db.R"))
 test <- article_pull_try_html(filtered_disc[40])
 ```
 
+# Need to create Tables First prior to runnigng scripts
+
 ```{r}
-osf_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
-gutt_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
-disc_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
+table_create <- create_art_table("text_aei", pol_sent_db)
+DBI::dbExecute(pol_sent_db, table_create)
 ```
+
+
+```{r}
+check_osf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
+check_gutt <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
+check_disc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
+check_epi <- dbGetQuery(pol_sent_db, "SELECT * FROM text_epi")
+check_merc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_merc")
+check_urban <- dbGetQuery(pol_sent_db, "SELECT * FROM text_urban")
+check_am <- dbGetQuery(pol_sent_db, "SELECT * FROM text_am")
+check_comf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_comf")
+check_cbpp <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cbpp")
+```
+
+```{r}
+check_cbpp |>
+  slice_tail()
+
+nrow(check_cbpp)
+```
+
+
+
 
 ```{r}
 # Disconnecting from DuckDB

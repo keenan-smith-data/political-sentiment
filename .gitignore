@@ -6,10 +6,13 @@
 /.quarto/
 *.pdf
 
+load.sql
+
 *.rds
 *.sqlite
 *.duckdb*
 *.csv*
+*.parquet
 
 _site
 

@@ -41,7 +41,7 @@ filtered_comf <- sitemap_viable_links(linkchecker, short.source = "comf", url.fi
 
 library(RSelenium)
 
-driver <- rsDriver(browser = "firefox", chromever = NULL, verbose = FALSE)
+driver <- rsDriver(browser = "firefox", chromever = NULL)
 
 remote_driver <- driver[["client"]]
 
@@ -50,7 +50,7 @@ source(here::here("R", "scraping_helpers.R"))
 source(here::here("R", "article_pull_js.R"))
 source(here::here("R", "write_to_db_js.R"))
 
-write_to_db_js(filtered_comf, pol_sent_db, "text_comf")
+write_to_db_js(filtered_comf, pol_sent_db, "text_comf", remDr = remote_driver)
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)

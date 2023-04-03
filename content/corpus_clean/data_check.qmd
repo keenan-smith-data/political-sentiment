@@ -5,36 +5,26 @@ author: "Keenan Smith"
 
 ```{r}
 here::i_am("content/corpus_clean/data_pull_and_check.qmd")
-source(here::here("R", "viable_links_original.R"))
+# source(here::here("R", "viable_links_original.R"))
 library(DBI)
 library(tidytable)
 ```
 
 ```{r}
 #| label: Connecting the DB
-pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"), read_only = TRUE)
 ```
 
 ```{r}
 dbListTables(pol_sent_db)
 ```
 
-```{r}
-source(here::here("R", "text_sql_statements.R"))
-source(here::here("R", "scraping_helpers.R"))
-source(here::here("R", "article_pull_html.R"))
-source(here::here("R", "write_to_db.R"))
-```
 
 ```{r}
-
-```
-
-
-```{r}
-osf_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
-gutt_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
-disc_check <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
+check_osf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
+check_gutt <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
+check_disc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
+check_comf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_comf")
 ```
 
 ```{r}

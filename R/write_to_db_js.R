@@ -1,5 +1,5 @@
-write_to_db <- function(df, db.con, table.title) {
-  #  browser()
+write_to_db_js <- function(df, db.con, table.title, remDr) {
+  # browser()
   table_create <- create_art_table(table.title, db.con)
   DBI::dbExecute(db.con, table_create)
   n_rows <- length(df$url)
@@ -12,7 +12,7 @@ write_to_db <- function(df, db.con, table.title) {
       {
         iteration_df <- R.utils::withTimeout(
           {
-            article_pull_try_js(df[i])
+            article_pull_try_js(df[i], remDr = remDr)
           },
           timeout = 30
         )
@@ -40,6 +40,7 @@ write_to_db <- function(df, db.con, table.title) {
       {
         message(paste("\nWriting to DB", i))
         DBI::dbExecute(db.con, table_insert)
+        message("\nData Written Successfully to DB\n")
       },
       error = function(e) {
         message(e)
