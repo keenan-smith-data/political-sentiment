@@ -12,7 +12,8 @@ load.sql
 *.sqlite
 *.duckdb*
 *.csv*
-*.parquet
+*.parquet*
+
 
 _site
 
