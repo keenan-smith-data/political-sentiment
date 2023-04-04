@@ -8,7 +8,14 @@ here::i_am("content/corpus_clean/data_pull_and_check.qmd")
 # source(here::here("R", "viable_links_original.R"))
 library(DBI)
 library(tidytable)
+
+source(here::here("R", "export_db.R"))
+source(here::here("R", "text_sql_statements.R"))
+source(here::here("R", "copy_to_sql.R"))
+source(here::here("R", "copy_from_sql.R"))
+source(here::here("R", "create_db_sql.R"))
 ```
+
 
 ```{r}
 #| label: Connecting the DB
@@ -16,7 +23,54 @@ pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-
 ```
 
 ```{r}
-DBI::dbExecute(pol_sent_db, "EXPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data' (FORMAT PARQUET)")
+# DBI::dbExecute(pol_sent_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data'")
+```
+
+# Export Main DB for Back Up
+
+```{r}
+export_statement <- export_db(here::here("data", "backup"), pol_sent_db)
+DBI::dbExecute(pol_sent_db, export_statement)
+```
+
+# Export Scrape DB
+
+```{r}
+scrape_db_mani <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_mani.duckdb"))
+scrape_db_hrw <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_hrw.duckdb"))
+scrape_db_cap <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_cap.duckdb"))
+scrape_db_heritage <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_heritage.duckdb"))
+```
+
+
+```{r}
+# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_mani)
+# DBI::dbExecute(scrape_db_mani, copy_statement)
+
+# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_hrw)
+# DBI::dbExecute(scrape_db_hrw, copy_statement)
+
+# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_cap)
+# DBI::dbExecute(scrape_db_cap, copy_statement)
+
+# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_heritage)
+# DBI::dbExecute(scrape_db_heritage, copy_statement)
+```
+
+# Copy Exported Data into Main DB
+
+```{r}
+# copy_mani <- copy_from_table("text_mani", here::here("data", "scrape_db", "text_mani.parquet"), pol_sent_db)
+# DBI::dbExecute(pol_sent_db, copy_mani)
+
+# copy_hrw <- copy_from_table("text_hrw", here::here("data", "scrape_db", "text_hrw.parquet"), pol_sent_db)
+# DBI::dbExecute(pol_sent_db, copy_hrw)
+
+# copy_cap <- copy_from_table("text_cap", here::here("data", "scrape_db", "text_cap.parquet"), pol_sent_db)
+# DBI::dbExecute(pol_sent_db, copy_cap)
+
+# copy_heritage <- copy_from_table("text_heritage", here::here("data", "scrape_db", "text_heritage.parquet"), pol_sent_db)
+# DBI::dbExecute(pol_sent_db, copy_heritage)
 ```
 
 
@@ -24,24 +78,98 @@ DBI::dbExecute(pol_sent_db, "EXPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/
 dbListTables(pol_sent_db)
 ```
 
-```{r}
-source(here::here("R", "text_sql_statements.R"))
-source(here::here("R", "scraping_helpers.R"))
-source(here::here("R", "article_pull_html.R"))
-source(here::here("R", "write_to_db.R"))
-```
+# Creating Table Function
+
+Check to make sure that the table isn't already created
 
 ```{r}
-test <- article_pull_try_html(filtered_disc[40])
-```
-
-# Need to create Tables First prior to runnigng scripts
-
-```{r}
-table_create <- create_art_table("text_aei", pol_sent_db)
+table_create <- create_art_table("text_brook", pol_sent_db)
 DBI::dbExecute(pol_sent_db, table_create)
 ```
 
+# Importing Previously Collected Text Data
+
+## Function Block
+
+```{r}
+corpus_concatenation <- function(df) {
+  df |>
+    group_by(art_link,
+             art_date,
+             art_author,
+             art_topic,
+             art_title,
+             art_source) |> # These are the metadata tags REFACTOR in future
+    summarise(full_text = paste(text, collapse = " "),
+              .groups = "drop") # combining using the summarise function
+}
+```
+
+## Loading Text Data
+
+```{r}
+text_jacobin <- readr::read_rds(here::here("data", "text", "text_jacobin.rds")) |> as_tidytable()
+text_brookings <- readr::read_rds(here::here("data", "text", "text_brooking.rds")) |> as_tidytable()
+
+text_jacobin <- text_jacobin |>
+  select(-i)
+
+text_brookings <- text_brookings |>
+  select(-i)
+
+# Combine Text into One Row, One Article
+text_jacobin_combined <- corpus_concatenation(text_jacobin)
+text_brookings_combined <- corpus_concatenation(text_brookings)
+
+text_jacobin_combined <- text_jacobin_combined |>
+  tibble::rowid_to_column() |>
+  rename(pull_index = rowid) |>
+  transmute(art_link, art_date, art_author, art_title, art_source, full_text, pull_index) |>
+  relocate(pull_index, .after = full_text)
+
+text_brookings_combined <- text_brookings_combined |>
+  tibble::rowid_to_column() |>
+  rename(pull_index = rowid) |>
+  transmute(art_link, art_date, art_author, art_title, art_source, full_text, pull_index) |>
+  relocate(pull_index, .after = full_text)
+
+fwrite(text_jacobin_combined, here::here("data", "text", "text_jacobin.csv"))
+fwrite(text_brookings_combined, here::here("data", "text", "text_brookings.csv"))
+
+copy_jacob <- copy_table("text_jacob", here::here("data", "text", "text_jacobin.csv"), pol_sent_db)
+copy_brook <- copy_table("text_brook", here::here("data", "text", "text_brookings.csv"), pol_sent_db)
+
+DBI::dbExecute(pol_sent_db, copy_jacob)
+DBI::dbExecute(pol_sent_db, copy_brook)
+```
+
+# Creating Unique Index on Link
+
+Creating Indexes to Speed Up Data Queries
+
+```{r}
+index_table <- function(tbl_name, con) {
+  index_statement <- glue::glue_sql("
+                 CREATE UNIQUE INDEX {`tbl_name`}_idx ON {tbl_name} (art_link, art_source)",
+    .con = con
+  )
+  DBI::dbSendStatement(conn = con, index_statement)
+}
+
+tables <- dbListTables(pol_sent_db)[4:20]
+```
+
+
+```{r}
+#| label: Creating Index on art_link
+
+# dbSendStatement(pol_sent_db, "ALTER TABLE source_table ADD PRIMARY KEY (art_source)")
+purrr::map(.x = tables, .f = index_table, con = pol_sent_db)
+```
+
+# Bring Data into R to Check its Validity
+
+Create a Validator After Scrape is Done
 
 ```{r}
 check_osf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
@@ -53,17 +181,9 @@ check_urban <- dbGetQuery(pol_sent_db, "SELECT * FROM text_urban")
 check_am <- dbGetQuery(pol_sent_db, "SELECT * FROM text_am")
 check_comf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_comf")
 check_cbpp <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cbpp")
+check_mani <- dbGetQuery(pol_sent_db, "SELECT * FROM text_mani")
+check_hrw <- dbGetQuery(pol_sent_db, "SELECT * FROM text_hrw")
 ```
-
-```{r}
-check_cbpp |>
-  slice_tail()
-
-nrow(check_cbpp)
-```
-
-
-
 
 ```{r}
 # Disconnecting from DuckDB

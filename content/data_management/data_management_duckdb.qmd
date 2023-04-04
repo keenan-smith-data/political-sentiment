@@ -20,7 +20,7 @@ library(dm)
 
 ```{r}
 #| label: Connecting the DB
-pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here("data","political-sentiment.duckdb"))
+pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
 ```
 
 # Reading in the Sitemap and Linkchecker Data
@@ -38,15 +38,15 @@ source_table <- tidytable(art_source = as.factor(c("American Enterprise Institut
                                          "Discovery Institute", "EPIC", "Hoover Institute",
                                          "Claremont Institute", "National Review", "Jacobin",
                                          "Commonwealth Fund", "EPI", "Open Society Foundations",
-                                         "The Nation", "Guttmacher Institute")),
+                                         "The Nation", "Guttmacher Institute", "Brookings Institute")),
                           short_source = as.factor(c("aei", "cato", "hrw", "heritage", "cap", "urban", "merc", "mani",
                                            "cbpp", "am", "disc", "epic", "hoov", "clare", "natr",
-                                           "jacob", "comf", "epi", "osf", "tnat", "gutt")),
+                                           "jacob", "comf", "epi", "osf", "tnat", "gutt", "brook")),
                           source_bias = as.factor(c("right-wing", "right-wing", "left-wing", "right-wing",
                                                     "left-wing", "left-wing", "right-wing", "right-wing",
                                                     "left-wing", "right-wing", "right-wing", "right-wing",
                                                     "right-wing", "right-wing", "right-wing", "left-wing",
-                                                    "left-wing", "left-wing", "left-wing", "left-wing", "left-wing"))) |>
+                                                    "left-wing", "left-wing", "left-wing", "left-wing", "left-wing", "left-wing"))) |>
   tibble::as_tibble()
 ```
 
@@ -56,50 +56,54 @@ source_table <- tidytable(art_source = as.factor(c("American Enterprise Institut
 linkchecker_data <- filtered_linkcheck |>
   tibble::rowid_to_column() |>
   rename(art_source = test_source) |>
-  mutate(art_source = as.factor(art_source)) |>
+  transmute(rowid, url, size, result, art_source) |>
+  mutate(size = as.integer(size)) |>
+  drop_na() |>
   distinct(url, .keep_all = TRUE) |>
   tibble::as_tibble()
 
 sitemap_data <- sitemap_collection |>
   rename(url = loc) |>
   select(-art_bias) |>
-  mutate(art_source = as.factor(art_source)) |>
   distinct(url, .keep_all = TRUE) |>
   tibble::as_tibble()
+
+fwrite(linkchecker_data, here::here("data", "linkchecker", "linkchecker_data.csv"))
+fwrite(sitemap_data, here::here("data", "sitemap", "sitemap_data.csv"))
+fwrite(source_table, here::here("data", "sources", "source_table.csv"))
 ```
 
 ```{r}
-links_no_keys <- dm(linkchecker_data, sitemap_data, source_table)
-
-links_primary_keys <- links_no_keys |>
-  dm_add_pk(table = source_table, columns = art_source)
-
-links_all_keys <- links_primary_keys |>
-  dm_add_fk(linkchecker_data, art_source, source_table) |>
-  dm_add_fk(sitemap_data, art_source, source_table)
-
-links_all_keys |>
-  dm_draw()
-
-links_all_keys |>
-  dm_examine_constraints()
-```
-
-# Creating Table in SQLite
-
-```{r}
-#| label: Writing Original Corpus to New SQLite db
-
 dbRemoveTable(pol_sent_db, "linkchecker_data")
 dbRemoveTable(pol_sent_db, "sitemap_data")
 dbRemoveTable(pol_sent_db, "source_table")
 
 dbListTables(pol_sent_db)
 
-dbWriteTable(pol_sent_db, "linkchecker_data", linkchecker_data)
-dbWriteTable(pol_sent_db, "sitemap_data", sitemap_data)
-dbWriteTable(pol_sent_db, "source_table", source_table)
+linkcheck_create <- create_linkchecker_table("linkchecker_data", pol_sent_db)
+sitemap_create <- create_sitemap_table("sitemap_data", pol_sent_db)
+source_create <- create_source_table("source_table", pol_sent_db)
 
+DBI::dbExecute(pol_sent_db, linkcheck_create)
+DBI::dbExecute(pol_sent_db, sitemap_create)
+DBI::dbExecute(pol_sent_db, source_create)
+```
+
+```{r}
+copy_linkcheck <- copy_table("linkchecker_data", here::here("data", "linkchecker", "linkchecker_data.csv"), pol_sent_db)
+copy_sitemap <- copy_table("sitemap_data", here::here("data", "sitemap", "sitemap_data.csv"), pol_sent_db)
+copy_source_table <- copy_table("source_table", here::here("data", "sources", "source_table.csv"), pol_sent_db)
+
+DBI::dbExecute(pol_sent_db, copy_linkcheck)
+DBI::dbExecute(pol_sent_db, copy_sitemap)
+DBI::dbExecute(pol_sent_db, copy_source_table)
+```
+
+
+# Creating Table in SQLite
+
+```{r}
+#| label: Writing Original Corpus to New SQLite db
 dbListTables(pol_sent_db)
 ```
 

@@ -4,10 +4,10 @@ write_to_db <- function(df, db.con, table.title, loop_start = 1L, loop_end = nro
   source(here::here("R", "article_pull_html.R"))
   n_rows <- as.integer(nrow(df))
   loop_end <- as.integer(loop_end)
-  
+  start_time <- proc.time()
   iteration_df <- tibble::tibble()
   for (i in loop_start:loop_end) {
-    Sys.sleep(1)
+    # Sys.sleep(1)
     tryCatch(
       {
         iteration_df <- R.utils::withTimeout(
@@ -50,6 +50,7 @@ write_to_db <- function(df, db.con, table.title, loop_start = 1L, loop_end = nro
       }, finally = {
         message("\nContinuing to Next URL\n")
         message(paste0("\n", round((i / n_rows * 100), digits = 2), "% complete"))
+        print(proc.time() - start_time)
       }
     )
   }

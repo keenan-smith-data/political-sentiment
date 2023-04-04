@@ -603,16 +603,19 @@
     },
     "duckdb": {
       "Package": "duckdb",
-      "Version": "0.7.1-1",
+      "Version": "0.8.0",
       "Source": "Repository",
-      "Repository": "CRAN",
+      "Repository": "https://duckdb.r-universe.dev",
+      "RemoteUrl": "https://github.com/duckdb/duckdb",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "3dcba6d0b59d50a5cb23a9878ed2847f654712d4",
       "Requirements": [
         "DBI",
         "R",
         "methods",
         "utils"
       ],
-      "Hash": "87a32b8f6439136df276da385ebd4ab0"
+      "Hash": "d22ebf42c6176a7863d44587e88a84d9"
     },
     "ellipsis": {
       "Package": "ellipsis",

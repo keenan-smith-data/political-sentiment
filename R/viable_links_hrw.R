@@ -1,10 +1,10 @@
 here::i_am("R/viable_links_hrw.R")
 
 # Connecting to DuckDB
-pol_sent_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data", "political-sentiment.duckdb"))
+scrape_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_hrw.duckdb"))
 # Loading Lazy DB for dbplyr
-sitemaps <- dplyr::tbl(pol_sent_db, "sitemap_data")
-source_table <- dplyr::tbl(pol_sent_db, "source_table")
+sitemaps <- dplyr::tbl(scrape_db, "sitemap_data")
+source_table <- dplyr::tbl(scrape_db, "source_table")
 # Function Block for Obtaining Viable Links
 source(here::here("R", "sitemap_viable_links.R"))
 # Inclusion and Exclusion Vectors
@@ -44,12 +44,26 @@ filtered_hrw <- sitemap_viable_links(sitemaps, short.source = "hrw", url.filter 
   ) |>
   tidytable::drop_na()
 
-source(here::here("R", "text_sql_statements.R"))
-source(here::here("R", "scraping_helpers.R"))
-source(here::here("R", "article_pull_html.R"))
+
 source(here::here("R", "write_to_db.R"))
 
-write_to_db(filtered_hrw, pol_sent_db, "text_hrw")
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 1L, loop_end = 5000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 5001L, loop_end = 10000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 10001L, loop_end = 15000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 15001L, loop_end = 20000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 20001L, loop_end = 25000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 25001L, loop_end = 30000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 30001L, loop_end = 35000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 35001L, loop_end = 40000L)
+Sys.sleep(10)
+write_to_db(filtered_hrw, scrape_db, "text_hrw", loop_start = 40001L)
 
 # Disconnecting from DuckDB
-DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
+DBI::dbDisconnect(scrape_db, shutdown = TRUE)

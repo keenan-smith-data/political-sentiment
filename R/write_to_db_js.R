@@ -1,12 +1,13 @@
-write_to_db_js <- function(df, db.con, table.title, remDr) {
-  # browser()
-  table_create <- create_art_table(table.title, db.con)
-  DBI::dbExecute(db.con, table_create)
-  n_rows <- length(df$url)
+write_to_db_js <- function(df, db.con, table.title, remDr, loop_start = 1L, loop_end = nrow(df)) {
+  source(here::here("R", "text_sql_statements.R"))
+  source(here::here("R", "scraping_helpers.R"))
+  source(here::here("R", "article_pull_js.R"))
+  n_rows <- as.integer(nrow(df))
+  loop_end <- as.integer(loop_end)
+  start_time <- proc.time()
   iteration_df <- tibble::tibble()
-  
   Sys.time()
-  for (i in seq_along(df$url)) {
+  for (i in loop_start:loop_end) {
     Sys.sleep(1)
     tryCatch(
       {
@@ -50,6 +51,7 @@ write_to_db_js <- function(df, db.con, table.title, remDr) {
       }, finally = {
         message("\nContinuing to Next URL\n")
         message(paste0("\n", round((i / n_rows * 100), digits = 2), "% complete"))
+        print(proc.time() - start_time)
       }
     )
   }

@@ -1,10 +1,10 @@
 here::i_am("R/viable_links_mani.R")
 
 # Connecting to DuckDB
-pol_sent_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data", "political-sentiment.duckdb"))
+scrape_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_mani.duckdb"))
 # Loading Lazy DB for dbplyr
-sitemaps <- dplyr::tbl(pol_sent_db, "sitemap_data")
-source_table <- dplyr::tbl(pol_sent_db, "source_table")
+sitemaps <- dplyr::tbl(scrape_db, "sitemap_data")
+source_table <- dplyr::tbl(scrape_db, "source_table")
 # Function Block for Obtaining Viable Links
 source(here::here("R", "sitemap_viable_links.R"))
 # Inclusion and Exclusion Vectors
@@ -23,9 +23,9 @@ filtered_mani <- sitemap_viable_links(sitemaps, short.source = "mani", url.filte
 
 source(here::here("R", "write_to_db.R"))
 
-write_to_db(filtered_mani, pol_sent_db, "text_mani", loop_start = 1L, loop_end = 5000L)
+write_to_db(filtered_mani, scrape_db, "text_mani", loop_start = 1L, loop_end = 5000L)
 Sys.sleep(10)
-write_to_db(filtered_mani, pol_sent_db, "text_mani", loop_start = 5001L)
+write_to_db(filtered_mani, scrape_db, "text_mani", loop_start = 5001L)
 
 # Disconnecting from DuckDB
-DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
+DBI::dbDisconnect(scrape_db, shutdown = TRUE)

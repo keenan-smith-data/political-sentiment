@@ -103,5 +103,12 @@
     "title": "Political Sentiment NLP",
     "section": "Output & the Research Question",
     "text": "Output & the Research Question\n\nThe output are trained classification models\n\nClassically trained classification models\n\nRandom Forest\nLogistic Regression\nSupport Vector Classification\nRegularization\nUnsupervised Learning Pre-processing\n\nDeep Learning Transformer-based model\n\nAdditionally I intend to create a Shiny Dashboard for Others to examine the data and model outputs\n\n\n\n\nDSC595_601_SP23_Project_Proposal_ktsmith4"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#column-format",
+    "href": "content/project/Sentiment Presentation.html#column-format",
+    "title": "Political Sentiment NLP",
+    "section": "Column Format",
+    "text": "Column Format\n\n\n\n\n\n\n\n\n\n\nPolitical_Sentiment_Capstone_Smith_Keenan"
   }
 ]

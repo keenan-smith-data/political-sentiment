@@ -1,0 +1,42 @@
+---
+title: "Political Sentiment NLP"
+author: "Keenan Smith"
+format:
+  revealjs:
+    theme: serif
+    logo: ncstate-type-2x2-red.png
+    footer: Political_Sentiment_Capstone_Smith_Keenan 
+---
+
+# Overview {.smaller}
+- Introduction
+  - Research Question, Political Ideology, NLP
+- Methods
+  - The Data
+  - Programming Language
+  - Data Collection
+  - Modeling
+- Results
+  - EDA
+  - Model Results
+- Further Work
+- Questions
+
+
+## Column Format {.smaller}
+
+:::: {.columns}
+
+::: {.column width="55%"}
+
+
+
+:::
+
+
+::: {.column width="45%"}
+
+
+:::
+
+::::

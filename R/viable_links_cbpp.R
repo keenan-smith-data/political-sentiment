@@ -4,7 +4,6 @@ here::i_am("R/viable_links_cbpp.R")
 pol_sent_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data", "political-sentiment.duckdb"))
 # Loading Lazy DB for dbplyr
 sitemaps <- dplyr::tbl(pol_sent_db, "sitemap_data")
-linkchecker <- dplyr::tbl(pol_sent_db, "linkchecker_data")
 source_table <- dplyr::tbl(pol_sent_db, "source_table")
 # Function Block for Obtaining Viable Links
 source(here::here("R", "sitemap_viable_links.R"))
@@ -53,7 +52,12 @@ filtered_cbpp <- sitemap_viable_links(sitemaps, short.source = "cbpp", url.filte
 
 source(here::here("R", "write_to_db.R"))
 
-write_to_db(filtered_cbpp, pol_sent_db, "text_cbpp")
+write_to_db(filtered_cbpp, pol_sent_db, "text_cbpp", loop_start = 6475L)
+
+source(here::here("R", "export_db.R"))
+export_statement <- export_db(here::here("data", "backup"), pol_sent_db)
+message("Backing Up DB")
+DBI::dbExecute(pol_sent_db, export_statement)
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
