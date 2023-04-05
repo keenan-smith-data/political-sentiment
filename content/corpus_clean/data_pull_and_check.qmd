@@ -20,6 +20,7 @@ source(here::here("R", "create_db_sql.R"))
 ```{r}
 #| label: Connecting the DB
 pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
+scrape_db_cato <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_cato.duckdb"))
 ```
 
 ```{r}
@@ -36,10 +37,11 @@ DBI::dbExecute(pol_sent_db, export_statement)
 # Export Scrape DB
 
 ```{r}
-scrape_db_mani <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_mani.duckdb"))
-scrape_db_hrw <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_hrw.duckdb"))
-scrape_db_cap <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_cap.duckdb"))
-scrape_db_heritage <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_heritage.duckdb"))
+# scrape_db_mani <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_mani.duckdb"))
+# scrape_db_hrw <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_hrw.duckdb"))
+# scrape_db_cap <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_cap.duckdb"))
+# scrape_db_heritage <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_heritage.duckdb"))
+# scrape_db_aei <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_aei.duckdb"))
 ```
 
 
@@ -55,6 +57,12 @@ scrape_db_heritage <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data"
 
 # copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_heritage)
 # DBI::dbExecute(scrape_db_heritage, copy_statement)
+
+# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_aei)
+# DBI::dbExecute(scrape_db_aei, copy_statement)
+
+copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_cato)
+DBI::dbExecute(scrape_db_cato, copy_statement)
 ```
 
 # Copy Exported Data into Main DB
@@ -71,6 +79,12 @@ scrape_db_heritage <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data"
 
 # copy_heritage <- copy_from_table("text_heritage", here::here("data", "scrape_db", "text_heritage.parquet"), pol_sent_db)
 # DBI::dbExecute(pol_sent_db, copy_heritage)
+
+# copy_aei <- copy_from_table("text_aei", here::here("data", "scrape_db", "text_aei.parquet"), pol_sent_db)
+# DBI::dbExecute(pol_sent_db, copy_aei)
+
+# copy_cato <- copy_from_table("text_cato", here::here("data", "scrape_db", "text_cato.parquet"), pol_sent_db)
+# DBI::dbExecute(pol_sent_db, copy_cato)
 ```
 
 
@@ -83,7 +97,7 @@ dbListTables(pol_sent_db)
 Check to make sure that the table isn't already created
 
 ```{r}
-table_create <- create_art_table("text_brook", pol_sent_db)
+table_create <- create_art_table("text_heritage", pol_sent_db)
 DBI::dbExecute(pol_sent_db, table_create)
 ```
 
