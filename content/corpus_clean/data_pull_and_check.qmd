@@ -20,18 +20,18 @@ source(here::here("R", "create_db_sql.R"))
 ```{r}
 #| label: Connecting the DB
 pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
-scrape_db_cato <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_cato.duckdb"))
+pol_parquet_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","pol-parquet.duckdb"))
 ```
 
 ```{r}
-# DBI::dbExecute(pol_sent_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data'")
+DBI::dbExecute(pol_parquet_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data/backup'")
 ```
 
 # Export Main DB for Back Up
 
 ```{r}
-export_statement <- export_db(here::here("data", "backup"), pol_sent_db)
-DBI::dbExecute(pol_sent_db, export_statement)
+export_statement <- export_db(here::here("data", "backup"), pol_parquet_db)
+DBI::dbExecute(pol_parquet_db, export_statement)
 ```
 
 # Export Scrape DB
@@ -61,8 +61,8 @@ DBI::dbExecute(pol_sent_db, export_statement)
 # copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_aei)
 # DBI::dbExecute(scrape_db_aei, copy_statement)
 
-copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_cato)
-DBI::dbExecute(scrape_db_cato, copy_statement)
+# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_cato)
+# DBI::dbExecute(scrape_db_cato, copy_statement)
 ```
 
 # Copy Exported Data into Main DB
@@ -89,7 +89,7 @@ DBI::dbExecute(scrape_db_cato, copy_statement)
 
 
 ```{r}
-dbListTables(pol_sent_db)
+dbListTables(pol_parquet_db)
 ```
 
 # Creating Table Function
@@ -97,8 +97,8 @@ dbListTables(pol_sent_db)
 Check to make sure that the table isn't already created
 
 ```{r}
-table_create <- create_art_table("text_heritage", pol_sent_db)
-DBI::dbExecute(pol_sent_db, table_create)
+table_create <- create_art_table("", pol_sent_db)
+DBI::dbExecute(pol_parquet_db, table_create)
 ```
 
 # Importing Previously Collected Text Data
@@ -189,7 +189,7 @@ Create a Validator After Scrape is Done
 check_osf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
 check_gutt <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
 check_disc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
-check_epi <- dbGetQuery(pol_sent_db, "SELECT * FROM text_epi")
+check_epi <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_epi")
 check_merc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_merc")
 check_urban <- dbGetQuery(pol_sent_db, "SELECT * FROM text_urban")
 check_am <- dbGetQuery(pol_sent_db, "SELECT * FROM text_am")
@@ -197,10 +197,106 @@ check_comf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_comf")
 check_cbpp <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cbpp")
 check_mani <- dbGetQuery(pol_sent_db, "SELECT * FROM text_mani")
 check_hrw <- dbGetQuery(pol_sent_db, "SELECT * FROM text_hrw")
+check_cato <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cato")
+```
+
+# Stopword Clearing
+
+```{r}
+additional_stopwords <- c("epop", "percision", "embedclicker", "textarea", "getembedcode", "footerright", "footerleft", "customjson", "attr", "thead", "styledtable", "roboto", "tbody", "monospace", "scopedstyledtable", "xaxis", "plotbands", "plotoptions", "chartinfo", "yaxistitle", "yaxismin", "yaxismax", "yaxisvisibility", "xaxistitle", "xaxismultipletitles", "xaxisunits", "xaxisplotbands", "defaultoffset", "orderby", "showdatalabels", "showfirstdatalabel", "showlastdatalabel", "decimalplaces", "heightadjustment", "epicharts", "showscatterlabels", "showscattermarkers", "showregressionline", "showregressionequation", "regressionlabel", "regressionslope", "regressionintercept", "chartdatadownload", "verticalalign", "f", "embed", "layout", "download", "chart", "copy", "facebook", "y", "x", "figure", "data", "null", "stacking", "photo", "height", "semihidden", "quot", "background", "align", "backgrounder", "swf", "istockphoto", "jquery", "image", "tweet", "id", "title", "browser", "unhidewhenused", "scribd", "post", "miss", "research")
+# Ensuring that Sources were removed from the Corpus
+source_stopwords <- c("enterprise", "institute", "cato", "heritage", "foundation", "center", "mercatus", "manhattan", "cbpp", "discovery", "hoover", "claremont", "guttmacher", "jacobin", "commonwealth", "epi", "aei", "cap")
+bigram_stopterms <- c("amp_amp", "percent_percent", "originally_appeared", "piece_originally", "cdata_cdata", "appeared_daily", "share_share", "right_top", "code_website", "share_twitter", "research_insights", "para_para", "n_n", "miss_research", "yes_yes", "enjoyed_sign", "excel_underlying", "legend_position", "type_legend", "visibility_type", "false_visibility", "enabled_true", "type_line", "miss_posts", "related_reading", "appeared_forbes", "posts_papers", "recently_highlights", "fellow_contributing", "papers_charts", "editor_city", "outlets_featured", "appeared_realclearmarkets", "act_ref", "fellow_follow", "grid_table", "name_grid", "code_var", "floating_false", "var_shared", "false_text", "hidden_enabled", "underlying_note", "line_false", "twitter_variety", "table_colorful", "top_calc", "tab_format", "bottom_horizontal", "display_tab", "bold_arial", "none_border", "none_linear", "buffon_rgba", "transparent_rgba", "color_transparent", "rgba_buffon", "table_accent")
+
+bigram_stopterms_edit <- unique(unlist(strsplit(bigram_stopterms, "_")))
+
+stopterms <- paste0(paste0("^", c(additional_stopwords, source_stopwords, bigram_stopterms_edit), "$"), collapse = "|")
 ```
 
 ```{r}
-# Disconnecting from DuckDB
-DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
+new_epi <- check_epi |>
+  mutate(full_text = gsub(stopterms, " ", full_text),
+         full_text = gsub("\\n|[[:digit:]]|[[:punct:]]", " ", full_text))
 ```
 
+
+# Building Full Corpus
+
+```{r}
+source_table <- dplyr::tbl(pol_parquet_db, "source_table")
+tables <- dbListTables(pol_parquet_db)
+tables_hrw<- tables[6:length(tables)]
+dbRemoveTable(pol_parquet_db, "full_corpus")
+```
+
+
+```{r}
+corpus_pull <- function(tbl_title, con) {
+  filter_date <- lubridate::ymd("20100101")
+  dplyr::tbl(con, tbl_title) |>
+    dplyr::left_join(source_table, by = source_table$art_source) |>
+    dplyr::filter(art_date >= filter_date) |>
+    dplyr::collect() |>
+    tidytable::as_tidytable()
+}
+
+create_full_corpus_table <- function(tbl_name, con) {
+  glue::glue_sql("
+                 CREATE OR REPLACE TABLE {tbl_name} (
+                 art_link VARCHAR PRIMARY KEY,
+                 art_date DATE,
+                 art_author VARCHAR,
+                 art_title VARCHAR,
+                 art_source VARCHAR,
+                 full_text VARCHAR,
+                 pull_index INTEGER,
+                 short_source VARCHAR,
+                 source_bias VARCHAR,
+                 length_text INTEGER,
+                 )",
+                 .con = con
+  )
+}
+```
+
+```{r}
+corpus_df <- purrr::map(.x = tables_hrw, .f = (corpus_pull), con = pol_parquet_db) |>
+  bind_rows()
+
+# Adding Length Col to the Dataset
+corpus_df <- corpus_df |>
+  mutate(length_text = nchar(full_text))
+
+
+fwrite(corpus_df, here::here("data", "text", "full_corpus.csv"))
+fwrite(new_corpus_df, here::here("data", "text", "full_corpus_filtered.csv"))
+
+# Full Corpus Unedited
+source(here::here("R", "create_db_sql.R"))
+table_create <- create_full_corpus_table("full_corpus", pol_parquet_db)
+DBI::dbExecute(pol_parquet_db, table_create)
+copy_full_corpus <- copy_table("full_corpus", here::here("data", "text", "full_corpus.csv"), pol_parquet_db)
+DBI::dbExecute(pol_parquet_db, copy_full_corpus)
+
+```
+
+```{r}
+# new_corpus_df <- corpus_df |>
+#   mutate(full_text = gsub(stopterms, " ", full_text),
+#          full_text = gsub("\\n|[[:digit:]]|[[:punct:]]", " ", full_text))
+
+# new_corpus_df <- new_corpus_df |>
+#   mutate(length_text = nchar(full_text))
+
+# table_create <- create_full_corpus_table("full_corpus_filtered", pol_parquet_db)
+# DBI::dbExecute(pol_parquet_db, table_create)
+# copy_full_corpus <- copy_table("full_corpus_filtered", here::here("data", "text", "full_corpus_filtered.csv"), pol_parquet_db)
+# DBI::dbExecute(pol_parquet_db, copy_full_corpus)
+```
+
+
+```{r}
+# Disconnecting from DuckDB
+DBI::dbDisconnect(pol_parquet_db, shutdown = TRUE)
+DBI::dbDisconnect(pol_sent_db, shutdown = TRUE)
+```

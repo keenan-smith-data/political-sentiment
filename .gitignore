@@ -5,9 +5,12 @@
 
 /.quarto/
 *.pdf
+tensorflow
 
 load.sql
 
+*.svg
+*.png
 *.rds
 *.sqlite
 *.duckdb*
