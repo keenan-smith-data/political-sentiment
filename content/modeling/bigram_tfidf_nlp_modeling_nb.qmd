@@ -1,0 +1,99 @@
+---
+title: "Classical NLP Modeling"
+author: "Keenan Smith"
+---
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/modeling/bigram_tfidf_nlp_modeling_nb.qmd")
+library(tidymodels)
+
+library(parallel)
+all_cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(all_cores)
+doParallel::registerDoParallel(cl)
+
+sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
+
+docid_to_bias <- function(df) {
+  df |>
+    tidytable::separate_wider_delim(doc_id, delim = "_", names = c("short_source", "pull_index", "source_bias"), cols_remove = TRUE) |>
+    tidytable::select(-short_source, -pull_index)
+}
+```
+
+```{r}
+bigram_tfidf <- tidytable::fread(here::here("data", "model_data", "tfidf_bigram_df.csv.gz"))
+
+rownames(bigram_tfidf) <- bigram_tfidf$doc_id
+```
+
+# Getting Classification out of Doc ID
+
+```{r}
+bigram_tfidf <- docid_to_bias(bigram_tfidf)
+```
+
+# Data Split
+
+```{r}
+tfidf_split <- initial_split(bigram_tfidf, strata = source_bias)
+
+bigram_train <- training(tfidf_split)
+bigram_test <- testing(tfidf_split)
+bigram_folds <- vfold_cv(bigram_train)
+```
+
+# Engine
+
+```{r}
+library(discrim)
+nb_spec <- naive_Bayes() |>
+  set_mode("classification") |>
+  set_engine("naivebayes")
+```
+
+# Recipes
+
+```{r}
+text_recipe <- recipe(source_bias ~ ., data = bigram_train)
+```
+
+# Workflows
+
+```{r}
+nb_bigram_wf <- workflow() |>
+  add_recipe(text_recipe) |>
+  add_model(nb_spec)
+```
+
+```{r}
+nb_rs <- fit_resamples(
+  nb_bigram_wf,
+  bigram_folds,
+  control = control_resamples(save_pred = TRUE)
+)
+```
+
+```{r}
+nb_rs_metrics <- collect_metrics(nb_rs)
+tidytable::fwrite(nb_rs_metrics, here::here("content", "modeling", "model_results", "nb_rs_metrics_bigrams.csv"))
+nb_rs_predictions <- collect_predictions(nb_rs)
+
+nb_rs_metrics
+```
+
+```{r}
+nb_rs_predictions |>
+  group_by(id) |>
+  roc_curve(truth = source_bias, `.pred_right-wing`) |>
+  autoplot() +
+  labs(
+    color = NULL,
+    title = "ROC curve for Naive Bayes Predictions",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+ggsave(nai)
+```
+

@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-04-11T01:38:34.921Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="DSIg6IGBuctgQGp07M2_" version="21.1.2" type="device">
+<mxfile host="Electron" modified="2023-04-11T20:03:24.163Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="VWUNbMn6IGoz6ZH8PnLN" version="21.1.2" type="device">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel dx="1434" dy="836" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -136,11 +136,11 @@
         <mxCell id="Q06K7-yVwiBWQH0qNbWU-48" value="&lt;b&gt;Exploratory Data Analysis&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="150" y="675" width="360" height="320" as="geometry" />
         </mxCell>
-        <mxCell id="Q06K7-yVwiBWQH0qNbWU-49" value="exploratory_data_analysis.qmd" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.document2;whiteSpace=wrap;size=0.25;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="291" y="875" width="200" height="100" as="geometry" />
+        <mxCell id="Q06K7-yVwiBWQH0qNbWU-49" value="exploratory_data_analysis_corpus.qmd&lt;br&gt;exploratory_data_analysis_quanteda.qmd" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.document2;whiteSpace=wrap;size=0.25;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="180" y="875" width="311" height="100" as="geometry" />
         </mxCell>
         <mxCell id="Q06K7-yVwiBWQH0qNbWU-50" value="Tools:&lt;br&gt;quanteda&lt;br&gt;tidytext&lt;br&gt;tidytable&lt;br&gt;ggplot2" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="174" y="705" width="106" height="200" as="geometry" />
+          <mxGeometry x="174" y="705" width="106" height="155" as="geometry" />
         </mxCell>
         <mxCell id="Q06K7-yVwiBWQH0qNbWU-51" value="Techniques:&lt;br&gt;Frequency Analysis&lt;br&gt;Length of Total Characters&lt;br&gt;Distribution of Sources&lt;br&gt;Stopword Cleaning&lt;br&gt;Top Features&lt;br&gt;Lexical Similarity&lt;br&gt;Clustering" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="290" y="705" width="200" height="160" as="geometry" />
@@ -151,11 +151,11 @@
         <mxCell id="Q06K7-yVwiBWQH0qNbWU-54" value="&lt;b&gt;Modeling&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="920" y="520" width="360" height="320" as="geometry" />
         </mxCell>
-        <mxCell id="Q06K7-yVwiBWQH0qNbWU-55" value="classical_nlp_modeling.qmd" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.document2;whiteSpace=wrap;size=0.25;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="1060" y="705" width="200" height="110" as="geometry" />
+        <mxCell id="Q06K7-yVwiBWQH0qNbWU-55" value="bigram_tfidf_nlp_modeling_lasso.qmd" style="strokeWidth=2;html=1;shape=mxgraph.flowchart.document2;whiteSpace=wrap;size=0.25;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="950" y="705" width="310" height="110" as="geometry" />
         </mxCell>
         <mxCell id="Q06K7-yVwiBWQH0qNbWU-56" value="Tools:&lt;br&gt;tidymodels&lt;br&gt;textrecipes&lt;br&gt;parallel" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;align=center;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="944" y="550" width="106" height="255" as="geometry" />
+          <mxGeometry x="944" y="550" width="106" height="140" as="geometry" />
         </mxCell>
         <mxCell id="Q06K7-yVwiBWQH0qNbWU-57" value="Models:&lt;br&gt;Regularized Regresssion&lt;br&gt;Random Forest&lt;br&gt;Naive Bayes&lt;br&gt;Support Vector Classification" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1060" y="550" width="200" height="140" as="geometry" />

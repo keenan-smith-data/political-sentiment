@@ -54,6 +54,7 @@ A **Data Science** Project that examines the question *"Does Political Speech in
 
 ::: {.notes}
 My interests are all the things you are not supposed to talk about at Thanksgiving
+Transformers are the current highest form for NLP modeling but require much more computing power
 :::
 
 ## Political Ideology {.smaller}
@@ -94,6 +95,7 @@ Speaker notes go here.
 :::
 
 ::: {.column width="45%"}
+![Credit: Xoriant](images/nlp_picture.png)
 :::
 ::::
 
@@ -124,16 +126,12 @@ This needs some tables
 
 ## The Data {.smaller}
 
-:::: {.columns}
-::: {.column width="55%"}
-:::
+```{r}
 
-::: {.column width="45%"}
-:::
-::::
+```
 
 ::: {.notes}
-Speaker notes go here.
+Table of Sample Data
 :::
 
 ## Process {.smaller}

@@ -1,0 +1,182 @@
+---
+title: "Exploratory Data Analysis"
+author: "Keenan Smith"
+editor_options: 
+  chunk_output_type: console
+---
+
+Built with R Version `r getRversion()`
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/exploratory_data_analysis/exploratory_data_analysis.qmd")
+library(tidytable)
+library(ggplot2)
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+```
+
+# START HERE
+
+# Reading In already Processed Document Feature Matrices & Token Objects
+
+## Words
+
+```{r}
+toks_polsent <- readr::read_rds(here::here("data", "tokens", "filtered_tokens.rds"))
+dfmat_polsent <- readr::read_rds(here::here("data", "tokens", "dfmat_polsent.rds"))
+```
+
+## Bigrams
+
+```{r}
+toks_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "filtered_bigrams.rds"))
+dfmat_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "dfmat_polsent_bigrams.rds"))
+```
+
+```{r}
+bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_los", "de_la", "la_de", "en_las", "en_la", "de_las", "see_also", "right_right", "left_left", "getty_images", "world_week", "solely_author", "please_see", "topic_please", "senior_american", "associate_director", "team_american", "solely_expressed", "douglas_sarah", "roe_economic", "resident_american", "allison_foreign", "pdf_read", "opinions_expressed", "international_scholars", "sarah_allison", "thomas_roe", "never_ways", "emphasis_added", "article_published", "newsletter_never")
+
+bigram_trim <- dfm_remove(dfmat_polsent_bigrams, pattern = bigram_stopterms_post_write)
+
+# Trimmed Frequency to Make Data Easier to Manage
+dfmat_bigrams_trim <- dfm_trim(bigram_trim, min_termfreq = 3000, termfreq_type = "rank")
+
+# Grouping Bigrams Based on Source Bias
+dfmat_group_bigrams <- dfmat_bigrams_trim |>
+  dfm_group(groups = source_bias)
+```
+
+```{r}
+words_stopterms_from_bigrams <- unique(unlist(strsplit(bigram_stopterms_post_write, "_")))
+
+word_trim <- dfm_remove(dfmat_polsent, pattern = words_stopterms_from_bigrams)
+
+# Trimmed word Data for Frequency as well
+dfmat_words_trim <- dfm_trim(dfmat_polsent, min_termfreq = 3000, termfreq_type = "rank")
+
+# Grouping Words Based on Source Bias
+dfmat_group <- dfmat_words_trim |>
+  dfm_group(groups = source_bias)
+```
+
+
+# Using Quanteda to Analyze Data
+
+## TF-IDF Vectorization of Individual Documents
+
+USE FOR MODELING
+
+```{r}
+dfmat_bigrams_tfidf <- dfm_tfidf(dfmat_bigrams_trim)
+```
+
+# Tidied Group Data on Bias
+
+CONVERT FOR MODELING
+
+```{r}
+convert_bigrams_tfidf <- convert(dfmat_bigrams_tfidf, to = "data.frame")
+fwrite(convert_bigrams_tfidf, here::here("data", "model_data", "tfidf_bigram_df.csv.gz"))
+```
+
+## Frequency Analysis
+
+RUN ONCE MODELS ARE COMPLETED
+
+```{r}
+tstat_bigram_freq <- textstat_frequency(dfmat_bigrams_trim, n = 200, groups = source_bias)
+fwrite(tstat_bigram_freq, here::here("content", "project", "tstat_freq_bigram.csv"))
+
+left_bigram_freq <- subset(tstat_bigram_freq, group == "left-wing")
+right_bigram_freq <- subset(tstat_bigram_freq, group == "right-wing")
+```
+
+### Individual Bigram Frequency WordCloud
+
+```{r}
+wordcloud2::wordcloud2(left_bigram_freq, size = 1.5, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1)
+wordcloud2::wordcloud2(right_bigram_freq, size = 1.5, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1)
+```
+
+```{r}
+#| fig-width: 8
+#| fig-height: 8
+# create wordcloud
+set.seed(132) # set seed for reproducibility
+textplot_wordcloud(dfmat_group_bigrams, comparison = TRUE, max_words = 500,  color = c("red", "blue"))
+```
+
+## Grouping by Article Source
+
+RUN IF WORDS CHANGE
+
+```{r}
+dfmat_group_source <- dfm_group(dfmat_words_trim, groups = short_source) |>
+  dfm_select(min_nchar = 2)
+```
+
+## Lexical Diversity Between Sources
+
+RUN IF WORDS CHANGE
+
+```{r}
+tstat_lexdiv <- textstat_lexdiv(dfmat_group_source)
+tstat_lexdiv
+```
+
+```{r}
+ggplot(tstat_lexdiv, aes(document, TTR)) + 
+  geom_col(aes(fill = document)) +
+  labs(x = "Article Sources",
+       y = "Lexical Diversity") +
+  ggthemes::theme_clean() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
+        legend.position = "none")
+
+ggsave(here::here("content", "project", "images", "art_source_lexical_diversity.png"))
+```
+
+
+## Collocation on Tokens
+
+RUN IF TOKENS CHANGE
+
+[Source for How to Do This](https://tutorials.quanteda.io/statistical-analysis/collocation/)
+
+```{r}
+tstat_col_caps <- tokens_select(toks_polsent, pattern = "^[A-Z]", 
+                                valuetype = "regex", 
+                                case_insensitive = FALSE, 
+                                padding = TRUE) |>
+                  textstat_collocations(min_count = 100)
+fwrite(tstat_col_caps, here::here("content", "project", "tstat_collations_bigram.csv"))
+
+tstat_col2 <- tokens_select(toks_polsent, pattern = "^[A-Z]", 
+                                valuetype = "regex", 
+                                case_insensitive = FALSE, 
+                                padding = TRUE) |> 
+              textstat_collocations(min_count = 100, size = 3)
+fwrite(tstat_col2, here::here("content", "project", "tstat_collations_trigrams.csv"))
+```
+
+## Clustering Based on Article Source
+
+RUN IF WORDS CHANGE
+
+[Source for How to Do This](https://tutorials.quanteda.io/advanced-operations/twitter-user-similarity/)
+
+```{r}
+tstat_dist <- as.dist(textstat_dist(dfmat_group_source))
+group_clust <- hclust(tstat_dist)
+
+plot(group_clust)
+
+ggdendro::ggdendrogram(group_clust, theme_dendro = FALSE) +
+  labs(title = "Cluster Analysis for Article Source",
+       x = "Article Sources",
+       y = "")
+ggsave(here::here("content", "project", "images", "art_source_cluster.png"))
+```

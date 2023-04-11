@@ -1,0 +1,95 @@
+---
+title: "Classical NLP Modeling"
+author: "Keenan Smith"
+---
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/modeling/classical_nlp_modeling.qmd")
+library(tidymodels)
+
+library(parallel)
+all_cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(all_cores)
+doParallel::registerDoParallel(cl)
+
+sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
+
+docid_to_bias <- function(df) {
+  df |>
+    tidytable::separate_wider_delim(doc_id, delim = "_", names = c("short_source", "pull_index", "source_bias"), cols_remove = TRUE) |>
+    tidytable::select(-short_source, -pull_index)
+}
+```
+
+```{r}
+word_freq_df <- tidytable::fread(here::here("data", "model_data", "word_df.csv.gz"))
+word_tfidf_df <- tidytable::fread(here::here("data", "model_data", "tfidf_word_df.csv.gz"))
+# bigram_freq_df <- fread(here::here("data", "model_data", "bigram_df.csv.gz"))
+# bigram_tfidf_df <- fread(here::here("data", "model_data", "tfidf_word_df.csv.gz"))
+
+rownames(word_freq_df) <- word_freq_df$doc_id
+rownames(word_tfidf_df) <- word_tfidf_df$doc_id
+```
+# Getting Classification out of Doc ID
+
+```{r}
+word_freq_df <- docid_to_bias(word_freq_df)
+word_tfidf_df <- docid_to_bias(word_tfidf_df)
+# bigram_freq_df <- docid_to_bias(bigram_freq_df)
+# bigram_freq_df <- docid_to_bias(bigram_tfidf_df)
+```
+
+# Data Split
+
+```{r}
+word_freq_df_split <- initial_split(word_freq_df, strata = source_bias)
+
+freq_train <- training(word_freq_df_split)
+freq_test <- testing(word_freq_df_split)
+freq_cv <- vfold_cv(freq_train)
+```
+
+
+# Engines
+
+```{r}
+library(discrim)
+nb_spec <- naive_Bayes() |>
+  set_mode("classification") |>
+  set_engine("naivebayes")
+```
+
+
+
+# Recipes
+
+```{r}
+text_recipe <- recipe(source_bias ~ ., data = freq_train)
+```
+
+# Workflows
+
+```{r}
+nb_freq_wf <- workflow() |>
+  add_recipe(text_recipe) |>
+  add_model(nb_spec)
+```
+
+```{r}
+nb_rs <- fit_resamples(
+  nb_freq_wf,
+  freq_cv,
+  control = control_resamples(save_pred = TRUE)
+)
+```
+
+```{r}
+nb_rs_metrics <- collect_metrics(nb_rs)
+tidytable::fwrite(nb_rs_metrics, here::here("content", "modeling", "model_results", "nb_rs_metrics.csv"))
+nb_rs_predictions <- collect_predictions(nb_rs)
+
+nb_rs_metrics
+```
+

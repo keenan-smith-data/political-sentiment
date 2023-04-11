@@ -25,6 +25,39 @@
       ],
       "Hash": "b2866e62bab9378c3cc9476a1954226b"
     },
+    "DiceDesign": {
+      "Package": "DiceDesign",
+      "Version": "1.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "DiceDesign",
+      "RemoteRef": "DiceDesign",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "1.9",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "b7b812ae4484d4bbf0a0baac72e8fc01"
+    },
+    "GPfit": {
+      "Package": "GPfit",
+      "Version": "1.0-8",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "GPfit",
+      "RemoteRef": "GPfit",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.0-8",
+      "Requirements": [
+        "lattice",
+        "lhs"
+      ],
+      "Hash": "29a7dccade1fd037c8262c2a239775eb"
+    },
     "ISOcodes": {
       "Package": "ISOcodes",
       "Version": "2022.09.29",
@@ -227,23 +260,6 @@
         "R"
       ],
       "Hash": "a45594a00f5dbb073d5ec9f48592a08a"
-    },
-    "RcppTOML": {
-      "Package": "RcppTOML",
-      "Version": "0.2.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "RemoteType": "standard",
-      "RemotePkgRef": "RcppTOML",
-      "RemoteRef": "RcppTOML",
-      "RemoteRepos": "https://cran.rstudio.com",
-      "RemotePkgPlatform": "x86_64-w64-mingw32",
-      "RemoteSha": "0.2.2",
-      "Requirements": [
-        "R",
-        "Rcpp"
-      ],
-      "Hash": "c232938949fcd8126034419cc529333a"
     },
     "Rttf2pt1": {
       "Package": "Rttf2pt1",
@@ -687,6 +703,30 @@
       ],
       "Hash": "c7f527c59edc72c4bce63519b8d38752"
     },
+    "dials": {
+      "Package": "dials",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "DiceDesign",
+        "R",
+        "cli",
+        "dplyr",
+        "glue",
+        "hardhat",
+        "lifecycle",
+        "pillar",
+        "purrr",
+        "rlang",
+        "scales",
+        "tibble",
+        "utils",
+        "vctrs",
+        "withr"
+      ],
+      "Hash": "ce71836ecc0efd70890c6825c8b4ff47"
+    },
     "dichromat": {
       "Package": "dichromat",
       "Version": "2.0-0.1",
@@ -714,6 +754,22 @@
         "utils"
       ],
       "Hash": "8b708f296afd9ae69f450f9640be8990"
+    },
+    "discrim": {
+      "Package": "discrim",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "dials",
+        "parsnip",
+        "rlang",
+        "stats",
+        "tibble",
+        "withr"
+      ],
+      "Hash": "39ec49c8b8d3c0502ad7aba699ec798b"
     },
     "doParallel": {
       "Package": "doParallel",
@@ -944,6 +1000,28 @@
         "methods"
       ],
       "Hash": "f4dcd23b67e33d851d2079f703e8b985"
+    },
+    "furrr": {
+      "Package": "furrr",
+      "Version": "0.3.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "furrr",
+      "RemoteRef": "furrr",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "0.3.1",
+      "Requirements": [
+        "R",
+        "future",
+        "globals",
+        "lifecycle",
+        "purrr",
+        "rlang",
+        "vctrs"
+      ],
+      "Hash": "da7a4c32196cb2262a41dd5a25d486ff"
     },
     "future": {
       "Package": "future",
@@ -1372,6 +1450,35 @@
       ],
       "Hash": "3e476b375c746d899fd53a7281d78191"
     },
+    "infer": {
+      "Package": "infer",
+      "Version": "1.0.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "infer",
+      "RemoteRef": "infer",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.0.4",
+      "Requirements": [
+        "R",
+        "broom",
+        "dplyr",
+        "generics",
+        "ggplot2",
+        "glue",
+        "grDevices",
+        "magrittr",
+        "methods",
+        "patchwork",
+        "purrr",
+        "rlang",
+        "tibble",
+        "tidyr"
+      ],
+      "Hash": "b1aa2741a03a90aa9d8187997cfc55c9"
+    },
     "ipred": {
       "Package": "ipred",
       "Version": "0.9-14",
@@ -1542,6 +1649,23 @@
       ],
       "Hash": "bbc70840ea0f91f34dd9703efe4c96c3"
     },
+    "lhs": {
+      "Package": "lhs",
+      "Version": "1.1.6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "lhs",
+      "RemoteRef": "lhs",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "1.1.6",
+      "Requirements": [
+        "R",
+        "Rcpp"
+      ],
+      "Hash": "a007ff66aa9d478e220bf0493a7b1d95"
+    },
     "lifecycle": {
       "Package": "lifecycle",
       "Version": "1.0.3",
@@ -1668,6 +1792,46 @@
         "tools"
       ],
       "Hash": "18e9c28c1d3ca1560ce30658b22ce104"
+    },
+    "modeldata": {
+      "Package": "modeldata",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "modeldata",
+      "RemoteRef": "modeldata",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.1.0",
+      "Requirements": [
+        "MASS",
+        "R",
+        "dplyr",
+        "purrr",
+        "rlang",
+        "tibble"
+      ],
+      "Hash": "df65cdee10e24635c6491ed5a98a31ef"
+    },
+    "modelenv": {
+      "Package": "modelenv",
+      "Version": "0.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "modelenv",
+      "RemoteRef": "modelenv",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "0.1.1",
+      "Requirements": [
+        "glue",
+        "rlang",
+        "tibble",
+        "vctrs"
+      ],
+      "Hash": "fc2e59a68030885555c7be34ee7765a1"
     },
     "modelr": {
       "Package": "modelr",
@@ -1829,6 +1993,63 @@
       ],
       "Hash": "1cf5a54cfc5dcb0b84037acfd93cbca7"
     },
+    "parsnip": {
+      "Package": "parsnip",
+      "Version": "1.0.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "parsnip",
+      "RemoteRef": "parsnip",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.0.4",
+      "Requirements": [
+        "R",
+        "cli",
+        "dplyr",
+        "generics",
+        "ggplot2",
+        "globals",
+        "glue",
+        "hardhat",
+        "lifecycle",
+        "magrittr",
+        "pillar",
+        "prettyunits",
+        "purrr",
+        "rlang",
+        "stats",
+        "tibble",
+        "tidyr",
+        "utils",
+        "vctrs",
+        "withr"
+      ],
+      "Hash": "c798f1abedbea6d64eaf2effd3ff455a"
+    },
+    "patchwork": {
+      "Package": "patchwork",
+      "Version": "1.1.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "patchwork",
+      "RemoteRef": "patchwork",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.1.2",
+      "Requirements": [
+        "ggplot2",
+        "grDevices",
+        "graphics",
+        "grid",
+        "gtable",
+        "stats",
+        "utils"
+      ],
+      "Hash": "63b611e9d909a9ed057639d9c3b77152"
+    },
     "pdftools": {
       "Package": "pdftools",
       "Version": "3.3.3",
@@ -1872,22 +2093,6 @@
         "utils"
       ],
       "Hash": "01f28d4278f15c76cddbea05899c5d6f"
-    },
-    "png": {
-      "Package": "png",
-      "Version": "0.1-8",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "RemoteType": "standard",
-      "RemotePkgRef": "png",
-      "RemoteRef": "png",
-      "RemoteRepos": "https://cran.rstudio.com",
-      "RemotePkgPlatform": "x86_64-w64-mingw32",
-      "RemoteSha": "0.1-8",
-      "Requirements": [
-        "R"
-      ],
-      "Hash": "bd54ba8a0a5faded999a7aab6e46b374"
     },
     "prettyunits": {
       "Package": "prettyunits",
@@ -2241,33 +2446,6 @@
       ],
       "Hash": "d66fe009d4c20b7ab1927eb405db9ee2"
     },
-    "reticulate": {
-      "Package": "reticulate",
-      "Version": "1.28",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "RemoteType": "standard",
-      "RemotePkgRef": "reticulate",
-      "RemoteRef": "reticulate",
-      "RemoteRepos": "https://cran.rstudio.com",
-      "RemotePkgPlatform": "x86_64-w64-mingw32",
-      "RemoteSha": "1.28",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "Rcpp",
-        "RcppTOML",
-        "graphics",
-        "here",
-        "jsonlite",
-        "methods",
-        "png",
-        "rappdirs",
-        "utils",
-        "withr"
-      ],
-      "Hash": "86c441bf33e1d608db773cb94b848458"
-    },
     "rlang": {
       "Package": "rlang",
       "Version": "1.1.0",
@@ -2325,6 +2503,35 @@
         "R"
       ],
       "Hash": "1de7ab598047a87bba48434ba35d497d"
+    },
+    "rsample": {
+      "Package": "rsample",
+      "Version": "1.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "rsample",
+      "RemoteRef": "rsample",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.1.1",
+      "Requirements": [
+        "R",
+        "dplyr",
+        "furrr",
+        "generics",
+        "glue",
+        "methods",
+        "pillar",
+        "purrr",
+        "rlang",
+        "slider",
+        "tibble",
+        "tidyr",
+        "tidyselect",
+        "vctrs"
+      ],
+      "Hash": "cb0c54ebc268ec382be8e4d4a8c34557"
     },
     "rstudioapi": {
       "Package": "rstudioapi",
@@ -2435,6 +2642,26 @@
       ],
       "Hash": "9067f962730f58b14d8ae54ca885509f"
     },
+    "slider": {
+      "Package": "slider",
+      "Version": "0.3.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "slider",
+      "RemoteRef": "slider",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "0.3.0",
+      "Requirements": [
+        "R",
+        "cli",
+        "rlang",
+        "vctrs",
+        "warp"
+      ],
+      "Hash": "c1c73df260af9e1e3692eb3b8e1ecb88"
+    },
     "sna": {
       "Package": "sna",
       "Version": "2.7-1",
@@ -2453,25 +2680,6 @@
         "utils"
       ],
       "Hash": "eec6f4c1e012f5730d8000e6f0fbd669"
-    },
-    "spacyr": {
-      "Package": "spacyr",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "RemoteType": "standard",
-      "RemotePkgRef": "spacyr",
-      "RemoteRef": "spacyr",
-      "RemoteRepos": "https://cran.rstudio.com",
-      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
-      "RemoteSha": "1.2.1",
-      "Requirements": [
-        "R",
-        "data.table",
-        "methods",
-        "reticulate"
-      ],
-      "Hash": "91d7138ab33fd6425700ec778206050c"
     },
     "statnet.common": {
       "Package": "statnet.common",
@@ -2587,36 +2795,6 @@
       ],
       "Hash": "90b28393209827327de889f49935140a"
     },
-    "textrecipes": {
-      "Package": "textrecipes",
-      "Version": "1.0.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "RemoteType": "standard",
-      "RemotePkgRef": "textrecipes",
-      "RemoteRef": "textrecipes",
-      "RemoteRepos": "https://cran.rstudio.com",
-      "RemotePkgPlatform": "x86_64-w64-mingw32",
-      "RemoteSha": "1.0.2",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "SnowballC",
-        "cpp11",
-        "dplyr",
-        "generics",
-        "glue",
-        "lifecycle",
-        "magrittr",
-        "purrr",
-        "recipes",
-        "rlang",
-        "tibble",
-        "tokenizers",
-        "vctrs"
-      ],
-      "Hash": "e54f06d1d4c47e953ab819c795bf6efc"
-    },
     "textshaping": {
       "Package": "textshaping",
       "Version": "0.3.6",
@@ -2647,6 +2825,43 @@
         "vctrs"
       ],
       "Hash": "a84e2cc86d07289b3b6f5069df7a004c"
+    },
+    "tidymodels": {
+      "Package": "tidymodels",
+      "Version": "1.0.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "tidymodels",
+      "RemoteUsername": "tidymodels",
+      "RemotePkgRef": "tidymodels/tidymodels",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "79bef5b2a55d3bb5fed974e48bf2e51ab7d703e8",
+      "Requirements": [
+        "R",
+        "broom",
+        "cli",
+        "conflicted",
+        "dials",
+        "dplyr",
+        "ggplot2",
+        "hardhat",
+        "infer",
+        "modeldata",
+        "parsnip",
+        "purrr",
+        "recipes",
+        "rlang",
+        "rsample",
+        "rstudioapi",
+        "tibble",
+        "tidyr",
+        "tune",
+        "workflows",
+        "workflowsets",
+        "yardstick"
+      ],
+      "Hash": "7cd5ee4d8903b1ae4b1153374e317aa2"
     },
     "tidyr": {
       "Package": "tidyr",
@@ -2827,6 +3042,44 @@
       ],
       "Hash": "76d35ebfaaf291e08c15696c9f2ec96d"
     },
+    "tune": {
+      "Package": "tune",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "tune",
+      "RemoteRef": "tune",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "source",
+      "RemoteSha": "1.1.0",
+      "Requirements": [
+        "GPfit",
+        "R",
+        "cli",
+        "dials",
+        "dplyr",
+        "foreach",
+        "generics",
+        "ggplot2",
+        "glue",
+        "hardhat",
+        "lifecycle",
+        "parsnip",
+        "purrr",
+        "recipes",
+        "rlang",
+        "rsample",
+        "tibble",
+        "tidyr",
+        "tidyselect",
+        "vctrs",
+        "withr",
+        "workflows",
+        "yardstick"
+      ],
+      "Hash": "4e0a032dfcd96b14753aa42da88147dd"
+    },
     "tzdb": {
       "Package": "tzdb",
       "Version": "0.3.0",
@@ -2908,6 +3161,22 @@
       ],
       "Hash": "7015a74373b83ffaef64023f4a0f5033"
     },
+    "warp": {
+      "Package": "warp",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "warp",
+      "RemoteRef": "warp",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "0.2.0",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "2982481615756e24e79fee95bdc95daa"
+    },
     "wdman": {
       "Package": "wdman",
       "Version": "0.2.6",
@@ -2976,6 +3245,62 @@
       ],
       "Hash": "10274bd096f5c2ad7471ea0eea0c1424"
     },
+    "workflows": {
+      "Package": "workflows",
+      "Version": "1.1.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "workflows",
+      "RemoteRef": "workflows",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "i386+x86_64-w64-mingw32",
+      "RemoteSha": "1.1.3",
+      "Requirements": [
+        "R",
+        "cli",
+        "generics",
+        "glue",
+        "hardhat",
+        "lifecycle",
+        "modelenv",
+        "parsnip",
+        "rlang",
+        "tidyselect",
+        "vctrs"
+      ],
+      "Hash": "553cd1d3d88da41e40f70b04f657a164"
+    },
+    "workflowsets": {
+      "Package": "workflowsets",
+      "Version": "1.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cli",
+        "dplyr",
+        "generics",
+        "ggplot2",
+        "glue",
+        "hardhat",
+        "lifecycle",
+        "parsnip",
+        "pillar",
+        "prettyunits",
+        "purrr",
+        "rlang",
+        "rsample",
+        "stats",
+        "tibble",
+        "tidyr",
+        "tune",
+        "vctrs",
+        "withr",
+        "workflows"
+      ],
+      "Hash": "7393bad2a9c83d549e79bd641f6bf67a"
+    },
     "xfun": {
       "Package": "xfun",
       "Version": "0.38",
@@ -3004,6 +3329,29 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "0d0056cc5383fbc240ccd0cb584bf436"
+    },
+    "yardstick": {
+      "Package": "yardstick",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "yardstick",
+      "RemoteRef": "yardstick",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-w64-mingw32",
+      "RemoteSha": "1.1.0",
+      "Requirements": [
+        "R",
+        "dplyr",
+        "generics",
+        "hardhat",
+        "rlang",
+        "tidyselect",
+        "utils",
+        "vctrs"
+      ],
+      "Hash": "dccdce88dc8bcc4bcf091742496d6ddd"
     }
   }
 }
