@@ -111,6 +111,7 @@ Speaker notes go here.
 
 :::: {.columns}
 ::: {.column width="55%"}
+
 :::
 
 ::: {.column width="45%"}

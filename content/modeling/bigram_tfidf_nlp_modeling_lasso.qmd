@@ -145,5 +145,27 @@ vip_lasso |>
   geom_col() +
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
+
+ggsave("variable_importance_plot.png")
+```
+
+```{r}
+lasso_test_preds <- augment(fitted_lasso, new_data = bigram_test)
+
+tidytable::fwrite(lasso_test_preds, here::here("content", "modeling", "model_results", "lasso_test_preds.csv"))
+
+last_fit_lasso <- last_fit(final_lasso, tfidf_split)
+
+lasso_metric <- last_fit(final_lasso, tfidf_split) |>
+  collect_metrics()
+
+tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics.csv")
+
+last_fit_lasso |>
+  collect_predictions() |>
+  roc_curve(source_bias, `.pred_left-wing`) |>
+  autoplot()
+
+ggsave("roc_curve_lasso.png")
 ```
 
