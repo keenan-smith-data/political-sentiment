@@ -6,7 +6,8 @@ author: "Keenan Smith"
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/exploratory_data_analysis/exploratory_data_analysis.qmd")
+here::i_am("content/modeling/classical_nlp_modeling.qmd")
+library(tidytable)
 
 library(parallel)
 all_cores <- parallel::detectCores(logical = FALSE)
@@ -15,51 +16,46 @@ doParallel::registerDoParallel(cl)
 ```
 
 ```{r}
-require(DBI)
-pol_parquet_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","pol-parquet.duckdb"))
-
-corpus_df <- dplyr::tbl(pol_parquet_db, "full_corpus") |>
-  dplyr::collect() |>
-  tidytable::as_tidytable() |>
-  tidytable::mutate(
-    short_source = as.factor(short_source),
-    source_bias = as.factor(source_bias)
-  ) |>
-  tidytable::rename(text = full_text)
-
-corpus_df <- corpus_df |>
-  tidytable::filter(length_text > 50)
-
-DBI::dbDisconnect(pol_parquet_db, shutdown = TRUE)
+word_freq_df <- fread(here::here("data", "model_data", "word_df.csv.gz"))
+word_tfidf_df <- fread(here::here("data", "model_data", "tfidf_word_df.csv.gz"))
+bigram_freq_df <- fread(here::here("data", "model_data", "bigram_df.csv.gz"))
+bigram_tfidf_df <- fread(here::here("data", "model_data", "tfidf_word_df.csv.gz"))
 ```
-
-# Prepping for Modeling
+# Getting Classification out of Doc ID
 
 ```{r}
-library(spacyr)
-spacy_initialize(model = "en_core_web_sm")
+docid_to_bias <- function(df) {
+  df |>
+    tidytable::separate_wider_delim(document, delim = "_", names = c("short_source", "pull_index", "source_bias"), cols_remove = TRUE) |>
+    tidytable::select(-short_source, -pull_index)
+}
 ```
 
+
+# Engines
 
 ```{r}
-library(textrecipes)
+library(discrim)
+nb_spec <- naive_Bayes() %>%
+  set_mode("classification") %>%
+  set_engine("naivebayes")
+
+nb_spec
 ```
+
+
+
+# Recipes
 
 ```{r}
-rec <- recipe(source_bias ~ text, data = corpus_df) |>
-  step_tokenize(text, engine = "spacyr") |>
-  step_ngram(text, num_tokens = 2) |>
-  step_tokenfilter(text, min_times = 20) |>
-  step_tf(text)
+rec <- recipe(source_bias ~ *, data = corpus_df)
 ```
+
+# Workflows
 
 ```{r}
-start_time <- Sys.time()
-corpus_baked <- rec |>
-  prep() |>
-  bake(new_data = NULL)
-end_time <- Sys.time()
-
-print(end_time - start_time)
+complaint_wf <- workflow() %>%
+  add_recipe(complaints_rec)
 ```
+
 

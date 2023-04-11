@@ -9,34 +9,211 @@ format:
 ---
 
 # Overview {.smaller}
-- Introduction
-  - Research Question, Political Ideology, NLP
-- Methods
-  - The Data
-  - Programming Language
-  - Data Collection
-  - Modeling
-- Results
-  - EDA
-  - Model Results
-- Further Work
-- Questions
 
+-   Introduction
+    -   Research Question, Political Ideology, NLP
+-   Methods
+    -   The Data
+    -   Programming Language
+    -   Data Collection
+    -   Modeling
+-   Results
+    -   EDA
+    -   Model Results
+-   Further Work
+-   Questions
+
+## Research Question {.smaller}
+
+A **Data Science** Project that examines the question *"Does Political Speech indicate classical right-left political bias?"*
+
+:::: {.columns}
+::: {.column width="55%"}
+
+- The Corpus consists of Ideologically Identified Sources
+  - Primarily U.S. Think Tanks
+    - Specifically Chosen for Bias
+  - Data are Scraped from the Web
+  - These Data are in English
+- Classical Machine Learning Techniques are used for Classification
+  - Transformers (The tech behind GPT) are goals for the future
+
+:::
+
+::: {.column width="45%"}
+
+**Why?**
+
+- We live in a politically charged and active time in the United States
+- I like history, politics, and Natural Language
+- How we communicate is meaningful and important
+- The US Supreme Court uses Originalism and Textualism in their decisions
+
+:::
+::::
+
+::: {.notes}
+My interests are all the things you are not supposed to talk about at Thanksgiving
+:::
+
+## Political Ideology {.smaller}
+
+"Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." (Adorno et al. 1950)
+
+:::: {.columns}
+::: {.column width="55%"}
+- The study of political ideology is vast and complex (Feldman 2013; Feldman, 2017; Jost, 2017)
+  - Construction of political parties are equally complicated and vast (Mayer, 2018; Mudge, 2018)
+- This project chooses intentionally to focus on a wide corpus of data from left and right
+- Clustering of the Sources used shows this is a complicated topic
+  - Further work should focus on this diversity and complexity
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Natural Language Processing {.smaller}
+
+"the application of computer science to the **analysis, synthesis, and comprehension" of written and spoken language" (Oxford Dictionary)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+- Mixing Data Science and how we use Natural Language
+- NLP use linguistic tools to build *features* out of langauge
+- These features are then transformed into mathematical vectors in order to model
+  - Term Frequency
+  - Term Frequency Inverse Document Frequency (Tf-idf)
+  - Embeddings (not used in this project)
+  
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+- There are many other applications such as sentiment analysis and topic modeling to name a few
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Methods
+
+## The Data {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+:::
+
+::: {.column width="45%"}
+- Bias
+- Mitigation Techniques
+- Data Integrity
+:::
+::::
+
+::: {.notes}
+This needs some tables
+:::
+
+## The Data {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Process {.smaller}
+
+[Github](https://github.com/keenan-smith-data/political-sentiment)
+
+![Technical Flow Chat](Flow Chart.drawio.png)
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Models {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Results
+
+## Exploratory Data Analysis {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Model Results {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## Further Work
+
+## Further Work {.smaller}
+
+:::: {.columns}
+::: {.column width="55%"}
+:::
+
+::: {.column width="45%"}
+:::
+::::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+# Questions
 
 ## Column Format {.smaller}
 
 :::: {.columns}
-
 ::: {.column width="55%"}
-
-
-
 :::
-
 
 ::: {.column width="45%"}
-
-
 :::
-
 ::::

@@ -110,5 +110,103 @@
     "title": "Political Sentiment NLP",
     "section": "Column Format",
     "text": "Column Format\n\n\n\n\n\n\n\n\n\n\nPolitical_Sentiment_Capstone_Smith_Keenan"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#research-question",
+    "href": "content/project/Sentiment Presentation.html#research-question",
+    "title": "Political Sentiment NLP",
+    "section": "Research Question",
+    "text": "Research Question\nA Data Science Project that examines the question “Does Political Speech indicate classical right-left political bias?”\n\n\n\nThe Corpus consists of Ideologically Identified Sources\n\nPrimarily U.S. Think Tanks\n\nSpecifically Chosen for Bias\n\nData are Scraped from the Web\nThese Data are in English\n\nClassical Machine Learning Techniques are used for Classification\n\nTransformers (The tech behind GPT) are goals for the future\n\n\n\nWhy?\n\nWe live in a politically charged and active time in the United States\nI like history, politics, and Natural Language\nHow we communicate is meaningful and important\nThe US Supreme Court uses Originalism and Textualism in their decisions\n\n\n\n\nMy interests are all the things you are not supposed to talk about at Thanksgiving"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#political-ideology",
+    "href": "content/project/Sentiment Presentation.html#political-ideology",
+    "title": "Political Sentiment NLP",
+    "section": "Political Ideology",
+    "text": "Political Ideology\n“Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated.” (Adorno et al. 1950)\n\n\n\nThe study of political ideology is vast and complex (Feldman 2013; Feldman, 2017; Jost, 2017)\n\nConstruction of political parties are equally complicated and vast (Mayer, 2018; Mudge, 2018)\n\nThis project chooses intentionally to focus on a wide corpus of data from left and right\nClustering of the Sources used shows this is a complicated topic\n\nFurther work should focus on this diversity and complexity\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#natural-language-processing",
+    "href": "content/project/Sentiment Presentation.html#natural-language-processing",
+    "title": "Political Sentiment NLP",
+    "section": "Natural Language Processing",
+    "text": "Natural Language Processing\n“the application of computer science to the **analysis, synthesis, and comprehension” of written and spoken language” (Oxford Dictionary)\n\n\n\nMixing Data Science and how we use Natural Language\nNLP use linguistic tools to build features out of langauge\nThese features are then transformed into mathematical vectors in order to model\n\nTerm Frequency\nTerm Frequency Inverse Document Frequency (Tf-idf)\nEmbeddings (not used in this project)\n\n\n\n\n\n\n\nThere are many other applications such as sentiment analysis and topic modeling to name a few\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#methods",
+    "href": "content/project/Sentiment Presentation.html#methods",
+    "title": "Political Sentiment NLP",
+    "section": "Methods",
+    "text": "Methods"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#the-data",
+    "href": "content/project/Sentiment Presentation.html#the-data",
+    "title": "Political Sentiment NLP",
+    "section": "The Data",
+    "text": "The Data\n\n\n\n\n\nBias\nMitigation Techniques\n\n\n\n\nThis needs some tables"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#programming",
+    "href": "content/project/Sentiment Presentation.html#programming",
+    "title": "Political Sentiment NLP",
+    "section": "Programming",
+    "text": "Programming\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#process",
+    "href": "content/project/Sentiment Presentation.html#process",
+    "title": "Political Sentiment NLP",
+    "section": "Process",
+    "text": "Process\nThis project utilizes the R Programming Language and a series of Libraries - Github\n\nTechnical Flow Chat\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#models",
+    "href": "content/project/Sentiment Presentation.html#models",
+    "title": "Political Sentiment NLP",
+    "section": "Models",
+    "text": "Models\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#results",
+    "href": "content/project/Sentiment Presentation.html#results",
+    "title": "Political Sentiment NLP",
+    "section": "Results",
+    "text": "Results"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#exploratory-data-analysis",
+    "href": "content/project/Sentiment Presentation.html#exploratory-data-analysis",
+    "title": "Political Sentiment NLP",
+    "section": "Exploratory Data Analysis",
+    "text": "Exploratory Data Analysis\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#model-results",
+    "href": "content/project/Sentiment Presentation.html#model-results",
+    "title": "Political Sentiment NLP",
+    "section": "Model Results",
+    "text": "Model Results\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#further-work",
+    "href": "content/project/Sentiment Presentation.html#further-work",
+    "title": "Political Sentiment NLP",
+    "section": "Further Work",
+    "text": "Further Work"
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#further-work-1",
+    "href": "content/project/Sentiment Presentation.html#further-work-1",
+    "title": "Political Sentiment NLP",
+    "section": "Further Work",
+    "text": "Further Work\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment Presentation.html#the-data-1",
+    "href": "content/project/Sentiment Presentation.html#the-data-1",
+    "title": "Political Sentiment NLP",
+    "section": "The Data",
+    "text": "The Data\n\n\n\n\n\n\n\n\nSpeaker notes go here."
   }
 ]

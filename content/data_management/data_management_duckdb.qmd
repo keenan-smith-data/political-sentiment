@@ -13,14 +13,18 @@ library(DBI)
 library(tidytable)
 library(duckdb)
 library(here)
-library(dm)
+
+source(here::here("R", "export_db.R"))
+source(here::here("R", "text_sql_statements.R"))
+source(here::here("R", "create_db_sql.R"))
+
 ```
 
 # Connecting to the DuckDB
 
 ```{r}
 #| label: Connecting the DB
-pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-sentiment.duckdb"))
+pol_parquet_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","pol-parquet.duckdb"))
 ```
 
 # Reading in the Sitemap and Linkchecker Data
@@ -28,7 +32,7 @@ pol_sent_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","political-
 ```{r}
 #| label: Reading in Original 4 source Corpus
 filtered_linkcheck <- fread(here("data", "linkchecker", "links_pre-filtered_linkchecker.csv"))
-sitemap_collection <- fread(here("data", "sitemap", "links_sitemap.csv.gz"))
+sitemap_collection <- fread(here("data", "sitemap", "links_sitemap_new.csv"))
 
 source_table <- tidytable(art_source = as.factor(c("American Enterprise Institute", "Cato Institute",
                                          "Human Rights Watch", "Heritage Foundation",
@@ -38,15 +42,20 @@ source_table <- tidytable(art_source = as.factor(c("American Enterprise Institut
                                          "Discovery Institute", "EPIC", "Hoover Institute",
                                          "Claremont Institute", "National Review", "Jacobin",
                                          "Commonwealth Fund", "EPI", "Open Society Foundations",
-                                         "The Nation", "Guttmacher Institute", "Brookings Institute")),
+                                         "The Nation", "Guttmacher Institute", "Brookings Institute",
+                                         "Woodrow Wilson Center", "Demos", "International Institute for Strategic Studies",
+                                         "Third Way", "Berggruen Institute", "Fabian Society", "Council on Foreign Relations")),
                           short_source = as.factor(c("aei", "cato", "hrw", "heritage", "cap", "urban", "merc", "mani",
                                            "cbpp", "am", "disc", "epic", "hoov", "clare", "natr",
-                                           "jacob", "comf", "epi", "osf", "tnat", "gutt", "brook")),
+                                           "jacob", "comf", "epi", "osf", "tnat", "gutt", "brook",
+                                           "wilson", "demos", "iiss", "third", "berg", "fab", "cfr")),
                           source_bias = as.factor(c("right-wing", "right-wing", "left-wing", "right-wing",
                                                     "left-wing", "left-wing", "right-wing", "right-wing",
                                                     "left-wing", "right-wing", "right-wing", "right-wing",
                                                     "right-wing", "right-wing", "right-wing", "left-wing",
-                                                    "left-wing", "left-wing", "left-wing", "left-wing", "left-wing", "left-wing"))) |>
+                                                    "left-wing", "left-wing", "left-wing", "left-wing", "left-wing", "left-wing",
+                                                    "left-wing", "left-wing", "left-wing", "left-wing", "left-wing", "left-wing",
+                                                    "left-wing"))) |>
   tibble::as_tibble()
 ```
 
@@ -76,27 +85,27 @@ fwrite(source_table, here::here("data", "sources", "source_table.csv"))
 ```{r}
 dbRemoveTable(pol_sent_db, "linkchecker_data")
 dbRemoveTable(pol_sent_db, "sitemap_data")
-dbRemoveTable(pol_sent_db, "source_table")
+dbRemoveTable(pol_parquet_db, "source_table")
 
-dbListTables(pol_sent_db)
+dbListTables(pol_parquet_db)
 
 linkcheck_create <- create_linkchecker_table("linkchecker_data", pol_sent_db)
 sitemap_create <- create_sitemap_table("sitemap_data", pol_sent_db)
-source_create <- create_source_table("source_table", pol_sent_db)
+source_create <- create_source_table("source_table", pol_parquet_db)
 
 DBI::dbExecute(pol_sent_db, linkcheck_create)
 DBI::dbExecute(pol_sent_db, sitemap_create)
-DBI::dbExecute(pol_sent_db, source_create)
+DBI::dbExecute(pol_parquet_db, source_create)
 ```
 
 ```{r}
 copy_linkcheck <- copy_table("linkchecker_data", here::here("data", "linkchecker", "linkchecker_data.csv"), pol_sent_db)
 copy_sitemap <- copy_table("sitemap_data", here::here("data", "sitemap", "sitemap_data.csv"), pol_sent_db)
-copy_source_table <- copy_table("source_table", here::here("data", "sources", "source_table.csv"), pol_sent_db)
+copy_source_table <- copy_table("source_table", here::here("data", "sources", "source_table.csv"), pol_parquet_db)
 
 DBI::dbExecute(pol_sent_db, copy_linkcheck)
 DBI::dbExecute(pol_sent_db, copy_sitemap)
-DBI::dbExecute(pol_sent_db, copy_source_table)
+DBI::dbExecute(pol_parquet_db, copy_source_table)
 ```
 
 
@@ -104,7 +113,7 @@ DBI::dbExecute(pol_sent_db, copy_source_table)
 
 ```{r}
 #| label: Writing Original Corpus to New SQLite db
-dbListTables(pol_sent_db)
+dbListTables(pol_parquet_db)
 ```
 
 # Creating Unique Index on Link
@@ -118,7 +127,7 @@ Creating Indexes to Speed Up Data Queries
 
 dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX link_idx ON linkchecker_data (url, art_source)")
 dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX site_idx ON sitemap_data (url, art_source)") 
-dbSendStatement(pol_sent_db, "CREATE UNIQUE INDEX source_idx ON source_table (art_source)") 
+dbSendStatement(pol_parquet_db, "CREATE UNIQUE INDEX source_idx ON source_table (art_source)") 
 ```
 
 # Query Testing
@@ -136,7 +145,7 @@ dbGetQuery(pol_sent_db, "SELECT * FROM sitemap_data LIMIT 10")
 
 ```{r}
 #| label: Disconnect Block
-dbDisconnect(pol_sent_db)
+dbDisconnect(pol_parquet_db, shutdown = TRUE)
 ```
 
 ```{r}

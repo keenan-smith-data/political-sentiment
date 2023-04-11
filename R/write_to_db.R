@@ -1,4 +1,5 @@
 write_to_db <- function(df, db.con, table.title, loop_start = 1L, loop_end = nrow(df)) {
+  # browser()
   source(here::here("R", "text_sql_statements.R"))
   source(here::here("R", "scraping_helpers.R"))
   source(here::here("R", "article_pull_html.R"))

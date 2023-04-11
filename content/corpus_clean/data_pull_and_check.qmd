@@ -30,61 +30,34 @@ DBI::dbExecute(pol_parquet_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documen
 # Export Main DB for Back Up
 
 ```{r}
-export_statement <- export_db(here::here("data", "backup"), pol_parquet_db)
-DBI::dbExecute(pol_parquet_db, export_statement)
+export_statement <- export_db(here::here("data", "backup"), pol_sent_db)
+DBI::dbExecute(pol_sent_db, export_statement)
 ```
 
 # Export Scrape DB
 
 ```{r}
-# scrape_db_mani <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_mani.duckdb"))
-# scrape_db_hrw <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_hrw.duckdb"))
-# scrape_db_cap <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_cap.duckdb"))
-# scrape_db_heritage <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_heritage.duckdb"))
-# scrape_db_aei <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_aei.duckdb"))
+scrape_db_fab <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_fab.duckdb"))
+
+
+scrape_db_wilson <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_wilson.duckdb"))
+
+check_wilson <- dbGetQuery(scrape_db_wilson, "SELECT * FROM text_wilson")
+dbDisconnect(scrape_db_wilson, shutdown = T)
 ```
 
 
 ```{r}
-# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_mani)
-# DBI::dbExecute(scrape_db_mani, copy_statement)
-
-# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_hrw)
-# DBI::dbExecute(scrape_db_hrw, copy_statement)
-
-# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_cap)
-# DBI::dbExecute(scrape_db_cap, copy_statement)
-
-# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_heritage)
-# DBI::dbExecute(scrape_db_heritage, copy_statement)
-
-# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_aei)
-# DBI::dbExecute(scrape_db_aei, copy_statement)
-
-# copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_cato)
-# DBI::dbExecute(scrape_db_cato, copy_statement)
+copy_statement <- export_db(here::here("data", "scrape_db"), scrape_db_wilson)
+DBI::dbExecute(scrape_db_wilson, copy_statement)
 ```
 
 # Copy Exported Data into Main DB
 
 ```{r}
-# copy_mani <- copy_from_table("text_mani", here::here("data", "scrape_db", "text_mani.parquet"), pol_sent_db)
-# DBI::dbExecute(pol_sent_db, copy_mani)
 
-# copy_hrw <- copy_from_table("text_hrw", here::here("data", "scrape_db", "text_hrw.parquet"), pol_sent_db)
-# DBI::dbExecute(pol_sent_db, copy_hrw)
-
-# copy_cap <- copy_from_table("text_cap", here::here("data", "scrape_db", "text_cap.parquet"), pol_sent_db)
-# DBI::dbExecute(pol_sent_db, copy_cap)
-
-# copy_heritage <- copy_from_table("text_heritage", here::here("data", "scrape_db", "text_heritage.parquet"), pol_sent_db)
-# DBI::dbExecute(pol_sent_db, copy_heritage)
-
-# copy_aei <- copy_from_table("text_aei", here::here("data", "scrape_db", "text_aei.parquet"), pol_sent_db)
-# DBI::dbExecute(pol_sent_db, copy_aei)
-
-# copy_cato <- copy_from_table("text_cato", here::here("data", "scrape_db", "text_cato.parquet"), pol_sent_db)
-# DBI::dbExecute(pol_sent_db, copy_cato)
+copy_wilson <- copy_from_table("text_wilson", here::here("data", "scrape_db", "text_wilson.parquet"), pol_parquet_db)
+DBI::dbExecute(pol_parquet_db, copy_wilson)
 ```
 
 
@@ -97,7 +70,7 @@ dbListTables(pol_parquet_db)
 Check to make sure that the table isn't already created
 
 ```{r}
-table_create <- create_art_table("", pol_sent_db)
+table_create <- create_art_table("text_demos", pol_parquet_db)
 DBI::dbExecute(pol_parquet_db, table_create)
 ```
 
@@ -170,7 +143,7 @@ index_table <- function(tbl_name, con) {
   DBI::dbSendStatement(conn = con, index_statement)
 }
 
-tables <- dbListTables(pol_sent_db)[4:20]
+tables_idx <- dbListTables(pol_sent_db)[4:20]
 ```
 
 
@@ -178,7 +151,7 @@ tables <- dbListTables(pol_sent_db)[4:20]
 #| label: Creating Index on art_link
 
 # dbSendStatement(pol_sent_db, "ALTER TABLE source_table ADD PRIMARY KEY (art_source)")
-purrr::map(.x = tables, .f = index_table, con = pol_sent_db)
+purrr::map(.x = tables_corpus, .f = index_table, con = pol_sent_db)
 ```
 
 # Bring Data into R to Check its Validity
@@ -198,25 +171,13 @@ check_cbpp <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cbpp")
 check_mani <- dbGetQuery(pol_sent_db, "SELECT * FROM text_mani")
 check_hrw <- dbGetQuery(pol_sent_db, "SELECT * FROM text_hrw")
 check_cato <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cato")
-```
 
-# Stopword Clearing
-
-```{r}
-additional_stopwords <- c("epop", "percision", "embedclicker", "textarea", "getembedcode", "footerright", "footerleft", "customjson", "attr", "thead", "styledtable", "roboto", "tbody", "monospace", "scopedstyledtable", "xaxis", "plotbands", "plotoptions", "chartinfo", "yaxistitle", "yaxismin", "yaxismax", "yaxisvisibility", "xaxistitle", "xaxismultipletitles", "xaxisunits", "xaxisplotbands", "defaultoffset", "orderby", "showdatalabels", "showfirstdatalabel", "showlastdatalabel", "decimalplaces", "heightadjustment", "epicharts", "showscatterlabels", "showscattermarkers", "showregressionline", "showregressionequation", "regressionlabel", "regressionslope", "regressionintercept", "chartdatadownload", "verticalalign", "f", "embed", "layout", "download", "chart", "copy", "facebook", "y", "x", "figure", "data", "null", "stacking", "photo", "height", "semihidden", "quot", "background", "align", "backgrounder", "swf", "istockphoto", "jquery", "image", "tweet", "id", "title", "browser", "unhidewhenused", "scribd", "post", "miss", "research")
-# Ensuring that Sources were removed from the Corpus
-source_stopwords <- c("enterprise", "institute", "cato", "heritage", "foundation", "center", "mercatus", "manhattan", "cbpp", "discovery", "hoover", "claremont", "guttmacher", "jacobin", "commonwealth", "epi", "aei", "cap")
-bigram_stopterms <- c("amp_amp", "percent_percent", "originally_appeared", "piece_originally", "cdata_cdata", "appeared_daily", "share_share", "right_top", "code_website", "share_twitter", "research_insights", "para_para", "n_n", "miss_research", "yes_yes", "enjoyed_sign", "excel_underlying", "legend_position", "type_legend", "visibility_type", "false_visibility", "enabled_true", "type_line", "miss_posts", "related_reading", "appeared_forbes", "posts_papers", "recently_highlights", "fellow_contributing", "papers_charts", "editor_city", "outlets_featured", "appeared_realclearmarkets", "act_ref", "fellow_follow", "grid_table", "name_grid", "code_var", "floating_false", "var_shared", "false_text", "hidden_enabled", "underlying_note", "line_false", "twitter_variety", "table_colorful", "top_calc", "tab_format", "bottom_horizontal", "display_tab", "bold_arial", "none_border", "none_linear", "buffon_rgba", "transparent_rgba", "color_transparent", "rgba_buffon", "table_accent")
-
-bigram_stopterms_edit <- unique(unlist(strsplit(bigram_stopterms, "_")))
-
-stopterms <- paste0(paste0("^", c(additional_stopwords, source_stopwords, bigram_stopterms_edit), "$"), collapse = "|")
-```
-
-```{r}
-new_epi <- check_epi |>
-  mutate(full_text = gsub(stopterms, " ", full_text),
-         full_text = gsub("\\n|[[:digit:]]|[[:punct:]]", " ", full_text))
+check_third <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_third")
+check_demos <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_demos")
+check_cfr <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_cfr")
+check_iiss <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_iiss")
+check_fab <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_fab")
+check_wilson <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_wilson")
 ```
 
 
@@ -224,8 +185,9 @@ new_epi <- check_epi |>
 
 ```{r}
 source_table <- dplyr::tbl(pol_parquet_db, "source_table")
+source_table
 tables <- dbListTables(pol_parquet_db)
-tables_hrw<- tables[6:length(tables)]
+tables_corpus<- tables[4:length(tables)]
 dbRemoveTable(pol_parquet_db, "full_corpus")
 ```
 
@@ -260,16 +222,14 @@ create_full_corpus_table <- function(tbl_name, con) {
 ```
 
 ```{r}
-corpus_df <- purrr::map(.x = tables_hrw, .f = (corpus_pull), con = pol_parquet_db) |>
+corpus_df <- purrr::map(.x = tables_corpus, .f = corpus_pull, con = pol_parquet_db) |>
   bind_rows()
 
 # Adding Length Col to the Dataset
 corpus_df <- corpus_df |>
   mutate(length_text = nchar(full_text))
 
-
 fwrite(corpus_df, here::here("data", "text", "full_corpus.csv"))
-fwrite(new_corpus_df, here::here("data", "text", "full_corpus_filtered.csv"))
 
 # Full Corpus Unedited
 source(here::here("R", "create_db_sql.R"))
@@ -277,21 +237,10 @@ table_create <- create_full_corpus_table("full_corpus", pol_parquet_db)
 DBI::dbExecute(pol_parquet_db, table_create)
 copy_full_corpus <- copy_table("full_corpus", here::here("data", "text", "full_corpus.csv"), pol_parquet_db)
 DBI::dbExecute(pol_parquet_db, copy_full_corpus)
-
 ```
 
 ```{r}
-# new_corpus_df <- corpus_df |>
-#   mutate(full_text = gsub(stopterms, " ", full_text),
-#          full_text = gsub("\\n|[[:digit:]]|[[:punct:]]", " ", full_text))
-
-# new_corpus_df <- new_corpus_df |>
-#   mutate(length_text = nchar(full_text))
-
-# table_create <- create_full_corpus_table("full_corpus_filtered", pol_parquet_db)
-# DBI::dbExecute(pol_parquet_db, table_create)
-# copy_full_corpus <- copy_table("full_corpus_filtered", here::here("data", "text", "full_corpus_filtered.csv"), pol_parquet_db)
-# DBI::dbExecute(pol_parquet_db, copy_full_corpus)
+DBI::dbDisconnect(scrape_db_wilson, shutdown = TRUE)
 ```
 
 

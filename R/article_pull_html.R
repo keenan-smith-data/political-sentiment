@@ -1,5 +1,5 @@
 article_pull_html <- function(df) {
-#  browser()
+  # browser()
   hyperlink <- df$url[[1]]
   title.css.tag <- df$css_title[[1]]
   text.css.tag <- df$css_text[[1]]

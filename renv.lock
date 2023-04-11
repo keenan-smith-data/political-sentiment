@@ -715,33 +715,6 @@
       ],
       "Hash": "8b708f296afd9ae69f450f9640be8990"
     },
-    "dm": {
-      "Package": "dm",
-      "Version": "1.0.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "DBI",
-        "R",
-        "backports",
-        "cli",
-        "dplyr",
-        "glue",
-        "igraph",
-        "lifecycle",
-        "magrittr",
-        "memoise",
-        "methods",
-        "pillar",
-        "purrr",
-        "rlang",
-        "tibble",
-        "tidyr",
-        "tidyselect",
-        "vctrs"
-      ],
-      "Hash": "31e05dc119a03e2e56cadbee362e0b50"
-    },
     "doParallel": {
       "Package": "doParallel",
       "Version": "1.0.17",
@@ -1381,11 +1354,13 @@
     },
     "igraph": {
       "Package": "igraph",
-      "Version": "1.4.1",
+      "Version": "1.4.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "Matrix",
+        "R",
+        "cpp11",
         "grDevices",
         "graphics",
         "magrittr",
@@ -1395,7 +1370,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "a7ef0d811cb66d8be9da0d7b5ab80ded"
+      "Hash": "3e476b375c746d899fd53a7281d78191"
     },
     "ipred": {
       "Package": "ipred",
@@ -2045,15 +2020,9 @@
     },
     "quanteda": {
       "Package": "quanteda",
-      "Version": "3.2.4",
+      "Version": "3.3.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "RemoteType": "standard",
-      "RemotePkgRef": "quanteda",
-      "RemoteRef": "quanteda",
-      "RemoteRepos": "https://cran.rstudio.com",
-      "RemotePkgPlatform": "x86_64-w64-mingw32",
-      "RemoteSha": "3.2.4",
       "Requirements": [
         "Matrix",
         "R",
@@ -2062,6 +2031,7 @@
         "RcppParallel",
         "SnowballC",
         "fastmatch",
+        "jsonlite",
         "magrittr",
         "methods",
         "stopwords",
@@ -2069,7 +2039,7 @@
         "xml2",
         "yaml"
       ],
-      "Hash": "0f3e045b82acfe3f56298ab16d89137a"
+      "Hash": "d53d870c5c85164387265fb3ecfa82c9"
     },
     "quanteda.textplots": {
       "Package": "quanteda.textplots",
@@ -2242,9 +2212,12 @@
     "renv": {
       "Package": "renv",
       "Version": "0.17.3",
-      "OS_type": null,
+      "Source": "Repository",
       "Repository": "CRAN",
-      "Source": "Repository"
+      "Requirements": [
+        "utils"
+      ],
+      "Hash": "4543b8cd233ae25c6aba8548be9e747e"
     },
     "reprex": {
       "Package": "reprex",
@@ -2570,7 +2543,7 @@
     },
     "survival": {
       "Package": "survival",
-      "Version": "3.5-3",
+      "Version": "3.5-5",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -2582,7 +2555,7 @@
         "stats",
         "utils"
       ],
-      "Hash": "aea2b8787db7088ba50ba389848569ee"
+      "Hash": "d683341b1fa2e8d817efde27d6e6d35b"
     },
     "svglite": {
       "Package": "svglite",

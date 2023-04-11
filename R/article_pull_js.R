@@ -5,6 +5,7 @@ js_get_page_source <- function(hyperlink, remDr) {
 }
 
 article_pull_js <- function(df, remDr) {
+  Sys.sleep(2)
   #  browser()
   hyperlink <- df$url[[1]]
   source.html <- js_get_page_source(hyperlink, remDr)

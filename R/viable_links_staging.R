@@ -417,23 +417,23 @@ filtered_wilson <- sitemap_viable_links(sitemaps, short.source = "wilson", url.f
     url_type = tidytable::case_when(
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), wilson_include[1], stringr::regex("/\\w"))) ~ wilson_include[1],
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), wilson_include[2], stringr::regex("/\\w"))) ~ wilson_include[2]
-    ), css_text = tidytable::case_when(
+    ), css_text = case_when(
       url_type == "article" ~ ".text-block-inner",
       url_type == "blog-post" ~ ".text-block-inner"
     ),
-    css_title = tidytable::case_when(
+    css_title = case_when(
       url_type == "article" ~ ".insight-detail-hero-title",
       url_type == "blog-post" ~ ".insight-detail-hero-title"
     ),
-    css_date = tidytable::case_when(
+    css_date = case_when(
       url_type == "article" ~ '[class="insight-detail-hero-author-byline-text -date"]',
       url_type == "blog-post" ~ '[class="insight-detail-hero-author-byline-text -date"]'
     ),
-    css_author = tidytable::case_when(
+    css_author = case_when(
       url_type == "article" ~ ".insight-detail-hero-author-byline-link-text",
       url_type == "blog-post" ~ ".insight-detail-hero-author-byline-link-text"
     ),
-    css_topics = tidytable::case_when(
+    css_topics = case_when(
       url_type == "article" ~ NA,
       url_type == "blog-post" ~ NA
     )
@@ -444,23 +444,23 @@ filtered_demos <- sitemap_viable_links(sitemaps, short.source = "demos", url.fil
     url_type = tidytable::case_when(
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), demos_include[1], stringr::regex("/\\w"))) ~ demos_include[1],
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), demos_include[2], stringr::regex("/\\w"))) ~ demos_include[2]
-    ), css_text = tidytable::case_when(
+    ), css_text = case_when(
       url_type == "blog" ~ ".article-detail-content",
       url_type == "press-release" ~ ".article-detail-content"
     ),
-    css_title = tidytable::case_when(
+    css_title = case_when(
       url_type == "blog" ~ '[class="field field--name-node-title field--type-ds field--label-hidden field__item"]',
       url_type == "press-release" ~ '[class="field field--name-node-title field--type-ds field--label-hidden field__item"]'
     ),
-    css_date = tidytable::case_when(
+    css_date = case_when(
       url_type == "blog" ~ ".datetime",
       url_type == "press-release" ~ ".datetime"
     ),
-    css_author = tidytable::case_when(
+    css_author = case_when(
       url_type == "blog" ~ '[class="field field--name-field-author field--type-entity-reference field--label-hidden field__items"]',
       url_type == "press-release" ~ '[class="field field--name-field-author field--type-entity-reference field--label-hidden field__items"]'
     ),
-    css_topics = tidytable::case_when(
+    css_topics = case_when(
       url_type == "blog" ~ NA,
       url_type == "press-release" ~ NA
     )
@@ -484,31 +484,31 @@ filtered_third <- sitemap_viable_links(sitemaps, short.source = "third", url.fil
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), third_include[2], stringr::regex("/\\w"))) ~ third_include[2],
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), third_include[3], stringr::regex("/\\w"))) ~ third_include[3],
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), third_include[4], stringr::regex("/\\w"))) ~ third_include[4]
-    ), css_text = tidytable::case_when(
+    ), css_text = case_when(
       url_type == "memo" ~ ".Content",
       url_type == "report" ~ ".Content",
       url_type == "press" ~ ".col-lg-8",
       url_type == "blog" ~ ".Content"
     ),
-    css_title = tidytable::case_when(
+    css_title = case_when(
       url_type == "memo" ~ "h1.mb-4",
       url_type == "report" ~ "h1.mb-4",
       url_type == "press" ~ "h1.mb-4",
       url_type == "blog" ~ "h1.mb-4"
     ),
-    css_date = tidytable::case_when(
+    css_date = case_when(
       url_type == "memo" ~ ".published-at",
       url_type == "report" ~ ".published-at",
       url_type == "press" ~ ".published-at",
       url_type == "blog" ~ ".published-at"
     ),
-    css_author = tidytable::case_when(
+    css_author = case_when(
       url_type == "memo" ~ ".title",
       url_type == "report" ~ ".title",
       url_type == "press" ~ ".title",
       url_type == "blog" ~ ".title"
     ),
-    css_topics = tidytable::case_when(
+    css_topics = case_when(
       url_type == "memo" ~ NA,
       url_type == "report" ~ NA,
       url_type == "press" ~ NA,
@@ -538,23 +538,23 @@ filtered_cfr <- sitemap_viable_links(sitemaps, short.source = "cfr", url.filter 
     url_type = tidytable::case_when(
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), cfr_include[1], stringr::regex("/\\w"))) ~ cfr_include[1],
       stringr::str_detect(url, paste0(stringr::regex("\\w/"), cfr_include[2], stringr::regex("/\\w"))) ~ cfr_include[2]
-    ), css_text = tidytable::case_when(
+    ), css_text = case_when(
       url_type == "article" ~ ".body-content",
       url_type == "in-brief" ~ ".body-content"
     ),
-    css_title = tidytable::case_when(
+    css_title = case_when(
       url_type == "article" ~ ".article-header__title",
       url_type == "in-brief" ~ ".article-header__title"
     ),
-    css_date = tidytable::case_when(
+    css_date = case_when(
       url_type == "article" ~ ".article-header__date-ttr",
       url_type == "in-brief" ~ ".article-header__date-ttr"
     ),
-    css_author = tidytable::case_when(
+    css_author = case_when(
       url_type == "article" ~ ".article-header__link",
       url_type == "in-brief" ~ ".article-header__link"
     ),
-    css_topics = tidytable::case_when(
+    css_topics = case_when(
       url_type == "article" ~ NA,
       url_type == "in-brief" ~ NA
     )

@@ -116,8 +116,74 @@ source_table
 # Link Exploration
 
 ```{r}
-initial_look(sitemaps, "urban") |>
+initial_look(sitemaps, "wilson") |>
   path_examination()
+
+wilson_include <- c("article", "blog-post")
+
+filtered_wilson <- sitemap_viable_links(sitemaps, short.source = "wilson", url.filter = wilson_include)
+```
+
+```{r}
+initial_look(sitemaps, "demos") |>
+  path_examination()
+
+demos_include <- c("blog", "press-release")
+
+filtered_demos <- sitemap_viable_links(sitemaps, short.source = "demos", url.filter = demos_include)
+```
+
+```{r}
+initial_look(sitemaps, "iiss") |>
+  path_examination()
+
+iiss_include <- c("online-analysis")
+
+filtered_iiss <- sitemap_viable_links(sitemaps, short.source = "iiss", url.filter = iiss_include)
+```
+
+
+```{r}
+initial_look(sitemaps, "third") |>
+  path_examination()
+
+third_include <- c("memo", "report", "press", "blog")
+
+filtered_third <- sitemap_viable_links(sitemaps, short.source = "third", url.filter = third_include)
+```
+
+
+```{r}
+initial_look(sitemaps, "berg") |>
+  path_examination()
+
+berg_include <- c("news", "ideas")
+
+filtered_berg <- sitemap_viable_links(sitemaps, short.source = "berg", url.filter = berg_include)
+```
+
+
+```{r}
+initial_look(sitemaps, "fab") |>
+  path_examination()
+
+fab_filter <- initial_look(sitemaps, "fab") |>
+  path_examination() |>
+  tidytable::filter(n > 1)
+
+fab_exclude <- fab_filter[[1]]
+rm(fab_filter)
+
+filtered_fab <- sitemap_viable_links(sitemaps, short.source = "fab", url.filter = fab_exclude, exclude = TRUE)
+```
+
+```{r}
+initial_look(sitemaps, "cfr") |>
+  path_examination()
+
+cfr_include <- c("article", "in-brief")
+
+filtered_cfr <- sitemap_viable_links(sitemaps, short.source = "cfr", url.filter = cfr_include)
 ```
 
 # Disconnect

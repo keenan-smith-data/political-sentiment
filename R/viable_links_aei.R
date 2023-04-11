@@ -50,8 +50,6 @@ write_to_db(filtered_aei, scrape_db, "text_aei", loop_start = 50001L, loop_end =
 Sys.sleep(10)
 write_to_db(filtered_aei, scrape_db, "text_aei", loop_start = 55001L)
 
-source(here::here("R", "copy_to_sql.R"))
-copy_to_table(tbl_name = "text_aei", file_location = here::here("data", "scrape_db"), con = scrape_db)
 
 # Disconnecting from DuckDB
 DBI::dbDisconnect(scrape_db, shutdown = TRUE)

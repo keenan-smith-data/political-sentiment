@@ -7,8 +7,6 @@ editor_options:
 
 Built with R Version `r getRversion()`
 
-Guidance on R tidy text exploration provided by Silge, J & Robinson, D (2022). Text Mining with R (1st ed.). O'Reilly. [Link to Textbook](https://www.tidytextmining.com/index.html)
-
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
@@ -32,40 +30,230 @@ Eliminated Human Rights Watch since after initial inspection, the text is mainly
 require(DBI)
 pol_parquet_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","pol-parquet.duckdb"))
 
-corpus_df <- dplyr::tbl(pol_parquet_db, "full_corpus") |>
-  dplyr::collect() |>
-  tidytable::as_tidytable() |>
-  tidytable::mutate(
+corpus_pull <- function(tbl_title, con) {
+  filter_date <- lubridate::ymd("20100101")
+  dplyr::tbl(con, tbl_title) |>
+    dplyr::left_join(source_table, by = source_table$art_source) |>
+    dplyr::filter(art_date >= filter_date) |>
+    dplyr::collect() |>
+    tidytable::as_tidytable() |>
+    tidytable::mutate(
     short_source = as.factor(short_source),
-    source_bias = as.factor(source_bias)
-  ) |>
-  tidytable::rename(text = full_text) |>
-  tidytable::filter(length_text > 50)
+    source_bias = as.factor(source_bias),
+    length_text = nchar(full_text)) |>
+    tidytable::rename(text = full_text)
+}
 
-DBI::dbDisconnect(pol_parquet_db, shutdown = TRUE)
+
+source_table <- dplyr::tbl(pol_parquet_db, "source_table")
+
+source_tibble <- dplyr::collect(source_table)
+table_aei <- corpus_pull("text_aei", pol_parquet_db)
+table_am <- corpus_pull("text_am", pol_parquet_db)
+table_brook <- corpus_pull("text_brook", pol_parquet_db)
+table_cap <- corpus_pull("text_cap", pol_parquet_db)
+table_cato <- corpus_pull("text_cato", pol_parquet_db)
+table_cbpp <- corpus_pull("text_cbpp", pol_parquet_db)
+table_cfr <- corpus_pull("text_cfr", pol_parquet_db)
+table_comf <- corpus_pull("text_comf", pol_parquet_db)
+table_demos <- corpus_pull("text_demos", pol_parquet_db)
+table_disc <- corpus_pull("text_disc", pol_parquet_db)
+table_epi <- corpus_pull("text_epi", pol_parquet_db)
+table_fab <- corpus_pull("text_fab", pol_parquet_db)
+table_gutt <- corpus_pull("text_gutt", pol_parquet_db)
+table_heritage <- corpus_pull("text_heritage", pol_parquet_db)
+table_iiss <- corpus_pull("text_iiss", pol_parquet_db)
+table_jacob <- corpus_pull("text_jacob", pol_parquet_db)
+table_mani <- corpus_pull("text_mani", pol_parquet_db)
+table_merc <- corpus_pull("text_merc", pol_parquet_db)
+table_osf <- corpus_pull("text_osf", pol_parquet_db)
+table_third <- corpus_pull("text_third", pol_parquet_db)
+table_urban <- corpus_pull("text_urban", pol_parquet_db)
+table_wilson <- corpus_pull("text_wilson", pol_parquet_db)
+
+corpus_df <- bind_rows(table_aei, table_am, table_brook, table_cap, table_cato, table_cbpp,
+                      table_cfr, table_comf, table_demos, table_disc, table_epi, table_fab,
+                      table_gutt, table_heritage, table_iiss, table_jacob, table_mani, table_merc, table_osf,
+                      table_third, table_urban, table_wilson)
+
+
+# DBI::dbDisconnect(pol_parquet_db, shutdown = TRUE)
 ```
 
 ```{r}
+summary(corpus_df)
+```
+
+
+```{r}
+library(scales)
+
 ggplot(corpus_df, aes(x = length_text, fill = short_source, color = short_source)) +
   geom_histogram(alpha = 0.5, position = "identity") +
-  scale_x_log10(labels = scales::label_number_si())
+  scale_x_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)") +
+  theme_classic()
+ggsave(here::here("content", "project", "images", "corpus_histogram_source.png"))
+
+ggplot(corpus_df, aes(x = short_source, y = length_text)) +
+  geom_boxplot() +
+  scale_y_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)")
+ggsave(here::here("content", "project", "images", "corpus_boxplot_source.png"))
 
 ggplot(corpus_df, aes(x = length_text, fill = source_bias, color = source_bias)) +
-  geom_histogram(alpha = 0.5, position = "identity") +
-  scale_x_log10(labels = scales::label_number_si())
+  geom_histogram(alpha = 0.5, position = "dodge") +
+  scale_x_log10(labels =label_number(scale_cut = cut_short_scale())) +
+  scale_color_manual(values = c("left-wing" = "blue",
+                                "right-wing" = "red")) +
+  scale_fill_manual(values = c("left-wing" = "blue",
+                                "right-wing" = "red")) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)")
+ggsave(here::here("content", "project", "images", "corpus_histogram_bias.png"))
 
-length_df <- corpus_df |>
-  select(short_source, source_bias, length_text)
+ggplot(corpus_df, aes(x = source_bias, y = length_text)) +
+  geom_boxplot() +
+  scale_y_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)")
 
+ggsave(here::here("content", "project", "images", "corpus_boxplot_bias.png"))
+```
+
+```{r}
 group_source <- corpus_df |>
   group_by(short_source) |>
   count(sort = TRUE)
 
-group_bias <- corpus_df |>
-  group_by(source_bias) |>
-  count()
+total_length <- sum(corpus_df$length_text)
 
-# MAKE HISTOGRAM PLOT
+# Summary Statistics for the Filtered Corpus
+bias_count <- corpus_df |>
+  group_by(source_bias) |>
+  summarise(total = sum(length_text),
+            num = n(),
+            min = min(length_text),
+            max = max(length_text),
+            mean = mean(length_text),
+            median = mean(length_text),
+            iqr = IQR(length_text),
+            sd = sd(length_text))
+fwrite(bias_count, here::here("content", "project", "bias_count.csv"))
+
+group_count <- corpus_df |>
+  group_by(short_source) |>
+  summarise(total = sum(length_text),
+            num = n(),
+            min = min(length_text),
+            max = max(length_text), 
+            mean = mean(length_text),
+            median = mean(length_text),
+            iqr = IQR(length_text),
+            sd = sd(length_text))
+fwrite(group_count, here::here("content", "project", "source_count.csv"))
+
+# Trying to Get Roughly Equal Character Counts
+bias_count$total[[1]] / total_length
+bias_count$total[[2]] / total_length
+```
+
+```{r}
+aei_90 <- quantile(table_aei$length_text, .90)
+heritage_92 <- quantile(table_heritage$length_text, .92)
+
+table_aei_adj <- table_aei |>
+  filter(length_text < aei_90)
+
+table_heritage_adj <- table_heritage |>
+  filter(length_text < heritage_92)
+```
+
+
+```{r}
+#| label: Adjusted Corpus
+
+corpus_df_filtered <- bind_rows(table_aei_adj, table_am, table_brook, table_cap, table_cato, table_cbpp,
+                      table_cfr, table_comf, table_demos, table_disc, table_epi, table_fab,
+                      table_gutt, table_heritage_adj, table_iiss, table_jacob, table_mani, table_merc, table_osf,
+                      table_third, table_urban, table_wilson)
+
+corpus_df_fil_5 <- quantile(corpus_df_filtered$length_text, .05)
+
+corpus_df_filtered <- corpus_df_filtered |>
+  filter(length_text > corpus_df_fil_5)
+```
+
+```{r}
+total_length_filtered <- sum(corpus_df_filtered$length_text)
+
+# Summary Statistics for the Filtered Corpus
+bias_count_filtered <- corpus_df_filtered |>
+  group_by(source_bias) |>
+  summarise(total = sum(length_text),
+            num = n(),
+            min = min(length_text),
+            max = max(length_text),
+            mean = mean(length_text),
+            median = mean(length_text),
+            iqr = IQR(length_text),
+            sd = sd(length_text))
+
+fwrite(bias_count_filtered, here::here("content", "project", "bias_count_filtered.csv"))
+
+group_count_filtered <- corpus_df_filtered |>
+  group_by(short_source) |>
+  summarise(total = sum(length_text),
+            num = n(),
+            min = min(length_text),
+            max = max(length_text), 
+            mean = mean(length_text),
+            median = mean(length_text),
+            iqr = IQR(length_text),
+            sd = sd(length_text))
+fwrite(group_count_filtered, here::here("content", "project", "source_count_filtered.csv"))
+
+# Trying to Get Roughly Equal Character Counts
+bias_count_filtered$total[[1]] / total_length_filtered
+bias_count_filtered$total[[2]] / total_length_filtered
+```
+
+
+```{r}
+ggplot(corpus_df_filtered, aes(x = length_text, fill = short_source, color = short_source)) +
+  geom_histogram(alpha = 0.5, position = "identity") +
+  scale_x_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)") +
+  theme_classic()
+ggsave(here::here("content", "project", "images", "corpus_histogram_filtered_source.png"))
+
+ggplot(corpus_df_filtered, aes(x = short_source, y = length_text)) +
+  geom_boxplot() +
+  scale_y_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)")
+ggsave(here::here("content", "project", "images", "corpus_boxplot_filtered_source.png"))
+
+ggplot(corpus_df_filtered, aes(x = length_text, fill = source_bias, color = source_bias)) +
+  geom_histogram(alpha = 0.5, position = "dodge") +
+  scale_x_log10(labels =label_number(scale_cut = cut_short_scale())) +
+  scale_color_manual(values = c("left-wing" = "blue",
+                                "right-wing" = "red")) +
+  scale_fill_manual(values = c("left-wing" = "blue",
+                                "right-wing" = "red")) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)")
+ggsave(here::here("content", "project", "images", "corpus_histogram_filtered_bias.png"))
+
+ggplot(corpus_df_filtered, aes(x = source_bias, y = length_text)) +
+  geom_boxplot() +
+  scale_y_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)")
+ggsave(here::here("content", "project", "images", "corpus_boxplot_filtered_bias.png"))
 ```
 
 
@@ -75,22 +263,24 @@ Added Unique Document Names
 
 ```{r}
 #| label: Quanteda Operations
-corpus_polsent <- corpus(corpus_df)
+corpus_polsent <- corpus(corpus_df_filtered)
 
-docid <- paste(corpus_df$short_source,
-               corpus_df$pull_index,
-               corpus_df$source_bias,
+docid <- paste(corpus_df_filtered$short_source,
+               corpus_df_filtered$pull_index,
+               corpus_df_filtered$source_bias,
                sep = "_")
 
 docnames(corpus_polsent) <- docid
 
+readr::write_rds(corpus_polsent, here::here("data", "tokens", "corpus.rds"), compress = "gz")
+
 # All stopwords were selected by Initial Analysis of the Total Dataset
 # there may be more as the Corpus is quite large but these had the biggest effect on the Data
-additional_stopwords <- c("epop", "percision", "embedclicker", "textarea", "getembedcode", "footerright", "footerleft", "customjson", "attr", "thead", "styledtable", "roboto", "tbody", "monospace", "scopedstyledtable", "xaxis", "plotbands", "plotoptions", "chartinfo", "yaxistitle", "yaxismin", "yaxismax", "yaxisvisibility", "xaxistitle", "xaxismultipletitles", "xaxisunits", "xaxisplotbands", "defaultoffset", "orderby", "showdatalabels", "showfirstdatalabel", "showlastdatalabel", "decimalplaces", "heightadjustment", "epicharts", "showscatterlabels", "showscattermarkers", "showregressionline", "showregressionequation", "regressionlabel", "regressionslope", "regressionintercept", "chartdatadownload", "verticalalign", "f", "embed", "layout", "download", "chart", "copy", "facebook", "y", "x", "figure", "data", "null", "stacking", "photo", "height", "semihidden", "quot", "background", "align", "backgrounder", "swf", "istockphoto", "jquery", "image", "tweet", "id", "title", "browser", "unhidewhenused", "scribd", "post")
+additional_stopwords <- c("epop", "percision", "embedclicker", "textarea", "getembedcode", "footerright", "footerleft", "customjson", "attr", "thead", "styledtable", "roboto", "tbody", "monospace", "scopedstyledtable", "xaxis", "plotbands", "plotoptions", "chartinfo", "yaxistitle", "yaxismin", "yaxismax", "yaxisvisibility", "xaxistitle", "xaxismultipletitles", "xaxisunits", "xaxisplotbands", "defaultoffset", "orderby", "showdatalabels", "showfirstdatalabel", "showlastdatalabel", "decimalplaces", "heightadjustment", "epicharts", "showscatterlabels", "showscattermarkers", "showregressionline", "showregressionequation", "regressionlabel", "regressionslope", "regressionintercept", "chartdatadownload", "verticalalign", "f", "embed", "layout", "download", "chart", "copy", "facebook", "y", "x", "figure", "data", "null", "stacking", "photo", "height", "semihidden", "quot", "background", "align", "backgrounder", "swf", "istockphoto", "jquery", "image", "tweet", "id", "title", "browser", "unhidewhenused", "scribd", "post", "told", "click", "ref", "said")
 # Ensuring that Sources were removed from the Corpus
-source_stopwords <- c("enterprise", "institute", "cato", "heritage", "foundation", "center", "mercatus", "manhattan", "cbpp", "discovery", "hoover", "claremont", "guttmacher", "jacobin", "commonwealth", "epi", "aei", "cap")
+source_stopwords <- c("enterprise", "institute", "cato", "heritage", "foundation", "center", "mercatus", "manhattan", "cbpp", "discovery", "hoover", "claremont", "guttmacher", "jacobin", "commonwealth", "epi", "aei", "cap", "human", "watch", "hrw", "woodrow", "wilson", "third", "way", "demos", "fabian", "Berggruen", "society", "strategic", "studies", "council")
 
-bigram_stopterms <- c("amp_amp", "percent_percent", "originally_appeared", "piece_originally", "cdata_cdata", "appeared_daily", "share_share", "right_top", "code_website", "share_twitter", "research_insights", "para_para", "n_n", "miss_research", "yes_yes", "enjoyed_sign", "excel_underlying", "legend_position", "type_legend", "visibility_type", "false_visibility", "enabled_true", "type_line", "miss_posts", "related_reading", "appeared_forbes", "posts_papers", "recently_highlights", "fellow_contributing", "papers_charts", "editor_city", "outlets_featured", "appeared_realclearmarkets", "act_ref", "fellow_follow", "grid_table", "name_grid", "code_var", "floating_false", "var_shared", "false_text", "hidden_enabled", "underlying_note", "line_false", "twitter_variety", "table_colorful", "top_calc", "tab_format", "bottom_horizontal", "display_tab", "bold_arial", "none_border", "none_linear", "buffon_rgba", "transparent_rgba", "color_transparent", "rgba_buffon", "table_accent")
+bigram_stopterms <- c("amp_amp", "percent_percent", "originally_appeared", "piece_originally", "cdata_cdata", "appeared_daily", "share_share", "right_top", "code_website", "share_twitter", "research_insights", "para_para", "n_n", "miss_research", "yes_yes", "enjoyed_sign", "excel_underlying", "legend_position", "type_legend", "visibility_type", "false_visibility", "enabled_true", "type_line", "miss_posts", "related_reading", "appeared_forbes", "posts_papers", "recently_highlights", "fellow_contributing", "papers_charts", "editor_city", "outlets_featured", "appeared_realclearmarkets", "fellow_follow", "grid_table", "name_grid", "code_var", "floating_false", "var_shared", "false_text", "hidden_enabled", "underlying_note", "line_false", "twitter_variety", "table_colorful", "top_calc", "tab_format", "bottom_horizontal", "display_tab", "bold_arial", "none_border", "none_linear", "buffon_rgba", "transparent_rgba", "color_transparent", "rgba_buffon", "table_accent")
 
 bigrams_stopterms <- unique(unlist(strsplit(bigram_stopterms, "_")))
 
@@ -130,14 +320,14 @@ dfmat_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "dfmat_pol
 
 ```{r}
 # Trimmed word Data for Frequency as well
-dfmat_words_trim <- dfm_trim(dfmat_polsent, min_termfreq = 1000, termfreq_type = "rank")
+dfmat_words_trim <- dfm_trim(dfmat_polsent, min_termfreq = 3000, termfreq_type = "rank")
 
 # Grouping Words Based on Source Bias
 dfmat_group <- dfmat_words_trim |>
   dfm_group(groups = source_bias)
 
 # Trimmed Frequency to Make Data Easier to Manage
-dfmat_bigrams_trim <- dfm_trim(dfmat_polsent_bigrams, min_termfreq = 1000, termfreq_type = "rank")
+dfmat_bigrams_trim <- dfm_trim(dfmat_polsent_bigrams, min_termfreq = 3000, termfreq_type = "rank")
 
 # Grouping Bigrams Based on Source Bias
 dfmat_group_bigrams <- dfmat_bigrams_trim |>
@@ -171,7 +361,17 @@ dfmat_group_source <- dfm_group(dfmat_words_trim, groups = short_source) |>
 # Tidied Group Data on Bias
 
 ```{r}
-convert_test <- convert(dfmat_words_trim, to = "data.frame")
+convert_word <- convert(dfmat_words_trim, to = "data.frame")
+fwrite(convert_word, here::here("content", "project", "word_df.csv.gz"))
+
+convert_bigrams <- convert(dfmat_bigrams_trim, to = "data.frame")
+fwrite(convert_bigrams, here::here("content", "project", "bigram_df.csv.gz"))
+
+convert_word_tfidf <- convert(dfmat_words_tfidf, to = "data.frame")
+fwrite(convert_word_tfidf, here::here("content", "project", "tfidf_word_df.csv.gz"))
+
+convert_bigrams_tfidf <- convert(dfmat_bigrams_tfidf, to = "data.frame")
+fwrite(convert_bigrams_tfidf, here::here("content", "project", "tfidf_bigram_df.csv.gz"))
 
 dfmat_to_tidy <- function(dfmat) {
   tidytext::tidy(dfmat) |>
@@ -182,45 +382,31 @@ tidied_bigrams <- dfmat_to_tidy(dfmat_bigrams_trim)
 tidied_words <- dfmat_to_tidy(dfmat_words_trim)
 ```
 
-```{r}
-test <- tidied_bigrams |>
-    pivot_wider(names_from = term, names_prefix = "term_",
-              values_from = count, values_fill = 0)
-
-test <- test |>
-  mutate(short_source = as.factor(short_source),
-         source_bias = as.factor(source_bias))
-
-test |>
-  group_by(source_bias) |>
-  count()
-```
-
-
-
-```{r}
-test_sparse <- tidied_bigrams |>
-  tidytext::cast_sparse(source_bias, term, count)
-
-test_rownames <- rownames(test_sparse)
-```
-
 ## Frequency Analysis
 
 ```{r}
-tstat_freq <- textstat_frequency(dfmat_bigrams_trim, n = 200, groups = source_bias)
-tstat_freq
+tstat_bigram_freq <- textstat_frequency(dfmat_bigrams_trim, n = 200, groups = source_bias)
+fwrite(tstat_bigram_freq, here::here("content", "project", "tstat_freq_bigram.csv"))
 
-left_freq <- subset(tstat_freq, group == "left-wing")
-right_freq <- subset(tstat_freq, group == "right-wing")
+left_bigram_freq <- subset(tstat_bigram_freq, group == "left-wing")
+right_bigram_freq <- subset(tstat_bigram_freq, group == "right-wing")
+
+tstat_word_freq <- textstat_frequency(dfmat_words_trim, n = 200, groups = source_bias)
+fwrite(tstat_word_freq, here::here("content", "project", "tstat_freq_word.csv"))
+
+left_word_freq <- subset(tstat_word_freq, group == "left-wing")
+right_word_freq <- subset(tstat_word_freq, group == "right-wing")
 ```
 
 ### Individual Bigram Frequency WordCloud
 
 ```{r}
 
-wordcloud2::wordcloud2(left_freq, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1)
-wordcloud2::wordcloud2(right_freq, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1)
+wordcloud2::wordcloud2(left_word_freq, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1)
+wordcloud2::wordcloud2(right_word_freq, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1)
+
+wordcloud2::wordcloud2(left_bigram_freq, size = 1.5, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1)
+wordcloud2::wordcloud2(right_bigram_freq, size = 1.5, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1)
 ```
 
 ```{r}
@@ -228,8 +414,8 @@ wordcloud2::wordcloud2(right_freq, color = pals::ocean.oxy(100), minRotation = -
 #| fig-height: 8
 # create wordcloud
 set.seed(132) # set seed for reproducibility
-textplot_wordcloud(dfmat_group_bigrams, comparison = TRUE, max_words = 500,  color = c("blue", "red"))
-textplot_wordcloud(dfmat_group, comparison = TRUE, max_words = 200, color = c("blue", "red"))
+textplot_wordcloud(dfmat_group_bigrams, comparison = TRUE, max_words = 500,  color = c("red", "blue"))
+textplot_wordcloud(dfmat_group, comparison = TRUE, max_words = 200, color = c("red", "blue"))
 ```
 
 ## Lexical Diversity Between Sources
@@ -249,7 +435,7 @@ ggplot(tstat_lexdiv, aes(document, TTR)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
         legend.position = "none")
 
-ggsave(here::here("content", "exploratory_data_analysis", "images", "art_source_lexical_diversity.png"))
+ggsave(here::here("content", "project", "images", "art_source_lexical_diversity.png"))
 ```
 
 
@@ -263,12 +449,14 @@ tstat_col_caps <- tokens_select(toks_polsent, pattern = "^[A-Z]",
                                 case_insensitive = FALSE, 
                                 padding = TRUE) |>
                   textstat_collocations(min_count = 100)
+fwrite(tstat_col_caps, here::here("content", "project", "tstat_collations_bigram.csv"))
 
 tstat_col2 <- tokens_select(toks_polsent, pattern = "^[A-Z]", 
                                 valuetype = "regex", 
                                 case_insensitive = FALSE, 
                                 padding = TRUE) |> 
               textstat_collocations(min_count = 100, size = 3)
+fwrite(tstat_col2, here::here("content", "project", "tstat_collations_trigrams.csv"))
 ```
 
 ## Clustering Based on Article Source
@@ -285,5 +473,5 @@ ggdendro::ggdendrogram(group_clust, theme_dendro = FALSE) +
   labs(title = "Cluster Analysis for Article Source",
        x = "Article Sources",
        y = "")
-ggsave(here::here("content", "exploratory_data_analysis", "images", "art_source_cluster.png"))
+ggsave(here::here("content", "project", "images", "art_source_cluster.png"))
 ```

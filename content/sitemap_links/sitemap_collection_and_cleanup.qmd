@@ -8,7 +8,8 @@ format: html
 Loading the Libraries required to start work.
 
 ```{r}
-here::i_am("content/sitemap_links/sitemap_collection_testing.qmd")
+here::i_am("content/sitemap_links/sitemap_collection_and_cleanup.qmd")
+1
 library(here)
 library(xml2)
 library(tidytable)
@@ -166,6 +167,17 @@ hrw_sitemap <- gathered_sitemaps[[13,1]]
 gutt_sitemap <- gathered_sitemaps[[14,1]]
 urban_sitemap <- gathered_sitemaps[[15,1]]
 am_mind_sitemap <- gathered_sitemaps[[16,1]]
+
+# New Sitemaps
+cfr_sitemap <- gathered_sitemaps[[20, 1]]
+aspen_sitemap <- gathered_sitemaps[[21, 1]]
+iiss_sitemap <- gathered_sitemaps[[22, 1]]
+cnas_sitemap <- gathered_sitemaps[[23, 1]]
+demos_sitemap <- gathered_sitemaps[[24, 1]]
+wilson_sitemap <- gathered_sitemaps[[25, 1]]
+third_sitemap <- gathered_sitemaps[[26, 1]]
+fab_sitemap <- gathered_sitemaps[[27, 1]]
+berg_sitemap <- gathered_sitemaps[[28, 1]]
 ```
 
 ```{r}
@@ -189,6 +201,19 @@ claremont_sitemap_links <- sitemap_function(claremont_sitemap, skip = TRUE)
 discovery_sitemap_links <- sitemap_function(discovery_sitemap, skip = TRUE)
 ```
 
+```{r}
+cfr_sitemap_links <- sitemap_function(cfr_sitemap)
+# aspen_sitemap_links <- sitemap_function(aspen_sitemap)
+iiss_sitemap_links <- sitemap_function(iiss_sitemap)
+# cnas_sitemap_links <- sitemap_function(cnas_sitemap)
+demos_sitemap_links <- sitemap_function(demos_sitemap)
+wilson_sitemap_links <- sitemap_function(wilson_sitemap)
+third_sitemap_links <- sitemap_function(third_sitemap)
+fab_sitemap_links <- sitemap_function(fab_sitemap)
+berg_sitemap_links <- sitemap_function(berg_sitemap)
+```
+
+
 
 # Staging for Sitemap Link Collection
 
@@ -207,6 +232,42 @@ gutt_all_links <- sitemap_page_opener(gutt_sitemap_links)
 urban_all_links <- sitemap_page_opener(urban_sitemap_links)
 am_mind_all_links <- sitemap_page_opener(am_mind_sitemap_links)
 ```
+
+```{r}
+cfr_all_links <- sitemap_page_opener(cfr_sitemap_links[2:4])
+# cnas_all_links <- sitemap_page_opener(cnas_sitemap_links)
+demos_all_links <- sitemap_page_opener(demos_sitemap_links)
+wilson_all_links <- sitemap_page_opener(wilson_sitemap_links)
+fab_all_links <- sitemap_page_opener(fab_sitemap_links)
+berg_all_links <- sitemap_page_opener(berg_sitemap_links)
+```
+
+
+```{r}
+
+unnest_to_format <- function(all.links, art.source, art.bias, csv.title) {
+  links_total <- tidytable::map_df(.x = all.links, .f = xml_to_tibble)
+  links_total <- links_total |> tidytable::mutate(art_source = art.source,
+                                           art_bias = art.bias)
+  tidytable::fwrite(links_total, here("data", paste0(csv.title,"_sitemap.csv.gz")))
+  return(links_total)
+}
+
+unnest_to_format_nolast_mod <- function(all.links, art.source, art.bias, csv.title) {
+  links_total <- tidytable::map_df(.x = all.links, .f = xml_to_tibble_epic)
+  links_total <- links_total |> tidytable::mutate(art_source = art.source,
+                                           art_bias = art.bias)
+  tidytable::fwrite(links_total, here("data", paste0(csv.title,"_sitemap.csv.gz")))
+  return(links_total)
+}
+
+links_cfr <- unnest_to_format(cfr_all_links[2:3], "Council on Foreign Relations", "left-wing", "links_cfr")
+links_demos <- unnest_to_format(demos_all_links, "Demos", "left-wing", "links_demos")
+links_wilson <- unnest_to_format(wilson_all_links, "Woodrow Wilson Center", "left-wing", "links_wilson")
+links_fab <- unnest_to_format_nolast_mod(fab_all_links, "Fabian Society", "left-wing", "links_fab")
+links_berg <- unnest_to_format(berg_all_links, "Berggruen Institute", "left-wing", "links_berg")
+```
+
 
 # Unnesting and Writing to Disk
 
@@ -291,6 +352,29 @@ fwrite(links_hoover, here("data", "links_hoover.csv.gz"))
 ```
 
 ```{r}
+# Third Way Link Collection
+links_third <- sitemap_to_format(third_sitemap_links, art.source = "Third Way", art.bias = "left-wing")
+fwrite(links_third, here("data", "links_third.csv.gz"))
+
+links_iiss <- sitemap_to_format(iiss_sitemap_links, art.source = "International Institute for Strategic Studies", art.bias = "left-wing")
+fwrite(links_iiss, here("data", "links_iiss.csv.gz"))
+```
+
+
+```{r}
+links_sitemap_old <- fread(here("data", "sitemap", "links_sitemap.csv")) |>
+  tidytable::distinct(loc, .keep_all = TRUE)
+
+links_sitemap_new <- tidytable::bind_rows(links_sitemap_old, links_berg, links_cfr,
+                                          links_demos, links_fab, links_iiss, links_third, links_wilson) |>
+  tidytable::select(-rowid) |>
+  tidytable::distinct(loc, .keep_all = TRUE) |>
+  tibble::rowid_to_column()
+
+links_group <- links_sitemap_new |>
+  group_by(art_source) |>
+  count(sort = TRUE)
+
 links_sitemap <- tidytable::bind_rows(links_aei, links_am_prog, links_cato,
                                       links_cbpp, links_claremont, links_discovery,
                                       links_epic, links_heritage, links_hoover,
@@ -300,6 +384,8 @@ links_sitemap <- tidytable::bind_rows(links_aei, links_am_prog, links_cato,
   tidytable::distinct(loc, .keep_all = TRUE) |>
   tibble::rowid_to_column()
 
-fwrite(links_sitemap, here("data", "links_sitemap.csv.gz"))
+fwrite(links_sitemap, here("data", "sitemap", "links_sitemap.csv.gz"))
+
+fwrite(links_sitemap_new, here("data", "sitemap", "links_sitemap_new.csv"))
 ```
 

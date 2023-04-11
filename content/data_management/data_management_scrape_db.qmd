@@ -10,7 +10,7 @@ source(here::here("R", "export_db.R"))
 source(here::here("R", "text_sql_statements.R"))
 source(here::here("R", "create_db_sql.R"))
 
-scrape_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_hrw.duckdb"))
+scrape_db <- DBI::dbConnect(duckdb::duckdb(), dbdir = here::here("data","scrape_db","scrape_wilson.duckdb"))
 
 linkcheck_create <- create_linkchecker_table("linkchecker_data", scrape_db)
 sitemap_create <- create_sitemap_table("sitemap_data", scrape_db)
@@ -28,7 +28,7 @@ DBI::dbExecute(scrape_db, copy_linkcheck)
 DBI::dbExecute(scrape_db, copy_sitemap)
 DBI::dbExecute(scrape_db, copy_source_table)
 
-table_create <- create_art_table("text_hrw", scrape_db)
+table_create <- create_art_table("text_wilson", scrape_db)
 DBI::dbExecute(scrape_db, table_create)
 
 DBI::dbDisconnect(scrape_db, shutdown = TRUE)
