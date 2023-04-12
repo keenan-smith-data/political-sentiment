@@ -12,18 +12,28 @@ format:
 
 # Overview
 
+:::: {.columns}
+::: {.column width="50%"}
+
 -   Introduction
     -   Research Question, Political Ideology, NLP
 -   Methods
     -   The Data
     -   Programming Language
     -   Data Collection
-    -   Modeling
+
+:::
+
+::: {.column width="50%"}
+
 -   Results
     -   EDA
     -   Model Results
 -   Further Work
 -   Questions
+
+:::
+::::
 
 ## Research Question
 
@@ -86,6 +96,8 @@ Speaker notes go here.
 - Mixing Data Science and how we use Natural Language
 - NLP use linguistic tools to build *features* out of langauge
 - These features are then transformed into mathematical vectors in order to model
+  - Tokens (units of language)
+    - Characters, Words, n-grams, Sentences, Paragraphs
   - Term Frequency
   - Term Frequency Inverse Document Frequency (Tf-idf)
   - Embeddings (not used in this project)
@@ -140,14 +152,9 @@ Speaker notes go here.
 This needs some tables
 :::
 
-## Data Source in Length of Text {.scrollable}
+## Sources
 
-```{r}
-source_count <- tidytable::fread("source_count_filtered.csv")
-kableExtra::kbl(source_count) |>
-  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
-```
-
+Insert Source Table Here
 
 ## Data Sample {.scrollable}
 
@@ -169,74 +176,147 @@ Table of Sample Data
 Speaker notes go here.
 :::
 
-## Models {.smaller}
+## The Data Prior to Modeling
 
-:::: {.columns}
-::: {.column width="55%"}
+- The Corpus is tokenized using the Quanteda framework of libraries
+  = Bigrams were chosen due to their ability to contain more lexical scope information
+  - Symbols, Numbers, and common Stopwords were excluded from the Corpus
+  - Specific Stopwords were chosen via EDA and early LASSO Classification
+    - Many of these are leftover web artifacts from scraping being an imperfect science
+    - Others are common terms used in articles ("originally_published", "see_also")
+    - Lastly, proper nouns specific to certain think tanks (Organization Names, Sponsors)
+- This Corpus is Large consisting of 148,703 documents
+  - 3000 predictors chosen based on Frequency, vectorized using TF-IDF
+- The Data are split 75/25 stratifying on bias
+  - 111,526 documents in the training set
+  - 37,177 documents in the testing set
+  - Random Seed state is set to 2023 in every model for reproducibility
+
+::: {.notes}
+Stopwords were removed to the best of my ability. Many times these were obvious, but most of the time they were pulled out after others were removed.
+Lastly, certain stopwords were not removed until initial modelling was completed as they weighed heavily towards identifying bias. This process is imperfect.
+Early on, the corpus had to be retokenized and saved to disk which took 10-20 mins per cycle.  
 :::
 
-::: {.column width="45%"}
-:::
-::::
+## Models
+
+Models were chosen for their use in Text Classification Best Practices and ease of Modeling in R
+
+- Naive Bayes Classifier
+  - A simple classifier that applies the Bayes Thereom to predictors
+  - Assume within *kth* class, the *p* predictors are independent (ISLR. 2018)
+  - $Pr(Y = k | X = x) = \frac{\pi_i * f_k(x) = f_{k1}(x_1) * \dots * f_{kp}}{\sum^K_{k=1} \pi_l * f_{l1}(x_1) * \dots * f_{lp}}$
+  - Generally good in Spam Detection situation where words appear less in one than the other
+
+- LASSO Logistic Regression
+  - Regularized Linear Regression that minimizes $\lambda$ value 
+  - In Statistics/Linear Algebra, the LASSO uses an $\ell_1$ penalty
+  - Performs Feature Selection on the Linear Model
+  - With close ties to Linear Regression, predictor effects are easier to understand
+
+- Random Forest Classification
+  - 
+
+- Gradient Boosted Classification Trees
+  - Utilizing the XGBoost Algorithm
+  - Think Decision Trees that learn based on Residuals and Thresholds
+  - Outside of Deep Learning, this algorithm is known for winning classification competitions
+
+## Model Optimization
+
+Cross Validation
+- 10 Fold Cross Validation is Utilized to Optimize Models
+- Parameters are training based on best practices
 
 ::: {.notes}
 Speaker notes go here.
 :::
 
-## Results
+# Results
+
+## Data Source in Length of Text {.scrollable}
+
+```{r}
+source_count <- tidytable::fread("source_count_filtered.csv")
+kableExtra::kbl(source_count) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
+```
+
 
 ## Exploratory Data Analysis {.smaller}
 
-:::: {.columns}
-::: {.column width="55%"}
-:::
-
-::: {.column width="45%"}
-:::
-::::
+![Histogram Length Text by Bias](images/corpus_histogram_filtered_bias.png)
 
 ::: {.notes}
 Speaker notes go here.
 :::
 
-## Model Results {.smaller}
+## Exploratory Data Analysis {.smaller}
+
+![Histogram Length Text by Bias](images/corpus_histogram_filtered_source.png)
+
+## Bigram Wordclouds
+
+:::: {.columns}
+::: {.column width="50%"}
+
+![](images/left_freq_wordcloud_bigram.png)
+
+:::
+
+::: {.column width="50%"}
+
+![](images/right_freq_bigram_wordcloud.png)
+
+:::
+::::
+
+## Model Results  {.scrollable}
+
+::: {.panel-tabset}
+
+### Tab A
 
 :::: {.columns}
 ::: {.column width="55%"}
+
+- 3000 of the Most Frequent Bigrams Selected
+  - Bigrams contain more information than Word Tokens
+  - Early Modeling showed Bigrams had better results
+- Regularized LASSO Regression Used so far
+
+```{r}
+lasso_test_metrics <- tidytable::fread("lasso_test_metrics.csv")
+kableExtra::kbl(lasso_test_metrics) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
+```
+
 :::
 
 ::: {.column width="45%"}
+
+![](images/variable_importance_plot.png)
+
 :::
 ::::
+
+### Tab B (ROC Curve)
+
+![](images/roc_curve_lasso.png)
+
+:::
 
 ::: {.notes}
 Speaker notes go here.
 :::
 
-## Further Work
+## Conclusion & Remarks
 
-## Further Work {.smaller}
-
-:::: {.columns}
-::: {.column width="55%"}
-:::
-
-::: {.column width="45%"}
-:::
-::::
-
-::: {.notes}
-Speaker notes go here.
-:::
+- Results appear to be promising
+  - An Accuracy of 82% and ROC AUC of 90% is excellent for LASSO Regresssion
+  - Results are Relatively Easy to Interpret
+- The Dataset is Large but not Unwieldy for others to Utilize
+- The R Packages Utilized are Manageable and Easy to Learn
+- Scraping is Easy to Replicate but Hard to find good sources
 
 # Questions
-
-## Column Format {.smaller}
-
-:::: {.columns}
-::: {.column width="55%"}
-:::
-
-::: {.column width="45%"}
-:::
-::::

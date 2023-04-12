@@ -29,6 +29,19 @@ toks_polsent <- readr::read_rds(here::here("data", "tokens", "filtered_tokens.rd
 dfmat_polsent <- readr::read_rds(here::here("data", "tokens", "dfmat_polsent.rds"))
 ```
 
+```{r}
+words_stopterms_from_bigrams <- unique(unlist(strsplit(bigram_stopterms_post_write, "_")))
+
+word_trim <- dfm_remove(dfmat_polsent, pattern = words_stopterms_from_bigrams)
+
+# Trimmed word Data for Frequency as well
+dfmat_words_trim <- dfm_trim(dfmat_polsent, min_termfreq = 3000, termfreq_type = "rank")
+
+# Grouping Words Based on Source Bias
+dfmat_group <- dfmat_words_trim |>
+  dfm_group(groups = source_bias)
+```
+
 ## Bigrams
 
 ```{r}
@@ -48,20 +61,6 @@ dfmat_bigrams_trim <- dfm_trim(bigram_trim, min_termfreq = 3000, termfreq_type =
 dfmat_group_bigrams <- dfmat_bigrams_trim |>
   dfm_group(groups = source_bias)
 ```
-
-```{r}
-words_stopterms_from_bigrams <- unique(unlist(strsplit(bigram_stopterms_post_write, "_")))
-
-word_trim <- dfm_remove(dfmat_polsent, pattern = words_stopterms_from_bigrams)
-
-# Trimmed word Data for Frequency as well
-dfmat_words_trim <- dfm_trim(dfmat_polsent, min_termfreq = 3000, termfreq_type = "rank")
-
-# Grouping Words Based on Source Bias
-dfmat_group <- dfmat_words_trim |>
-  dfm_group(groups = source_bias)
-```
-
 
 # Using Quanteda to Analyze Data
 

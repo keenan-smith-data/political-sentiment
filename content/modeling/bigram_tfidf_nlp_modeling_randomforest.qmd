@@ -1,12 +1,12 @@
 ---
-title: "LASSO NLP Modeling"
+title: "xgboost NLP Modeling"
 author: "Keenan Smith"
 ---
 
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_tfidf_nlp_modeling_lasso.qmd")
+here::i_am("content/modeling/bigram_tfidf_nlp_modeling_randomforest.qmd")
 library(tidymodels)
 
 library(parallel)
