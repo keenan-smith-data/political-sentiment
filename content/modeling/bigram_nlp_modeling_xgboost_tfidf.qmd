@@ -1,12 +1,12 @@
 ---
-title: "LASSO NLP Modeling"
+title: "xgb NLP Modeling"
 author: "Keenan Smith"
 ---
 
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_nlp_modeling_lasso_tfidf.qmd")
+here::i_am("content/modeling/bigram_nlp_modeling_xgb_tfidf.qmd")
 library(tidymodels)
 
 library(parallel)
@@ -49,15 +49,34 @@ bigram_folds <- vfold_cv(bigram_train)
 # Engine
 
 ```{r}
-tune_spec <- logistic_reg(penalty = tune(), mixture = 1) |>
+library(xgboost)
+
+tune_spec <- boost_tree(
+  trees = 1000,
+  tree_depth = tune(), 
+  min_n = tune(),
+  loss_reduction = tune(),
+  learn_rate = tune()) |>
   set_mode("classification") |>
-  set_engine("glmnet")
+  set_engine("xgboost")
 ```
 
 # Tune Grid
 
 ```{r}
-lambda_grid <- grid_regular(penalty(), levels = 10)
+xgboost_params <- 
+  dials::parameters(
+    min_n(),
+    tree_depth(),
+    learn_rate(),
+    loss_reduction()
+  )
+
+xgb_grid <- 
+  dials::grid_max_entropy(
+    xgboost_params, 
+    size = 10
+  )
 ```
 
 # Recipes
@@ -86,114 +105,98 @@ class_metrics <- metric_set(sens, spec, recall, precision, f_meas, accuracy, roc
 tune_rs <- tune_grid(
   tune_wf,
   bigram_folds,
-  grid = lambda_grid,
+  grid = xgb_grid,
   metrics = class_metrics,
-  control = control_resamples(save_pred = TRUE)
 )
 
-readr::write_rds(tune_rs, "model_data/tune_results_lasso_tfidf.rds")
+readr::write_rds(tune_rs, "model_data/tune_results_xgb_tfidf.rds")
 ```
 
 # Hyperparameter Metrics
 
 ```{r}
-lasso_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
+xgb_rs_metrics <- collect_metrics(tune_rs)
+tidytable::fwrite(xgb_rs_metrics, here::here("content", "modeling", "model_results", "xgb_rs_metrics_tfidf_bigrams_4k.csv"))
 
-
-lasso_rs_metrics
+show_best(tune_rs)
 ```
 
 ## Metric vs. Lambda
 
 ```{r}
-autoplot(tune_rs) +
-  labs(
-    title = "Lasso model performance across regularization penalties",
-    subtitle = "Performance metrics can be used to identity the best penalty"
-  )
-ggsave("plots/cv_metrics_lasso_tfidf.png")
+tune_rs |>
+  collect_metrics() |>
+  filter(.metric == "roc_auc") |>
+  select(mean, min_n:loss_reduction) |>
+  pivot_longer(min_n:loss_reduction,
+               values_to = "value",
+               names_to = "parameter"
+  ) |>
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(alpha = 0.8, show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "AUC")
+
+ggsave("plots/cv_metrics_xgb_tfidf.png")
 ```
 
 # Selecting Best ROC-AUC to tune Model
 
 ```{r}
 chosen_auc <- tune_rs |>
-  select_best(metric = "roc_auc", -penalty)
+  select_best(metric = "roc_auc")
 
-final_lasso <- finalize_workflow(tune_wf, chosen_auc)
+final_xgb <- finalize_workflow(tune_wf, chosen_auc)
 ```
 
 # Fitting Model on Training Data
 
 ```{r}
-fitted_lasso <- fit(final_lasso, bigram_train)
+fitted_xgb <- fit(final_xgb, bigram_train)
 ```
 
 # Variable Importance Examination
-
-```{r}
-lasso_variables <- fitted_lasso |>
-  extract_fit_parsnip() |>
-  tidy() |>
-  arrange(-estimate)
-
-tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_third_run_4k.csv"))
-
-lasso_variables
-```
-
-```{r}
-fitted_lasso |>
-  extract_fit_parsnip() |>
-  tidy() |>
-  arrange(estimate)
-```
 
 ## Variable Importance Plot
 
 ```{r}
 library(vip)
 
-vip_lasso <- fitted_lasso |>
+vip_xgboost <- fitted_xgboost |>
   extract_fit_parsnip() |>
-  vi(lambda = chosen_auc$penalty) |>
-  mutate(
-    Importance = abs(Importance),
-    Variable = forcats::fct_reorder(Variable, Importance)
-  )
+  vi()
 
-vip_lasso |>
+vip_xgboost |>
   slice_head(n = 20) |>
-  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
+  ggplot(aes(x = Importance, y = Variable)) +
   geom_col() +
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("plots/variable_importance_plot_lasso_tfidf.png")
+ggsave("plots/variable_importance_plot_xgb_tfidf.png")
 ```
 
 ```{r}
-last_fit_lasso <- last_fit(final_lasso, tfidf_split)
+last_fit_xgb <- last_fit(final_xgb, tfidf_split)
 
-lasso_metric <- last_fit_lasso |>
+xgb_metric <- last_fit_xgb |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_tfidf.csv")
+tidytable::fwrite(xgb_metric, "model_results/xgb_test_metrics_tfidf.csv")
 
-last_fit_lasso |>
+last_fit_xgb |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_lasso_tfidf.png")
+ggsave("plots/roc_curve_xgb_tfidf.png")
 
-last_fit_lasso |>
+last_fit_xgb |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_lasso_tfidf.png")
+ggsave("plots/confusion_matrix_xgb_tfidf.png")
 ```
 

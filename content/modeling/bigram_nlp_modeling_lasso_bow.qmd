@@ -6,7 +6,7 @@ author: "Keenan Smith"
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_nlp_modeling_lasso_tfidf.qmd")
+here::i_am("content/modeling/bigram_nlp_modeling_lasso_bow.qmd")
 library(tidymodels)
 
 library(parallel)
@@ -24,25 +24,25 @@ docid_to_bias <- function(df) {
 ```
 
 ```{r}
-bigram_tfidf <- tidytable::fread(here::here("data", "model_data", "tfidf_bigram_df_4k.csv.gz"))
+bigram_bow <- tidytable::fread(here::here("data", "model_data", "bow_bigram_df_4k.csv.gz"))
 
-rownames(bigram_tfidf) <- bigram_tfidf$doc_id
+rownames(bigram_bow) <- bigram_bow$doc_id
 ```
 
 # Getting Classification out of Doc ID
 
 ```{r}
-bigram_tfidf <- docid_to_bias(bigram_tfidf)
+bigram_bow <- docid_to_bias(bigram_bow)
 ```
 
 # Data Split
 
 ```{r}
 set.seed(2023)
-tfidf_split <- initial_split(bigram_tfidf, strata = source_bias)
+bow_split <- initial_split(bigram_bow, strata = source_bias)
 
-bigram_train <- training(tfidf_split)
-bigram_test <- testing(tfidf_split)
+bigram_train <- training(bow_split)
+bigram_test <- testing(bow_split)
 bigram_folds <- vfold_cv(bigram_train)
 ```
 
@@ -91,14 +91,14 @@ tune_rs <- tune_grid(
   control = control_resamples(save_pred = TRUE)
 )
 
-readr::write_rds(tune_rs, "model_data/tune_results_lasso_tfidf.rds")
+readr::write_rds(tune_rs, "model_data/tune_results_lasso_bow.rds")
 ```
 
 # Hyperparameter Metrics
 
 ```{r}
 lasso_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
+tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_bow_bigrams_4k.csv"))
 
 
 lasso_rs_metrics
@@ -112,7 +112,7 @@ autoplot(tune_rs) +
     title = "Lasso model performance across regularization penalties",
     subtitle = "Performance metrics can be used to identity the best penalty"
   )
-ggsave("plots/cv_metrics_lasso_tfidf.png")
+ggsave("plots/cv_metrics_lasso_bow.png")
 ```
 
 # Selecting Best ROC-AUC to tune Model
@@ -138,7 +138,7 @@ lasso_variables <- fitted_lasso |>
   tidy() |>
   arrange(-estimate)
 
-tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_third_run_4k.csv"))
+tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_bow_third_run_4k.csv"))
 
 lasso_variables
 ```
@@ -170,30 +170,30 @@ vip_lasso |>
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("plots/variable_importance_plot_lasso_tfidf.png")
+ggsave("plots/variable_importance_plot_lasso_bow.png")
 ```
 
 ```{r}
-last_fit_lasso <- last_fit(final_lasso, tfidf_split)
+last_fit_lasso <- last_fit(final_lasso, bow_split)
 
 lasso_metric <- last_fit_lasso |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_tfidf.csv")
+tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_bow.csv")
 
 last_fit_lasso |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_lasso_tfidf.png")
+ggsave("plots/roc_curve_lasso_bow.png")
 
 last_fit_lasso |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_lasso_tfidf.png")
+ggsave("plots/confusion_matrix_lasso_bow.png")
 ```
 
