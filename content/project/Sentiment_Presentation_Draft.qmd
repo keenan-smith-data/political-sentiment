@@ -8,6 +8,8 @@ format:
     footer: Political_Sentiment_Capstone_Smith_Keenan 
     width: 1920
     height: 1080
+    embed-resources: true
+    self-contained-math: true
 ---
 
 # Overview
@@ -198,7 +200,7 @@ Lastly, certain stopwords were not removed until initial modelling was completed
 Early on, the corpus had to be retokenized and saved to disk which took 10-20 mins per cycle.  
 :::
 
-## Models
+## Models {.scrollable}
 
 Models were chosen for their use in Text Classification Best Practices and ease of Modeling in R
 
@@ -215,7 +217,6 @@ Models were chosen for their use in Text Classification Best Practices and ease 
   - With close ties to Linear Regression, predictor effects are easier to understand
 
 - Random Forest Classification
-  - 
 
 - Gradient Boosted Classification Trees
   - Utilizing the XGBoost Algorithm

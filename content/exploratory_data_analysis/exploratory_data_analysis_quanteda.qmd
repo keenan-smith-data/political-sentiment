@@ -10,7 +10,7 @@ Built with R Version `r getRversion()`
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/exploratory_data_analysis/exploratory_data_analysis.qmd")
+here::i_am("content/exploratory_data_analysis/exploratory_data_analysis_quanteda.qmd")
 library(tidytable)
 library(ggplot2)
 library(quanteda)
@@ -22,9 +22,15 @@ library(quanteda.textplots)
 
 # Reading In already Processed Document Feature Matrices & Token Objects
 
+```{r}
+bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_los", "de_la", "la_de", "en_las", "en_la", "de_las", "see_also", "right_right", "left_left", "getty_images", "world_week", "solely_author", "please_see", "topic_please", "senior_american", "associate_director", "team_american", "solely_expressed", "douglas_sarah", "roe_economic", "resident_american", "allison_foreign", "pdf_read", "opinions_expressed", "international_scholars", "sarah_allison", "thomas_roe", "never_ways", "emphasis_added", "article_published", "newsletter_never", "expressed_solely", "report_pdf", "michael_barone", "thatcher_freedom", "margaret_thatcher", "policy_team", "special_assistant", "see_graph", "read_full", "et_al", "one_two", "tell_us", "looks_like", "may_well", "may_also", "just_like", "tells_us", "full_report", "full_article", "bergman_group", "reflect_views", "asia_program")
+```
+
 ## Words
 
 ```{r}
+polsent_corpus <- readr::read_rds(here::here("data", "tokens", "corpus.rds"))
+
 toks_polsent <- readr::read_rds(here::here("data", "tokens", "filtered_tokens.rds"))
 dfmat_polsent <- readr::read_rds(here::here("data", "tokens", "dfmat_polsent.rds"))
 ```
@@ -45,17 +51,18 @@ dfmat_group <- dfmat_words_trim |>
 ## Bigrams
 
 ```{r}
-toks_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "filtered_bigrams.rds"))
+# toks_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "filtered_bigrams.rds"))
 dfmat_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "dfmat_polsent_bigrams.rds"))
-```
-
-```{r}
-bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_los", "de_la", "la_de", "en_las", "en_la", "de_las", "see_also", "right_right", "left_left", "getty_images", "world_week", "solely_author", "please_see", "topic_please", "senior_american", "associate_director", "team_american", "solely_expressed", "douglas_sarah", "roe_economic", "resident_american", "allison_foreign", "pdf_read", "opinions_expressed", "international_scholars", "sarah_allison", "thomas_roe", "never_ways", "emphasis_added", "article_published", "newsletter_never")
 
 bigram_trim <- dfm_remove(dfmat_polsent_bigrams, pattern = bigram_stopterms_post_write)
 
+filtering <- topfeatures(bigram_trim, n = 4000) |> as.list() |> as_tidytable() |> pivot_longer()
+
+specifics <- filtering |>
+  filter(stringr::str_detect(name, "^pdf_"))
+
 # Trimmed Frequency to Make Data Easier to Manage
-dfmat_bigrams_trim <- dfm_trim(bigram_trim, min_termfreq = 3000, termfreq_type = "rank")
+dfmat_bigrams_trim <- dfm_trim(bigram_trim, min_termfreq = 4000, termfreq_type = "rank")
 
 # Grouping Bigrams Based on Source Bias
 dfmat_group_bigrams <- dfmat_bigrams_trim |>
@@ -77,8 +84,10 @@ dfmat_bigrams_tfidf <- dfm_tfidf(dfmat_bigrams_trim)
 CONVERT FOR MODELING
 
 ```{r}
+convert_bigrams_bow <- convert(dfmat_bigrams_trim, to = "data.frame")
+fwrite(convert_bigrams_bow, here::here("data", "model_data", "bow_bigram_df_4k.csv.gz"))
 convert_bigrams_tfidf <- convert(dfmat_bigrams_tfidf, to = "data.frame")
-fwrite(convert_bigrams_tfidf, here::here("data", "model_data", "tfidf_bigram_df.csv.gz"))
+fwrite(convert_bigrams_tfidf, here::here("data", "model_data", "tfidf_bigram_df_4k.csv.gz"))
 ```
 
 ## Frequency Analysis

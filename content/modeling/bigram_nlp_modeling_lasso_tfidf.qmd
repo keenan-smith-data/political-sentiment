@@ -6,7 +6,7 @@ author: "Keenan Smith"
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_tfidf_nlp_modeling_lasso.qmd")
+here::i_am("content/modeling/bigram_nlp_modeling_lasso_tfidf.qmd")
 library(tidymodels)
 
 library(parallel)
@@ -24,7 +24,7 @@ docid_to_bias <- function(df) {
 ```
 
 ```{r}
-bigram_tfidf <- tidytable::fread(here::here("data", "model_data", "tfidf_bigram_df.csv.gz"))
+bigram_tfidf <- tidytable::fread(here::here("data", "model_data", "tfidf_bigram_df_4k.csv.gz"))
 
 rownames(bigram_tfidf) <- bigram_tfidf$doc_id
 ```
@@ -74,21 +74,37 @@ tune_wf <- workflow() |>
   add_model(tune_spec)
 ```
 
+# Metric Set
+
+```{r}
+class_metrics <- metric_set(sens, spec, recall, precision, f_meas, accuracy, roc_auc, pr_auc)
+```
+
+# Hyperparameter Tuning
+
 ```{r}
 tune_rs <- tune_grid(
   tune_wf,
   bigram_folds,
   grid = lambda_grid,
+  metrics = class_metrics,
   control = control_resamples(save_pred = TRUE)
 )
+
+readr::write_rds(tune_rs, "model_data/tune_results_lasso_tfidf.rds")
 ```
+
+# Hyperparameter Metrics
 
 ```{r}
 lasso_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_bigrams.csv"))
+tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
+
 
 lasso_rs_metrics
 ```
+
+## Metric vs. Lambda
 
 ```{r}
 autoplot(tune_rs) +
@@ -98,6 +114,7 @@ autoplot(tune_rs) +
   )
 ```
 
+# Selecting Best ROC-AUC to tune Model
 
 ```{r}
 chosen_auc <- tune_rs |>
@@ -106,9 +123,13 @@ chosen_auc <- tune_rs |>
 final_lasso <- finalize_workflow(tune_wf, chosen_auc)
 ```
 
+# Fitting Model on Training Data
+
 ```{r}
 fitted_lasso <- fit(final_lasso, bigram_train)
 ```
+
+# Variable Importance Examination
 
 ```{r}
 lasso_variables <- fitted_lasso |>
@@ -116,7 +137,7 @@ lasso_variables <- fitted_lasso |>
   tidy() |>
   arrange(-estimate)
 
-tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_fifth_run.csv"))
+tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_third_run_4k.csv"))
 
 lasso_variables
 ```
@@ -128,11 +149,13 @@ fitted_lasso |>
   arrange(estimate)
 ```
 
+## Variable Importance Plot
+
 ```{r}
 library(vip)
 
 vip_lasso <- fitted_lasso |>
-  pull_workflow_fit() |>
+  extract_fit_parsnip() |>
   vi(lambda = chosen_auc$penalty) |>
   mutate(
     Importance = abs(Importance),
@@ -146,7 +169,7 @@ vip_lasso |>
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("variable_importance_plot.png")
+ggsave("variable_importance_plot_lasso_tfidf.png")
 ```
 
 ```{r}
@@ -156,16 +179,24 @@ tidytable::fwrite(lasso_test_preds, here::here("content", "modeling", "model_res
 
 last_fit_lasso <- last_fit(final_lasso, tfidf_split)
 
-lasso_metric <- last_fit(final_lasso, tfidf_split) |>
-  collect_metrics()
+lasso_metric <- last_fit_lasso |>
+  collect_predictions() |>
+  class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics.csv")
+tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_tfidf.csv")
 
 last_fit_lasso |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("roc_curve_lasso.png")
+ggsave("roc_curve_lasso_tfidf.png")
+
+last_fit_lasso |>
+  collect_predictions() |>
+  conf_mat(source_bias, .pred_class) |>
+  autoplot(type = "heatmap")
+
+ggsave("confusion_matrix_lasso_tfidf.png")
 ```
 

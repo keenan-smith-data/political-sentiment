@@ -16,6 +16,6 @@ UseNativePipeOperator: Yes
 
 QuitChildProcessesOnExit: Yes
 
-PythonType: virtualenv
+PythonType: system
 PythonVersion: 3.10.2
-PythonPath: renv/python/virtualenvs/renv-python-3.10/Scripts/python.exe
+PythonPath: C:/Python/python.exe

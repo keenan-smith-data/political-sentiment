@@ -8,6 +8,8 @@ format:
     footer: Political_Sentiment_Capstone_Smith_Keenan 
     width: 1920
     height: 1080
+    embed-resources: true
+    self-contained-math: true
 ---
 
 # Overview

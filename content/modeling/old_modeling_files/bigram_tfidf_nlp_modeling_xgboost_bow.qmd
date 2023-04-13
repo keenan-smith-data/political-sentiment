@@ -24,22 +24,22 @@ docid_to_bias <- function(df) {
 ```
 
 ```{r}
-bigram_tfidf <- tidytable::fread(here::here("data", "model_data", "tfidf_bigram_df.csv.gz"))
+bigram_bow <- tidytable::fread(here::here("data", "model_data", "bigram_df.csv.gz"))
 
-rownames(bigram_tfidf) <- bigram_tfidf$doc_id
+rownames(bigram_bow) <- bigram_bow$doc_id
 ```
 
 # Getting Classification out of Doc ID
 
 ```{r}
-bigram_tfidf <- docid_to_bias(bigram_tfidf)
+bigram_bow <- docid_to_bias(bigram_bow)
 ```
 
 # Data Split
 
 ```{r}
 set.seed(2023)
-tfidf_split <- initial_split(bigram_tfidf, strata = source_bias)
+bow_split <- initial_split(bigram_bow, strata = source_bias)
 
 bigram_train <- training(tfidf_split)
 bigram_test <- testing(tfidf_split)
@@ -108,15 +108,15 @@ readr::write_rds(tune_rs, "model_results/xgboost_tune_data.rds", compress = c("g
 xgboost_rs_metrics <- collect_metrics(tune_rs)
 tidytable::fwrite(xgboost_rs_metrics, here::here("content", "modeling", "model_results", "xgboost_rs_metrics_bigrams.csv"))
 
-xgboost_rs_metrics
+show_best(tune_rs)
 ```
 
 ```{r}
 tune_rs |>
   collect_metrics() |>
   filter(.metric == "roc_auc") |>
-  select(mean, mtry:sample_size) |>
-  pivot_longer(mtry:sample_size,
+  select(mean, min_n:loss_reduction) |>
+  pivot_longer(min_n:loss_reduction,
                values_to = "value",
                names_to = "parameter"
   ) |>
@@ -141,11 +141,16 @@ fitted_xgboost <- fit(final_xgboost, bigram_train)
 ```{r}
 library(vip)
 
-vip_lasso <- fitted_xgboost |>
+vip_xgboost <- fitted_xgboost |>
   extract_fit_parsnip() |>
-  vip(geom = "point")
+  vi()
 
-vip_lasso
+vip_xgboost |>
+  slice_head(n = 20) |>
+  ggplot(aes(x = Importance, y = Variable)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(y = NULL)
 
 
 ggsave("variable_importance_plot_xgboost.png")
@@ -154,7 +159,7 @@ ggsave("variable_importance_plot_xgboost.png")
 ```{r}
 last_fit_xgboost <- last_fit(final_xgboost, tfidf_split)
 
-xgboost_metric <- last_fit(final_xgboost, tfidf_split) |>
+xgboost_metric <- last_fit_xgboost |>
   collect_metrics()
 
 tidytable::fwrite(xgboost_metric, "model_results/xgboost_test_metrics.csv")
