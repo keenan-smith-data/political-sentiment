@@ -16,6 +16,6 @@ UseNativePipeOperator: Yes
 
 QuitChildProcessesOnExit: Yes
 
-PythonType: system
-PythonVersion: 3.10.2
-PythonPath: C:/Python/python.exe
+PythonType: conda
+PythonVersion: 3.9.16
+PythonPath: ~/miniconda3/envs/tf/bin/python3.9
