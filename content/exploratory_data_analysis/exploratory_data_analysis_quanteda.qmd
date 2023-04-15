@@ -88,11 +88,6 @@ fwrite(d_mat, here::here("data", "model_data", "lsa_bigram_D.csv.gz"))
 
 ```
 
-```{r}
-readr::write_rds(bigrams_lsa, here::here("data", "tokens", "bigrams_lsa.rds"), compress = "gz")
-```
-
-
 # Tidied Group Data on Bias
 
 CONVERT FOR MODELING
