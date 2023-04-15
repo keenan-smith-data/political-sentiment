@@ -1,6 +1,8 @@
 ---
 title: "LASSO NLP Modeling"
 author: "Keenan Smith"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
@@ -92,6 +94,12 @@ tune_rs <- tune_grid(
 )
 
 readr::write_rds(tune_rs, "model_data/tune_results_lasso_tfidf.rds")
+```
+
+# Stopping Multicore Operations
+
+```{r}
+parallel::stopCluster(cl)
 ```
 
 # Hyperparameter Metrics
