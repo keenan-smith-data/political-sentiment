@@ -63,6 +63,37 @@ dfmat_bigrams_tfidf_lsa <- dfm_tfidf(dfmat_bigrams_lsa)
 
 # Latent Semantic Analysis
 
+## n = 400
+
+```{r}
+bigrams_lsa_400 <- textmodel_lsa(dfmat_bigrams_tfidf_lsa, nd = 400)
+
+bigrams_lsa_docs_400 <- bigrams_lsa_400$docs
+bigrams_lsa_features <- bigrams_lsa_400$features
+bigrams_lsa_sk_400 <- bigrams_lsa_400$sk
+
+matrix_to_tidy <- function(mat) {
+  df <- tidytable::as_tidytable(mat, .keep_rownames = "docid")
+  colnames(df) <- c("docid", paste0("component", 1:400))
+  return(df)
+}
+
+bigrams_lsa_docs_df_400 <- matrix_to_tidy(bigrams_lsa_docs_400)
+
+bigrams_lsa_features_df_400 <- matrix_to_tidy(bigrams_lsa_features_400)
+
+d_400 <- tidytable(d = bigrams_lsa_sk_400)
+
+fwrite(bigrams_lsa_docs_df_400, here::here("data", "model_data", "lsa_bigram_docs.csv_400.gz"))
+fwrite(bigrams_lsa_features_df_400, here::here("data", "model_data", "lsa_bigram_features_400.csv.gz"))
+fwrite(d_400, here::here("data", "model_data", "lsa_bigram_D_400.csv.gz"))
+
+```
+
+# Latent Semantic Analysis 
+
+## n = 200
+
 ```{r}
 bigrams_lsa <- textmodel_lsa(dfmat_bigrams_tfidf_lsa, nd = 200)
 
