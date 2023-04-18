@@ -31,7 +31,7 @@ This NLP project utilizes a primarily English corpus with minimal Spanish entrie
 
 ## Political Ideology
 
-Political Ideology is a complex and nuanced subject. It is loosely defined as left and right wing by numerous news outlets and the public. However, this loose definition is often found to be lacking in precision. An study by Feldman and Jonston found using Latent Class Analysis, six distinct classes of individuals when measured against economic and social questions. Adorno defined ideology as "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." 
+Political Ideology is a complex and nuanced subject. It is loosely defined as left and right wing by numerous news outlets and the public. However, this loose definition is often found to be lacking in precision. An study by Feldman and Jonston found using Latent Class Analysis, six distinct classes of individuals when measured against economic and social questions. {@feldman_2013} Adorno defined ideology as "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno] Political parties are equally complex and nuanced with several actors and social movements. 
 
 It is important to highlight this because the author classifies the data based on traditional right-wing and left-wing denominations. In the exploratory data analysis stage of this project, it was found that the overal corpus of text analyzed found that, based on unsupervised cluster analysis and lexical diversity analysis, the overall differences between the sources overall was not too disimilar. See Figure 1.  However, this is not part of the scope of this project and therefore is categorized for future work at a later date. 
 
@@ -39,7 +39,7 @@ It is important to highlight this because the author classifies the data based o
 
 ## The Research Question
 
-Lastly, it is important to define the full scope of the project before going forward. This project aims to answer the question "Does political speech indicate right-wing or left-wing political bias?" This is done using a web-scraped corpus of text from 21 think tanks and 1 news-source. The full corpus of text contains 148,703 documents that total 141,840,157 total words. The sources were selected using AcademicInfluence.com's Top Influential Think Tanks for 2023 [@thinktank] and filtered into right-wing and left-wing using Academicinfluence.com's determination as well as supporting research. A more thorough definition of the corpus of text will be given in the following section. 
+Lastly, it is important to define the full scope of the project before going forward. This project aims to answer the question "Does political speech indicate right-wing or left-wing political bias?" This is done using a web-scraped corpus of text from 21 think tanks and 1 news-source. The full corpus of text contains 148,703 documents that total 141,840,157 total words. The sources were selected using AcademicInfluence.com's Top Influential Think Tanks for 2023 [@thinktank] and filtered into right-wing and left-wing using Academicinfluence.com's determination as well as supporting research. A more thorough definition of the corpus of text will be given in the following section. [@mayer_party; @mudge_parties]
 
 # Methods
 
@@ -47,17 +47,14 @@ Lastly, it is important to define the full scope of the project before going for
 
 ### Sources
 
-Table 1 shows the sources and biases utilized to build the corpus of text.
+Table 1 ^[Cato Institute is classified "libertarian", research by Public Religion Research Institute shows that a plurality of libertarians align themselves with right-wing parties [@libertarians]] ^[Sources are classified as Conservative as right-wing and liberal and progressive as left-wing [@thinktank]] shows the sources and biases utilized to build the corpus of text.
 
 ```{r}
 #| echo: false
-
 source_table <- tidytable::fread(here::here("data", "sources", "source_table.csv"))
 kableExtra::kbl(source_table) |>
   kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
 ```
-
-Add a footnote discussing libertarianism and the right wing in the US.
 
 ### Webscaping
 
@@ -80,7 +77,11 @@ If an article contained no viable text, it was not imported into the database an
 ### Corpus Creation
 
 ```{r}
+#| echo: false
 
+bias_count <- tidytable::fread(here::here("content", "project", "bias_count_filtered.csv"))
+kableExtra::kbl(bias_count) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
 ```
 
 To create the corpus, an analysis of the number of characters were performed to limit bias in the data. Some sources yielded more data than other sources due to the nature of content creation. The original data contained XX% right-wing and XX% left-wing. The corpus was then trimmed using the 90% quantile on American Enterprise Institute and 92% quantile on Heritage Foundation. This balanced the final corpus to 51% right-wing and 49% left-wing. Figure 2 shows the histogram of the final corpus in length of characters. As the data shows, there are more "mid-length" articles for right-wing sources but more "long" articles for left-wing. 
@@ -103,7 +104,9 @@ $$
 
 where $f_{i,j}$ is number of occurences of i in j, $df_i$ is the number of documents containing i, and N is the total number of documents.
 
-The text was vectorized using the `quanteda` library first using Term Frequency. The top 10,000 bigrams in the corpus were then selected and transformed into a tf-idf vectorization. Text data, in particular, has a large sparse set of predictors [@tidytext]. In order to reduce the number of predictors from 10,000 to 400, Latent Semantic Analysis (LSA) is utilized. LSA uses singular value decomposition to perform dimensionality reduction on the number of predictors. [@latent_medium] LSA mathematically groups words together that are semantically similar. LSA has the advantage of dimensionality reduction and of grouping semantically similar words together into a single vector. However, like any dimsionality techniques [@islr], some information is lost in the process and bigram positional information is lost. In the context of this project, these drawbacks are considered minimal for the potential gains of reducing the number of features. It also grants insight into words that are semantically similar that otherwise would not have been found using traditional tf-idf vectorization.
+The text was vectorized using the `quanteda` library first using Term Frequency. [@quanteda] The top 10,000 bigrams in the corpus were then selected and transformed into a tf-idf vectorization. Text data, in particular, has a large sparse set of predictors [@tidytext]. In order to reduce the number of predictors from 10,000 to 400, Latent Semantic Analysis (LSA) is utilized. LSA uses singular value decomposition to perform dimensionality reduction on the number of predictors. [@latent_medium] LSA mathematically groups words together that are semantically similar. LSA has the advantage of dimensionality reduction and of grouping semantically similar words together into a single vector. However, like any dimsionality techniques [@islr], some information is lost in the process and bigram positional information is lost. In the context of this project, these drawbacks are considered minimal for the potential gains of reducing the number of features. It also grants insight into words that are semantically similar that otherwise would not have been found using traditional tf-idf vectorization.
+
+Additionally, the top 4,000 bigrams were selected and vectorized using tf-idf and were used to model in addition to LSA. This method provides a bit more transparency to which variables are important and is easier to tokenize and analyze new data since LSA cannot fully reproduce the original feature matrix. 
 
 #### Data Bias
 
@@ -142,6 +145,7 @@ The models were training using the R programming language using the `tidymodels`
 
 
 ## Exploratory Data Analysis
+
 
 
 ## Model Results
