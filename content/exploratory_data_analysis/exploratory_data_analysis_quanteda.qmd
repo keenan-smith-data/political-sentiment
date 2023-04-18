@@ -16,6 +16,7 @@ library(ggplot2)
 library(quanteda)
 library(quanteda.textstats)
 library(quanteda.textplots)
+library(quanteda.textmodels)
 
 matrix_to_tidy <- function(mat, n = 1:400) {
   df <- tidytable::as_tidytable(mat, .keep_rownames = "docid")
@@ -29,7 +30,7 @@ matrix_to_tidy <- function(mat, n = 1:400) {
 # Reading In already Processed Document Feature Matrices & Token Objects
 
 ```{r}
-bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_los", "de_la", "la_de", "en_las", "en_la", "de_las", "see_also", "right_right", "left_left", "getty_images", "world_week", "solely_author", "please_see", "topic_please", "senior_american", "associate_director", "team_american", "solely_expressed", "douglas_sarah", "roe_economic", "resident_american", "allison_foreign", "pdf_read", "opinions_expressed", "international_scholars", "sarah_allison", "thomas_roe", "never_ways", "emphasis_added", "article_published", "newsletter_never", "expressed_solely", "report_pdf", "michael_barone", "thatcher_freedom", "margaret_thatcher", "policy_team", "special_assistant", "see_graph", "read_full", "et_al", "one_two", "tell_us", "looks_like", "may_well", "may_also", "just_like", "tells_us", "full_report", "full_article", "bergman_group", "reflect_views", "asia_program")
+bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_los", "de_la", "la_de", "en_las", "en_la", "de_las", "see_also", "right_right", "left_left", "getty_images", "world_week", "solely_author", "please_see", "topic_please", "senior_american", "associate_director", "team_american", "solely_expressed", "douglas_sarah", "roe_economic", "resident_american", "allison_foreign", "pdf_read", "opinions_expressed", "international_scholars", "sarah_allison", "thomas_roe", "never_ways", "emphasis_added", "article_published", "newsletter_never", "expressed_solely", "report_pdf", "michael_barone", "thatcher_freedom", "margaret_thatcher", "policy_team", "special_assistant", "see_graph", "read_full", "et_al", "one_two", "tell_us", "looks_like", "may_well", "may_also", "just_like", "tells_us", "full_report", "full_article", "bergman_group", "reflect_views", "asia_program", "locked_priority", "priority_medium", "gte_mso", "e_t", "t_r", "r_e", "t_e", "r_r", "que_el", "con_el", "el_de", "que_la", "de_que", "en_los", "read_whole", "views_kennan", "new_content", "author_article", "read_entire", "author_reflect", "front_page", "article_first", "expressed_article")
 ```
 
 ## Bigrams
@@ -38,15 +39,28 @@ bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_l
 # toks_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "filtered_bigrams.rds"))
 dfmat_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "dfmat_polsent_bigrams.rds"))
 
-bigram_trim <- dfm_remove(dfmat_polsent_bigrams, pattern = bigram_stopterms_post_write)
+bigram_trim <- dfm_remove(dfmat_polsent_bigrams, pattern = bigram_stopterms_post_write) |>
+  dfm_select(pattern = c("^author_+", "^article_+", "\\w+_author$", "\\w+_article"), selection = "remove", valuetype = "regex")
 
-filtering <- topfeatures(bigram_trim, n = 4000) |> as.list() |> as_tidytable() |> pivot_longer()
+bigram_trim <- dfm_select(bigram_trim, pattern = c("^que_+"), selection = "remove", valuetype = "regex")
+
+bigram_trim <- dfm_keep(bigram_trim, min_nchar = 6)
+
+readr::write_rds(bigram_trim, here::here("data", "tokens", "dfmat_bigram_trim.rds"), compress = "gz")
+```
+
+
+```{r}
+bigram_trim <- readr::read_rds(here::here("data", "tokens", "dfmat_bigram_trim.rds"))
+
+filtering <- topfeatures(bigram_trim, n = 10000) |> as.list() |> as_tidytable() |> pivot_longer()
 
 specifics <- filtering |>
-  filter(stringr::str_detect(name, "^pdf_"))
+  filter(stringr::str_detect(name, "que"))
 
 # Trimmed Frequency to Make Data Easier to Manage
 dfmat_bigrams_trim <- dfm_trim(bigram_trim, min_termfreq = 4000, termfreq_type = "rank")
+dfmat_bigrams_lsa <- dfm_trim(bigram_trim, min_termfreq = 10000, termfreq_type = "rank")
 
 # Grouping Bigrams Based on Source Bias
 dfmat_group_bigrams <- dfmat_bigrams_trim |>
