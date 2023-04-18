@@ -1,0 +1,88 @@
+---
+title: "Exploratory Data Analysis"
+author: "Keenan Smith"
+editor_options: 
+  chunk_output_type: console
+---
+
+Built with R Version `r getRversion()`
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/exploratory_data_analysis/exploratory_data_analysis_lca.qmd")
+library(tidytable)
+library(ggplot2)
+```
+
+# Latent Semantic Analysis
+
+## n = 1000
+
+```{r}
+docs_df_1000 <- fread(here::here("data", "model_data", "lsa_bigram_docs_1000.csv.gz"))
+features_df_1000 <- fread(here::here("data", "model_data", "lsa_bigram_features_1000.csv.gz"))
+d_1000 <- fread(here::here("data", "model_data", "lsa_bigram_D_1000.csv.gz"))
+
+d_1000_percent <- d_1000 |>
+  mutate(percent_variability = d^2/sum(d^2)*100,
+         cum_per_variability = cumsum(d^2)/sum(d^2)*100,
+         component = paste0("component", 1:1000))
+
+features_long <- features_df_1000 |>
+  pivot_longer(cols = component1:component1000, names_to = "component") |>
+  mutate(component = as.factor(component))
+```
+
+```{r}
+plot(d_1000_percent$percent_variability,ylab="Percent variability explained")
+
+plot(d_1000_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
+```
+
+## n = 400
+
+```{r}
+docs_df_400 <- fread(here::here("data", "model_data", "lsa_bigram_docs_400.csv.gz"))
+features_df_400 <- fread(here::here("data", "model_data", "lsa_bigram_features_400.csv.gz"))
+d_400 <- fread(here::here("data", "model_data", "lsa_bigram_D_400.csv.gz"))
+
+d_400_percent <- d_400 |>
+  mutate(percent_variability = d^2/sum(d^2)*100,
+         cum_per_variability = cumsum(d^2)/sum(d^2)*100,
+         component = paste0("component", 1:1000))
+
+svd_top_features <- function(selection, df = features_df_400, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_max(order_by = {{selection}}, n = n)
+}
+
+svd_top_features(selection = component1, features_df_400, n = 20)
+
+```
+
+```{r}
+plot(d_400_percent$percent_variability,ylab="Percent variability explained")
+
+plot(d_400_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
+```
+
+## n = 200
+
+```{r}
+docs_df_200 <- fread(here::here("data", "model_data", "lsa_bigram_docs_200.csv.gz"))
+features_df_200 <- fread(here::here("data", "model_data", "lsa_bigram_features_200.csv.gz"))
+d_200 <- fread(here::here("data", "model_data", "lsa_bigram_D_200.csv.gz"))
+
+d_200_percent <- d_200 |>
+  mutate(percent_variability = d^2/sum(d^2)*100,
+         cum_per_variability = cumsum(d^2)/sum(d^2)*100,
+         component = paste0("component", 1:1000))
+```
+
+```{r}
+plot(d_200_percent$percent_variability,ylab="Percent variability explained")
+
+plot(d_200_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
+```

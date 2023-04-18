@@ -16,7 +16,12 @@ library(ggplot2)
 library(quanteda)
 library(quanteda.textstats)
 library(quanteda.textplots)
-library(quanteda.textmodels)
+
+matrix_to_tidy <- function(mat, n = 1:400) {
+  df <- tidytable::as_tidytable(mat, .keep_rownames = "docid")
+  colnames(df) <- c("docid", paste0("component", n))
+  return(df)
+}
 ```
 
 # START HERE
@@ -35,14 +40,13 @@ dfmat_polsent_bigrams <- readr::read_rds(here::here("data", "tokens", "dfmat_pol
 
 bigram_trim <- dfm_remove(dfmat_polsent_bigrams, pattern = bigram_stopterms_post_write)
 
-# filtering <- topfeatures(bigram_trim, n = ) |> as.list() |> as_tidytable() |> pivot_longer()
+filtering <- topfeatures(bigram_trim, n = 4000) |> as.list() |> as_tidytable() |> pivot_longer()
 
-# specifics <- filtering |> filter(stringr::str_detect(name, "^pdf_"))
+specifics <- filtering |>
+  filter(stringr::str_detect(name, "^pdf_"))
 
 # Trimmed Frequency to Make Data Easier to Manage
 dfmat_bigrams_trim <- dfm_trim(bigram_trim, min_termfreq = 4000, termfreq_type = "rank")
-
-dfmat_bigrams_lsa <- dfm_trim(bigram_trim, min_termfreq = 10000, termfreq_type = "rank")
 
 # Grouping Bigrams Based on Source Bias
 dfmat_group_bigrams <- dfmat_bigrams_trim |>
@@ -63,6 +67,26 @@ dfmat_bigrams_tfidf_lsa <- dfm_tfidf(dfmat_bigrams_lsa)
 
 # Latent Semantic Analysis
 
+## n = 1000
+
+```{r}
+bigrams_lsa_1000 <- textmodel_lsa(dfmat_bigrams_tfidf_lsa, nd = 1000)
+
+bigrams_lsa_docs_1000 <- bigrams_lsa_1000$docs
+bigrams_lsa_features_1000 <- bigrams_lsa_1000$features
+bigrams_lsa_sk_1000 <- bigrams_lsa_1000$sk
+
+bigrams_lsa_docs_df_1000 <- matrix_to_tidy(bigrams_lsa_docs_1000, 1:1000)
+
+bigrams_lsa_features_df_1000 <- matrix_to_tidy(bigrams_lsa_features_1000, 1:1000)
+
+d_1000 <- tidytable(d = bigrams_lsa_sk_1000)
+
+fwrite(bigrams_lsa_docs_df_1000, here::here("data", "model_data", "lsa_bigram_docs.csv_1000.gz"))
+fwrite(bigrams_lsa_features_df_1000, here::here("data", "model_data", "lsa_bigram_features_1000.csv.gz"))
+fwrite(d_1000, here::here("data", "model_data", "lsa_bigram_D_1000.csv.gz"))
+```
+
 ## n = 400
 
 ```{r}
@@ -72,50 +96,35 @@ bigrams_lsa_docs_400 <- bigrams_lsa_400$docs
 bigrams_lsa_features <- bigrams_lsa_400$features
 bigrams_lsa_sk_400 <- bigrams_lsa_400$sk
 
-matrix_to_tidy <- function(mat) {
-  df <- tidytable::as_tidytable(mat, .keep_rownames = "docid")
-  colnames(df) <- c("docid", paste0("component", 1:400))
-  return(df)
-}
+bigrams_lsa_docs_df_400 <- matrix_to_tidy(bigrams_lsa_docs_400, 1:400)
 
-bigrams_lsa_docs_df_400 <- matrix_to_tidy(bigrams_lsa_docs_400)
-
-bigrams_lsa_features_df_400 <- matrix_to_tidy(bigrams_lsa_features_400)
+bigrams_lsa_features_df_400 <- matrix_to_tidy(bigrams_lsa_features_400, 1:400)
 
 d_400 <- tidytable(d = bigrams_lsa_sk_400)
 
 fwrite(bigrams_lsa_docs_df_400, here::here("data", "model_data", "lsa_bigram_docs.csv_400.gz"))
 fwrite(bigrams_lsa_features_df_400, here::here("data", "model_data", "lsa_bigram_features_400.csv.gz"))
 fwrite(d_400, here::here("data", "model_data", "lsa_bigram_D_400.csv.gz"))
-
 ```
-
-# Latent Semantic Analysis 
 
 ## n = 200
 
 ```{r}
-bigrams_lsa <- textmodel_lsa(dfmat_bigrams_tfidf_lsa, nd = 200)
+bigrams_lsa_200 <- textmodel_lsa(dfmat_bigrams_tfidf_lsa, nd = 200)
 
-bigrams_lsa_docs <- bigrams_lsa$docs
-bigrams_lsa_features <- bigrams_lsa$features
-bigrams_lsa_sk <- bigrams_lsa$sk
+bigrams_lsa_docs_200 <- bigrams_lsa_200$docs
+bigrams_lsa_features_200 <- bigrams_lsa_200$features
+bigrams_lsa_sk_200 <- bigrams_lsa_200$sk
 
-matrix_to_tidy <- function(mat) {
-  df <- tidytable::as_tidytable(mat, .keep_rownames = "docid")
-  colnames(df) <- c("docid", paste0("component", 1:200))
-  return(df)
-}
+bigrams_lsa_docs_df_200 <- matrix_to_tidy(bigrams_lsa_docs_200, 1:200)
 
-bigrams_lsa_docs_df <- matrix_to_tidy(bigrams_lsa_docs)
+bigrams_lsa_features_df_200 <- matrix_to_tidy(bigrams_lsa_features_200, 1:200)
 
-bigrams_lsa_features_df <- matrix_to_tidy(bigrams_lsa_features)
+d_200 <- tidytable(d = bigrams_lsa_sk_200)
 
-d_mat <- diag(bigrams_lsa_sk)
-
-fwrite(bigrams_lsa_docs_df, here::here("data", "model_data", "lsa_bigram_docs.csv.gz"))
-fwrite(bigrams_lsa_features_df, here::here("data", "model_data", "lsa_bigram_features.csv.gz"))
-fwrite(d_mat, here::here("data", "model_data", "lsa_bigram_D.csv.gz"))
+fwrite(bigrams_lsa_docs_df_200, here::here("data", "model_data", "lsa_bigram_docs_200.csv.gz"))
+fwrite(bigrams_lsa_features_df_200, here::here("data", "model_data", "lsa_bigram_features_200.csv.gz"))
+fwrite(d_200, here::here("data", "model_data", "lsa_bigram_D_200.csv.gz"))
 
 ```
 
