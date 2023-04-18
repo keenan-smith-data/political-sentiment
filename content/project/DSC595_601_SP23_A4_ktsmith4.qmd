@@ -51,7 +51,7 @@ A **Data Science** Project that examines the question *"Does Political Speech in
   - These Data are in English
 - Classical Machine Learning Techniques are used for Classification
   - Transformers (The tech behind GPT) are goals for the future
-- Source Code is Located on Github [Github](https://github.com/keenan-smith-data/political-sentiment)
+- Source Code is Located on [Github](https://github.com/keenan-smith-data/political-sentiment)
 
 :::
 
@@ -119,7 +119,7 @@ Speaker notes go here.
 
 # Methods
 
-## The Data {.smaller}
+## The Data
 
 :::: {.columns}
 ::: {.column width="65%"}
