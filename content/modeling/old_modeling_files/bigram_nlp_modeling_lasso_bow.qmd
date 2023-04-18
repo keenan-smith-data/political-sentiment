@@ -1,49 +1,36 @@
 ---
 title: "LASSO NLP Modeling"
 author: "Keenan Smith"
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_tfidf_nlp_modeling_lasso.qmd")
-library(tidymodels)
+here::i_am("content/modeling/bigram_nlp_modeling_lasso_bow.qmd")
 
 library(parallel)
 all_cores <- parallel::detectCores(logical = FALSE)
 cl <- parallel::makePSOCKcluster(all_cores)
 doParallel::registerDoParallel(cl)
 
+# Script to Ensure Data Reproducibility
+source(here::here("R", "data_prep_modeling_bow.R"))
+```
+
+# Recipes
+
+```{r}
 sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
 
-docid_to_bias <- function(df) {
-  df |>
-    tidytable::separate_wider_delim(doc_id, delim = "_", names = c("short_source", "pull_index", "source_bias"), cols_remove = TRUE) |>
-    tidytable::select(-short_source, -pull_index)
-}
-```
+# Text Recipe
+text_rec <- recipe(source_bias ~ ., data = bigram_train) |>
+  embed::step_pca_truncated(all_predictors(), num_comp = 200)
 
-```{r}
-bigram_bow <- tidytable::fread(here::here("data", "model_data", "bow_bigram_df_4k.csv.gz"))
-
-rownames(bigram_bow) <- bigram_bow$doc_id
-```
-
-# Getting Classification out of Doc ID
-
-```{r}
-bigram_bow <- docid_to_bias(bigram_bow)
-```
-
-# Data Split
-
-```{r}
-set.seed(2023)
-bow_split <- initial_split(bigram_bow, strata = source_bias)
-
-bigram_train <- training(tfidf_split)
-bigram_test <- testing(tfidf_split)
-bigram_folds <- vfold_cv(bigram_train)
+# Base Bag of Words Workflow
+base_bow_wf <- workflow() |>
+  add_recipe(text_rec, blueprint = sparse_bp)
 ```
 
 # Engine
@@ -60,35 +47,49 @@ tune_spec <- logistic_reg(penalty = tune(), mixture = 1) |>
 lambda_grid <- grid_regular(penalty(), levels = 10)
 ```
 
-# Recipes
-
-```{r}
-text_rec <- recipe(source_bias ~ ., data = bigram_train)
-```
-
 # Workflows
 
 ```{r}
-tune_wf <- workflow() |>
-  add_recipe(text_rec, blueprint = sparse_bp) |>
+tune_wf <- base_bow_wf |>
   add_model(tune_spec)
 ```
+
+# Metric Set
+
+```{r}
+class_metrics <- metric_set(sens, spec, recall, precision, f_meas, accuracy, roc_auc, pr_auc)
+```
+
+# Hyperparameter Tuning
 
 ```{r}
 tune_rs <- tune_grid(
   tune_wf,
   bigram_folds,
   grid = lambda_grid,
+  metrics = class_metrics,
   control = control_resamples(save_pred = TRUE)
 )
+
+readr::write_rds(tune_rs, here::here("content", "modeling", "model_results", "tune_results_lasso_bow_svd.rds"), compress = "gz")
 ```
+
+# Stopping Multicore Operations
+
+```{r}
+parallel::stopCluster(cl)
+```
+
+# Hyperparameter Metrics
 
 ```{r}
 lasso_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_bow_bigrams_4k.csv"))
+tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_bow_bigrams_4k_svd.csv"))
 
 lasso_rs_metrics
 ```
+
+## Metric vs. Lambda
 
 ```{r}
 autoplot(tune_rs) +
@@ -96,8 +97,10 @@ autoplot(tune_rs) +
     title = "Lasso model performance across regularization penalties",
     subtitle = "Performance metrics can be used to identity the best penalty"
   )
+ggsave("plots/cv_metrics_lasso_bow.png")
 ```
 
+# Selecting Best ROC-AUC to tune Model
 
 ```{r}
 chosen_auc <- tune_rs |>
@@ -106,9 +109,13 @@ chosen_auc <- tune_rs |>
 final_lasso <- finalize_workflow(tune_wf, chosen_auc)
 ```
 
+# Fitting Model on Training Data
+
 ```{r}
 fitted_lasso <- fit(final_lasso, bigram_train)
 ```
+
+# Variable Importance Examination
 
 ```{r}
 lasso_variables <- fitted_lasso |>
@@ -116,7 +123,7 @@ lasso_variables <- fitted_lasso |>
   tidy() |>
   arrange(-estimate)
 
-tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_bow_first_run_4k.csv"))
+tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_bow_third_run_4k.csv"))
 
 lasso_variables
 ```
@@ -128,11 +135,13 @@ fitted_lasso |>
   arrange(estimate)
 ```
 
+## Variable Importance Plot
+
 ```{r}
 library(vip)
 
 vip_lasso <- fitted_lasso |>
-  pull_workflow_fit() |>
+  extract_fit_parsnip() |>
   vi(lambda = chosen_auc$penalty) |>
   mutate(
     Importance = abs(Importance),
@@ -146,18 +155,15 @@ vip_lasso |>
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("variable_importance_plot.png")
+ggsave("plots/variable_importance_plot_lasso_bow.png")
 ```
 
 ```{r}
-lasso_test_preds <- augment(fitted_lasso, new_data = bigram_test)
-
-tidytable::fwrite(lasso_test_preds, here::here("content", "modeling", "model_results", "lasso_test_preds_bow.csv"))
-
 last_fit_lasso <- last_fit(final_lasso, bow_split)
 
 lasso_metric <- last_fit_lasso |>
-  collect_metrics()
+  collect_predictions() |>
+  class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
 tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_bow.csv")
 
@@ -166,6 +172,13 @@ last_fit_lasso |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("roc_curve_lasso_bow.png")
+ggsave("plots/roc_curve_lasso_bow.png")
+
+last_fit_lasso |>
+  collect_predictions() |>
+  conf_mat(source_bias, .pred_class) |>
+  autoplot(type = "heatmap")
+
+ggsave("plots/confusion_matrix_lasso_bow.png")
 ```
 

@@ -8,12 +8,14 @@ editor_options:
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_nlp_modeling_randomforest_bow.qmd")
-library(tidymodels)
+here::i_am("content/modeling/bigram_nlp_modeling_randomforest_lsa.qmd")
 
 library(parallel)
 all_cores <- parallel::detectCores(logical = FALSE)
 cl <- parallel::makePSOCKcluster(all_cores)
+
+# Script to Ensure Data Reproducibility
+source(here::here("R", "data_prep_modeling_lsa.R"), echo = TRUE)
 ```
 
 # Recipes
@@ -80,7 +82,7 @@ tune_rs <- tune_grid(
   metrics = class_metrics,
 )
 
-readr::write_rds(tune_rs, "model_data/tune_results_randomforest_bow.rds")
+readr::write_rds(tune_rs, "model_data/tune_results_randomforest_lsa.rds")
 parallel::stopCluster(cl)
 ```
 
@@ -88,7 +90,7 @@ parallel::stopCluster(cl)
 
 ```{r}
 randomforest_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(randomforest_rs_metrics, here::here("content", "modeling", "model_results", "randomforest_rs_metrics_bow_bigrams.csv"))
+tidytable::fwrite(randomforest_rs_metrics, here::here("content", "modeling", "model_results", "randomforest_rs_metrics_lsa_bigrams.csv"))
 
 show_best(tune_rs)
 ```
@@ -109,7 +111,7 @@ tune_rs |>
   facet_wrap(~parameter, scales = "free_x") +
   labs(x = NULL, y = "AUC")
 
-ggsave("plots/cv_metrics_randomforest_bow.png")
+ggsave("plots/cv_metrics_randomforest_lsa.png")
 ```
 
 # Selecting Best ROC-AUC to tune Model
@@ -145,30 +147,30 @@ vip_randomforest |>
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("plots/variable_importance_plot_randomforest_bow.png")
+ggsave("plots/variable_importance_plot_randomforest_lsa.png")
 ```
 
 ```{r}
-last_fit_randomforest <- last_fit(final_randomforest, bow_split)
+last_fit_randomforest <- last_fit(final_randomforest, lsa_split)
 
 randomforest_metric <- last_fit_randomforest |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(randomforest_metric, "model_results/randomforest_test_metrics_bow.csv")
+tidytable::fwrite(randomforest_metric, "model_results/randomforest_test_metrics_lsa.csv")
 
 last_fit_randomforest |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_randomforest_bow.png")
+ggsave("plots/roc_curve_randomforest_lsa.png")
 
 last_fit_randomforest |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_randomforest_bow.png")
+ggsave("plots/confusion_matrix_randomforest_lsa.png")
 ```
 

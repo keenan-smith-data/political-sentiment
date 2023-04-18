@@ -107,7 +107,7 @@ fwrite(d_1000, here::here("data", "model_data", "lsa_bigram_D_1000.csv.gz"))
 bigrams_lsa_400 <- textmodel_lsa(dfmat_bigrams_tfidf_lsa, nd = 400)
 
 bigrams_lsa_docs_400 <- bigrams_lsa_400$docs
-bigrams_lsa_features <- bigrams_lsa_400$features
+bigrams_lsa_features_400 <- bigrams_lsa_400$features
 bigrams_lsa_sk_400 <- bigrams_lsa_400$sk
 
 bigrams_lsa_docs_df_400 <- matrix_to_tidy(bigrams_lsa_docs_400, 1:400)

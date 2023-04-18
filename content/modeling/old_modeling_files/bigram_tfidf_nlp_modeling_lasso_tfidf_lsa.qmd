@@ -1,0 +1,171 @@
+---
+title: "LASSO NLP Modeling Latent Semantic Analysis"
+author: "Keenan Smith"
+---
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/modeling/bigram_nlp_modeling_lasso.qmd")
+library(tidymodels)
+
+library(parallel)
+all_cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(all_cores)
+doParallel::registerDoParallel(cl)
+
+sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
+
+docid_to_bias <- function(df) {
+  df |>
+    tidytable::separate_wider_delim(doc_id, delim = "_", names = c("short_source", "pull_index", "source_bias"), cols_remove = TRUE) |>
+    tidytable::select(-short_source, -pull_index)
+}
+```
+
+```{r}
+bigram_lsa <- tidytable::fread(here::here("data", "model_data", "lsa_bigram_docs_400.csv.gz"))
+
+rownames(bigram_lsa) <- bigram_lsa$doc_id
+```
+
+# Getting Classification out of Doc ID
+
+```{r}
+bigram_lsa <- docid_to_bias(bigram_lsa)
+```
+
+# Data Split
+
+```{r}
+set.seed(2023)
+lsa_split <- initial_split(bigram_lsa, strata = source_bias)
+
+bigram_train <- training(tfidf_split)
+bigram_test <- testing(tfidf_split)
+bigram_folds <- vfold_cv(bigram_train)
+```
+
+# Engine
+
+```{r}
+tune_spec <- logistic_reg(penalty = tune(), mixture = 1) |>
+  set_mode("classification") |>
+  set_engine("glmnet")
+```
+
+# Tune Grid
+
+```{r}
+lambda_grid <- grid_regular(penalty(), levels = 10)
+```
+
+# Recipes
+
+```{r}
+text_rec <- recipe(source_bias ~ ., data = bigram_train)
+```
+
+# Workflows
+
+```{r}
+tune_wf <- workflow() |>
+  add_recipe(text_rec, blueprint = sparse_bp) |>
+  add_model(tune_spec)
+```
+
+```{r}
+tune_rs <- tune_grid(
+  tune_wf,
+  bigram_folds,
+  grid = lambda_grid,
+  control = control_resamples(save_pred = TRUE)
+)
+```
+
+```{r}
+lasso_rs_metrics <- collect_metrics(tune_rs)
+tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_lsa_bigrams_4k.csv"))
+
+lasso_rs_metrics
+```
+
+```{r}
+autoplot(tune_rs) +
+  labs(
+    title = "Lasso model performance across regularization penalties",
+    subtitle = "Performance metrics can be used to identity the best penalty"
+  )
+```
+
+
+```{r}
+chosen_auc <- tune_rs |>
+  select_best(metric = "roc_auc", -penalty)
+
+final_lasso <- finalize_workflow(tune_wf, chosen_auc)
+```
+
+```{r}
+fitted_lasso <- fit(final_lasso, bigram_train)
+```
+
+```{r}
+lasso_variables <- fitted_lasso |>
+  extract_fit_parsnip() |>
+  tidy() |>
+  arrange(-estimate)
+
+tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_lsa_first_run_4k.csv"))
+
+lasso_variables
+```
+
+```{r}
+fitted_lasso |>
+  extract_fit_parsnip() |>
+  tidy() |>
+  arrange(estimate)
+```
+
+```{r}
+library(vip)
+
+vip_lasso <- fitted_lasso |>
+  pull_workflow_fit() |>
+  vi(lambda = chosen_auc$penalty) |>
+  mutate(
+    Importance = abs(Importance),
+    Variable = forcats::fct_reorder(Variable, Importance)
+  )
+
+vip_lasso |>
+  slice_head(n = 20) |>
+  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(y = NULL)
+
+ggsave("variable_importance_plot.png")
+```
+
+```{r}
+lasso_test_preds <- augment(fitted_lasso, new_data = bigram_test)
+
+tidytable::fwrite(lasso_test_preds, here::here("content", "modeling", "model_results", "lasso_test_preds_lsa.csv"))
+
+last_fit_lasso <- last_fit(final_lasso, lsa_split)
+
+lasso_metric <- last_fit_lasso |>
+  collect_metrics()
+
+tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_lsa.csv")
+
+last_fit_lasso |>
+  collect_predictions() |>
+  roc_curve(source_bias, `.pred_left-wing`) |>
+  autoplot()
+
+ggsave("roc_curve_lasso_lsa.png")
+```
+

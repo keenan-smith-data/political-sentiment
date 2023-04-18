@@ -13,9 +13,68 @@ Built with R Version `r getRversion()`
 here::i_am("content/exploratory_data_analysis/exploratory_data_analysis_lca.qmd")
 library(tidytable)
 library(ggplot2)
+
+svd_top_features <- function(selection, df = features_df_400, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_max(order_by = {{selection}}, n = n) |>
+    tidytable::mutate(type_sel = "max")
+}
+
+svd_bottom_features <- function(selection, df = features_df_400, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_min(order_by = {{selection}}, n = n) |>
+    tidytable::mutate(type_sel = "min")
+}
+
+svd_component_features <- function(selection, df = features_df_400, n = 20) {
+  temp_max <- svd_top_features(selection = {{selection}}, df = df, n = n)
+  temp_min <- svd_bottom_features(selection = {{selection}}, df = df, n = n)
+  final <- tidytable::bind_rows(temp_max, temp_min)
+  return(final)
+}
 ```
 
 # Latent Semantic Analysis
+
+## n = 400
+
+```{r}
+docs_df_400 <- fread(here::here("data", "model_data", "lsa_bigram_docs_400.csv.gz"))
+features_df_400 <- fread(here::here("data", "model_data", "lsa_bigram_features_400.csv.gz"))
+d_400 <- fread(here::here("data", "model_data", "lsa_bigram_D_400.csv.gz"))
+
+d_400_percent <- d_400 |>
+  mutate(percent_variability = d^2/sum(d^2)*100,
+         cum_per_variability = cumsum(d^2)/sum(d^2)*100,
+         component = paste0("component", 1:400))
+
+svd_top_features(component1, features_df_400, n = 20)
+svd_bottom_features(component1, features_df_400, n = 20)
+
+component1_features <- svd_component_features(component1, features_df_400, n = 20)
+component2_features <- svd_component_features(component2, features_df_400, n = 20)
+
+
+component1_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component1))) |>
+  ggplot(aes(component1, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+
+component2_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component2))) |>
+  ggplot(aes(component2, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+```
+
+```{r}
+plot(d_400_percent$percent_variability,ylab="Percent variability explained")
+
+plot(d_400_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
+```
 
 ## n = 1000
 
@@ -38,34 +97,6 @@ features_long <- features_df_1000 |>
 plot(d_1000_percent$percent_variability,ylab="Percent variability explained")
 
 plot(d_1000_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
-```
-
-## n = 400
-
-```{r}
-docs_df_400 <- fread(here::here("data", "model_data", "lsa_bigram_docs_400.csv.gz"))
-features_df_400 <- fread(here::here("data", "model_data", "lsa_bigram_features_400.csv.gz"))
-d_400 <- fread(here::here("data", "model_data", "lsa_bigram_D_400.csv.gz"))
-
-d_400_percent <- d_400 |>
-  mutate(percent_variability = d^2/sum(d^2)*100,
-         cum_per_variability = cumsum(d^2)/sum(d^2)*100,
-         component = paste0("component", 1:1000))
-
-svd_top_features <- function(selection, df = features_df_400, n = 20) {
-  df |>
-    tidytable::transmute(docid, {{selection}}) |>
-    tidytable::slice_max(order_by = {{selection}}, n = n)
-}
-
-svd_top_features(selection = component1, features_df_400, n = 20)
-
-```
-
-```{r}
-plot(d_400_percent$percent_variability,ylab="Percent variability explained")
-
-plot(d_400_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
 ```
 
 ## n = 200

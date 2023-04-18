@@ -53,10 +53,11 @@ library(xgboost)
 
 tune_spec <- boost_tree(
   trees = 1000,
-  tree_depth = tune(), 
-  min_n = tune(),
+  tree_depth = tune(), min_n = tune(),
   loss_reduction = tune(),
-  learn_rate = tune()) |>
+  sample_size = tune(),
+  learn_rate = tune()
+) |>
   set_mode("classification") |>
   set_engine("xgboost")
 ```
@@ -108,15 +109,15 @@ readr::write_rds(tune_rs, "model_results/xgboost_tune_data.rds", compress = c("g
 xgboost_rs_metrics <- collect_metrics(tune_rs)
 tidytable::fwrite(xgboost_rs_metrics, here::here("content", "modeling", "model_results", "xgboost_rs_metrics_bigrams.csv"))
 
-show_best(tune_rs)
+xgboost_rs_metrics
 ```
 
 ```{r}
 tune_rs |>
   collect_metrics() |>
   filter(.metric == "roc_auc") |>
-  select(mean, min_n:loss_reduction) |>
-  pivot_longer(min_n:loss_reduction,
+  select(mean, mtry:sample_size) |>
+  pivot_longer(mtry:sample_size,
                values_to = "value",
                names_to = "parameter"
   ) |>
@@ -141,16 +142,11 @@ fitted_xgboost <- fit(final_xgboost, bigram_train)
 ```{r}
 library(vip)
 
-vip_xgboost <- fitted_xgboost |>
+vip_lasso <- fitted_xgboost |>
   extract_fit_parsnip() |>
-  vi()
+  vip(geom = "point")
 
-vip_xgboost |>
-  slice_head(n = 20) |>
-  ggplot(aes(x = Importance, y = Variable)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0)) +
-  labs(y = NULL)
+vip_lasso
 
 
 ggsave("variable_importance_plot_xgboost.png")
@@ -159,7 +155,7 @@ ggsave("variable_importance_plot_xgboost.png")
 ```{r}
 last_fit_xgboost <- last_fit(final_xgboost, tfidf_split)
 
-xgboost_metric <- last_fit_xgboost |>
+xgboost_metric <- last_fit(final_xgboost, tfidf_split) |>
   collect_metrics()
 
 tidytable::fwrite(xgboost_metric, "model_results/xgboost_test_metrics.csv")

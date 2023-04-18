@@ -1,5 +1,5 @@
 ---
-title: "randomforest NLP Modeling"
+title: "xgb NLP Modeling"
 author: "Keenan Smith"
 editor_options: 
   chunk_output_type: console
@@ -8,51 +8,83 @@ editor_options:
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_nlp_modeling_randomforest_bow.qmd")
+here::i_am("content/modeling/bigram_nlp_modeling_xgb_bow.qmd")
 library(tidymodels)
 
 library(parallel)
 all_cores <- parallel::detectCores(logical = FALSE)
 cl <- parallel::makePSOCKcluster(all_cores)
-```
+doParallel::registerDoParallel(cl)
 
-# Recipes
-
-```{r}
 sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
 
-text_rec <- recipe(source_bias ~ ., data = bigram_train)
+docid_to_bias <- function(df) {
+  df |>
+    tidytable::separate_wider_delim(doc_id, delim = "_", names = c("short_source", "pull_index", "source_bias"), cols_remove = TRUE) |>
+    tidytable::select(-short_source, -pull_index)
+}
+```
+
+```{r}
+bigram_bow <- tidytable::fread(here::here("data", "model_data", "bow_bigram_df_4k.csv.gz"))
+
+rownames(bigram_bow) <- bigram_bow$doc_id
+```
+
+# Getting Classification out of Doc ID
+
+```{r}
+bigram_bow <- docid_to_bias(bigram_bow)
+```
+
+# Data Split
+
+```{r}
+set.seed(2023)
+bow_split <- initial_split(bigram_bow, strata = source_bias)
+
+bigram_train <- training(bow_split)
+bigram_test <- testing(bow_split)
+bigram_folds <- vfold_cv(bigram_train)
 ```
 
 # Engine
 
 ```{r}
-library(ranger)
+library(xgboost)
 
-tune_spec <- rand_forest(
-  mtry = tune(), # Randomly Selected Predictors
-  trees = tune(), # Trees
-  min_n = tune() # Minimal Node Size
-  ) |>
+tune_spec <- boost_tree(
+  trees = 1000,
+  tree_depth = tune(), 
+  min_n = tune(),
+  loss_reduction = tune(),
+  learn_rate = tune()) |>
   set_mode("classification") |>
-  set_engine("ranger")
+  set_engine("xgboost")
 ```
 
 # Tune Grid
 
 ```{r}
-randomforest_params <- 
+xgboost_params <- 
   dials::parameters(
-    finalize(mtry(), bigram_train),
-    trees(),
-    min_n()
+    min_n(),
+    tree_depth(),
+    learn_rate(),
+    loss_reduction()
   )
 
-randomforest_grid <- 
+xgb_grid <- 
   dials::grid_max_entropy(
-    randomforest_params, 
+    xgboost_params, 
     size = 10
   )
+```
+
+# Recipes
+
+```{r}
+text_rec <- recipe(source_bias ~ ., data = bigram_train)
 ```
 
 # Workflows
@@ -72,23 +104,27 @@ class_metrics <- metric_set(sens, spec, recall, precision, f_meas, accuracy, roc
 # Hyperparameter Tuning
 
 ```{r}
-doParallel::registerDoParallel(cl)
 tune_rs <- tune_grid(
   tune_wf,
   bigram_folds,
-  grid = randomforest_grid,
+  grid = xgb_grid,
   metrics = class_metrics,
 )
 
-readr::write_rds(tune_rs, "model_data/tune_results_randomforest_bow.rds")
+readr::write_rds(tune_rs, "model_data/tune_results_xgb_bow.rds")
+```
+
+# Stopping Multicore Operations
+
+```{r}
 parallel::stopCluster(cl)
 ```
 
 # Hyperparameter Metrics
 
 ```{r}
-randomforest_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(randomforest_rs_metrics, here::here("content", "modeling", "model_results", "randomforest_rs_metrics_bow_bigrams.csv"))
+xgb_rs_metrics <- collect_metrics(tune_rs)
+tidytable::fwrite(xgb_rs_metrics, here::here("content", "modeling", "model_results", "xgb_rs_metrics_bow_bigrams_4k.csv"))
 
 show_best(tune_rs)
 ```
@@ -109,7 +145,7 @@ tune_rs |>
   facet_wrap(~parameter, scales = "free_x") +
   labs(x = NULL, y = "AUC")
 
-ggsave("plots/cv_metrics_randomforest_bow.png")
+ggsave("plots/cv_metrics_xgb_bow.png")
 ```
 
 # Selecting Best ROC-AUC to tune Model
@@ -118,13 +154,13 @@ ggsave("plots/cv_metrics_randomforest_bow.png")
 chosen_auc <- tune_rs |>
   select_best(metric = "roc_auc")
 
-final_randomforest <- finalize_workflow(tune_wf, chosen_auc)
+final_xgb <- finalize_workflow(tune_wf, chosen_auc)
 ```
 
 # Fitting Model on Training Data
 
 ```{r}
-fitted_randomforest <- fit(final_randomforest, bigram_train)
+fitted_xgb <- fit(final_xgb, bigram_train)
 ```
 
 # Variable Importance Examination
@@ -134,41 +170,41 @@ fitted_randomforest <- fit(final_randomforest, bigram_train)
 ```{r}
 library(vip)
 
-vip_randomforest <- fitted_randomforest |>
+vip_xgboost <- fitted_xgboost |>
   extract_fit_parsnip() |>
   vi()
 
-vip_randomforest |>
+vip_xgboost |>
   slice_head(n = 20) |>
   ggplot(aes(x = Importance, y = Variable)) +
   geom_col() +
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("plots/variable_importance_plot_randomforest_bow.png")
+ggsave("plots/variable_importance_plot_xgb_bow.png")
 ```
 
 ```{r}
-last_fit_randomforest <- last_fit(final_randomforest, bow_split)
+last_fit_xgb <- last_fit(final_xgb, bow_split)
 
-randomforest_metric <- last_fit_randomforest |>
+xgb_metric <- last_fit_xgb |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(randomforest_metric, "model_results/randomforest_test_metrics_bow.csv")
+tidytable::fwrite(xgb_metric, "model_results/xgb_test_metrics_bow.csv")
 
-last_fit_randomforest |>
+last_fit_xgb |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_randomforest_bow.png")
+ggsave("plots/roc_curve_xgb_bow.png")
 
-last_fit_randomforest |>
+last_fit_xgb |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_randomforest_bow.png")
+ggsave("plots/confusion_matrix_xgb_bow.png")
 ```
 

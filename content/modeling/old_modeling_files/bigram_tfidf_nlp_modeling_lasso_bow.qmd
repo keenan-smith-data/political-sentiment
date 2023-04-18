@@ -6,7 +6,7 @@ author: "Keenan Smith"
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_tfidf_nlp_modeling_lasso_bow.qmd")
+here::i_am("content/modeling/bigram_tfidf_nlp_modeling_lasso.qmd")
 library(tidymodels)
 
 library(parallel)
@@ -41,8 +41,8 @@ bigram_bow <- docid_to_bias(bigram_bow)
 set.seed(2023)
 bow_split <- initial_split(bigram_bow, strata = source_bias)
 
-bigram_train <- training(bow_split)
-bigram_test <- testing(bow_split)
+bigram_train <- training(tfidf_split)
+bigram_test <- testing(tfidf_split)
 bigram_folds <- vfold_cv(bigram_train)
 ```
 
@@ -132,7 +132,7 @@ fitted_lasso |>
 library(vip)
 
 vip_lasso <- fitted_lasso |>
-  extract_fit_parsnip() |>
+  pull_workflow_fit() |>
   vi(lambda = chosen_auc$penalty) |>
   mutate(
     Importance = abs(Importance),
@@ -146,7 +146,7 @@ vip_lasso |>
   scale_x_continuous(expand = c(0, 0)) +
   labs(y = NULL)
 
-ggsave("variable_importance_plot_lasso_bow.png")
+ggsave("variable_importance_plot.png")
 ```
 
 ```{r}
