@@ -96,7 +96,7 @@ naivebayes_metric <- last_fit_naivebayes |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(naivebayes_metric, "model_results/naivebayes_test_metrics_tfidf.csv")
+tidytable::fwrite(naivebayes_metric, here::here("content","modeling", "model_results", "naivebayes_test_metrics_tfidf.csv"))
 
 last_fit_naivebayes |>
   collect_predictions() |>

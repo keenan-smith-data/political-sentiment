@@ -85,7 +85,7 @@ tune_rs <- tune_grid(
   metrics = class_metrics,
 )
 
-readr::write_rds(tune_rs, "model_data/tune_results_xgb_tfidf.rds")
+readr::write_rds(tune_rs, here::here("content","modeling", "model_results", "tune_results_xgb_tfidf.rds"), compress = "gz")
 parallel::stopCluster(cl)
 ```
 
@@ -160,7 +160,7 @@ xgb_metric <- last_fit_xgb |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(xgb_metric, "model_results/xgb_test_metrics_tfidf.csv")
+tidytable::fwrite(xgb_metric, here::here("content","modeling", "model_results", "xgb_test_metrics_tfidf.csv"))
 
 last_fit_xgb |>
   collect_predictions() |>

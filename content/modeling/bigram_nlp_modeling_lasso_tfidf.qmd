@@ -27,20 +27,20 @@ sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
 text_rec <- recipe(source_bias ~ ., data = bigram_train)
 ```
 
-# Workflows
-
-```{r}
-tune_wf <- workflow() |>
-  add_recipe(text_rec, blueprint = sparse_bp) |>
-  add_model(tune_spec)
-```
-
 # Engine
 
 ```{r}
 tune_spec <- logistic_reg(penalty = tune(), mixture = 1) |>
   set_mode("classification") |>
   set_engine("glmnet")
+```
+
+# Workflows
+
+```{r}
+tune_wf <- workflow() |>
+  add_recipe(text_rec, blueprint = sparse_bp) |>
+  add_model(tune_spec)
 ```
 
 # Tune Grid
@@ -67,7 +67,7 @@ tune_rs <- tune_grid(
   control = control_resamples(save_pred = TRUE)
 )
 
-readr::write_rds(tune_rs, "model_data/tune_results_lasso_tfidf.rds")
+readr::write_rds(tune_rs, here::here("content","modeling", "model_results", "tune_results_lasso_tfidf.rds"), compress = "gz")
 parallel::stopCluster(cl)
 ```
 
@@ -131,9 +131,9 @@ fitted_lasso |>
 ```{r}
 library(vip)
 
-vip_lasso <- fitted_lasso |>
+vip_lasso <- last_fit_lasso |>
   extract_fit_parsnip() |>
-  vi(lambda = chosen_auc$penalty) |>
+  vi() |>
   mutate(
     Importance = abs(Importance),
     Variable = forcats::fct_reorder(Variable, Importance)
@@ -144,6 +144,8 @@ vip_lasso |>
   ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
   geom_col() +
   scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = c("NEG" = "blue",
+                              "POS" = "red")) +
   labs(y = NULL)
 
 ggsave("plots/variable_importance_plot_lasso_tfidf.png")
@@ -156,7 +158,7 @@ lasso_metric <- last_fit_lasso |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(lasso_metric, "model_results/lasso_test_metrics_tfidf.csv")
+tidytable::fwrite(lasso_metric, here::here("content","modeling", "model_results", "lasso_test_metrics_tfidf.csv"))
 
 last_fit_lasso |>
   collect_predictions() |>

@@ -85,7 +85,7 @@ tune_rs <- tune_grid(
 )
 parallel::stopCluster(cl)
 
-readr::write_rds(tune_rs, "model_data/tune_results_xgb_lsa.rds")
+readr::write_rds(tune_rs, here::here("content","modeling", "model_results", "tune_results_xgb_lsa.rds"), compress = "gz")
 ```
 
 # Hyperparameter Metrics
@@ -159,7 +159,7 @@ xgb_metric <- last_fit_xgb |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(xgb_metric, "model_results/xgb_test_metrics_lsa.csv")
+tidytable::fwrite(xgb_metric, here::here("content","modeling", "model_results", "xgb_test_metrics_lsa.csv"))
 
 last_fit_xgb |>
   collect_predictions() |>

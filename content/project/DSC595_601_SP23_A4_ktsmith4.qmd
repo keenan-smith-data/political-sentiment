@@ -267,7 +267,7 @@ kableExtra::kbl(lasso_test_metrics) |>
 
 ### Tab B (ROC Curve)
 
-![](images/roc_curve_lasso.png){width=80%}
+![](images/roc_curve_lasso.png){width=40%}
 
 :::
 
