@@ -89,7 +89,7 @@ ggsave("plots/cv_roc_naivebayes_lsa.png")
 
 
 ```{r}
-last_fit_naivebayes <- last_fit(final_naivebayes, lsa_split)
+last_fit_naivebayes <- last_fit(tune_wf, lsa_split)
 
 naivebayes_metric <- last_fit_naivebayes |>
   collect_predictions() |>

@@ -8,7 +8,7 @@ editor_options:
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/modeling/bigram_nlp_modeling_xgb_lsa.qmd")
+here::i_am("content/modeling/bigram_nlp_modeling_xgboost_lsa.qmd")
 
 library(parallel)
 all_cores <- parallel::detectCores(logical = FALSE)

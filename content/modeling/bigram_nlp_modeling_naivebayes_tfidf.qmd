@@ -60,7 +60,7 @@ tune_rs <- tune_grid(
   control = control_resamples(save_pred = TRUE)
 )
 parallel::stopCluster(cl)
-readr::write_rds(tune_rs, "model_results/tune_results_naivebayes_tfidf.rds", compress = "gz")
+readr::write_rds(tune_rs, here::here("content", "modeling", "model_results", "tune_results_naivebayes_tfidf.rds"), compress = "gz")
 ```
 
 # Hyperparameter Metrics
@@ -90,7 +90,7 @@ ggsave("plots/cv_roc_naivebayes_tfidf.png")
 
 
 ```{r}
-last_fit_naivebayes <- last_fit(final_naivebayes, tfidf_split)
+last_fit_naivebayes <- last_fit(tune_wf, tfidf_split)
 
 naivebayes_metric <- last_fit_naivebayes |>
   collect_predictions() |>
