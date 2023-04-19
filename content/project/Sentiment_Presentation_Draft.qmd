@@ -4,7 +4,7 @@ author: "Keenan Smith"
 format:
   revealjs:
     theme: serif
-    logo: ncstate-type-2x2-red.png
+    logo: images/ncstate-type-2x2-red.png
     footer: Political_Sentiment_Capstone_Smith_Keenan 
     width: 1920
     height: 1080

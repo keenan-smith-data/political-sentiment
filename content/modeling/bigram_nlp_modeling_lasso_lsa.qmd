@@ -66,8 +66,7 @@ tune_rs <- tune_grid(
   tune_wf,
   bigram_folds,
   grid = lambda_grid,
-  metrics = class_metrics,
-  control = control_resamples(save_pred = TRUE)
+  metrics = class_metrics
 )
 
 readr::write_rds(tune_rs, here::here("content", "modeling", "model_results", "tune_results_lasso_lsa.rds"), compress = "gz")
@@ -79,7 +78,7 @@ parallel::stopCluster(cl)
 # Hyperparameter Metrics
 
 ```{r}
-tune_rs <- readr::read_rds(here::here("content", "modeling", "model_results", "tune_results_lasso_lsa.rds"))
+# tune_rs <- readr::read_rds(here::here("content", "modeling", "model_results", "tune_results_lasso_lsa.rds"))
 
 lasso_rs_metrics <- collect_metrics(tune_rs)
 tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_lsa_bigrams.csv"))
@@ -95,7 +94,7 @@ autoplot(tune_rs) +
     title = "Lasso model performance across regularization penalties",
     subtitle = "Performance metrics can be used to identity the best penalty"
   )
-ggsave("plots/cv_metrics_lasso_lsa.png")
+ggsave(here::here("content", "modeling", "plots", "cv_metrics_lasso_lsa.png"))
 ```
 
 # Selecting Best ROC-AUC to tune Model
@@ -155,7 +154,7 @@ vip_lasso |>
                                "POS" = "red")) +
   labs(y = NULL)
 
-ggsave("plots/variable_importance_plot_lasso_lsa.png")
+ggsave(here::here("content", "modeling", "plots", "variable_importance_plot_lasso_lsa.png"))
 ```
 
 ```{r}
@@ -172,13 +171,13 @@ last_fit_lasso |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_lasso_lsa.png")
+ggsave(here::here("content", "modeling", "plots", "roc_curve_lasso_lsa.png"))
 
 last_fit_lasso |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_lasso_lsa.png")
+ggsave(here::here("content", "modeling", "plots", "confusion_matrix_lasso_lsa.png"))
 ```
 

@@ -31,7 +31,7 @@ This NLP project utilizes a primarily English corpus with minimal Spanish entrie
 
 ## Political Ideology
 
-Political Ideology is a complex and nuanced subject. It is loosely defined as left and right wing by numerous news outlets and the public. However, this loose definition is often found to be lacking in precision. An study by Feldman and Jonston found using Latent Class Analysis, six distinct classes of individuals when measured against economic and social questions. {@feldman_2013} Adorno defined ideology as "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno] Political parties are equally complex and nuanced with several actors and social movements. 
+Political Ideology is a complex and nuanced subject. It is loosely defined as left and right wing by numerous news outlets and the public. However, this loose definition is often found to be lacking in precision. An study by Feldman and Johnston found, using Latent Class Analysis, six distinct classes of individuals when measured against economic and social questions. {@feldman_2013} Adorno defined ideology as "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno] Political parties are equally complex and nuanced with several actors and social movements. 
 
 It is important to highlight this because the author classifies the data based on traditional right-wing and left-wing denominations. In the exploratory data analysis stage of this project, it was found that the overal corpus of text analyzed found that, based on unsupervised cluster analysis and lexical diversity analysis, the overall differences between the sources overall was not too disimilar. See Figure 1.  However, this is not part of the scope of this project and therefore is categorized for future work at a later date. 
 
@@ -58,7 +58,7 @@ kableExtra::kbl(source_table) |>
 
 ### Webscaping
 
-These data are collected using the webscraping libraries `rvest` and `RSelenium`. These libraries and the avaliablility of the data to be scraped greatly determined which sources were included in the final corpus. Links were obtained using two methods of collection, sitemap XML data and the `linkchecker` Application Programming Interface (API). Links are checked several times for uniqueness to ensure zero duplication. The links were then cleaned widely into articles and blog posts with some reports being included in the overall corpus. This was done by filtering first on URL parsing and then by random spot checking of the links. After viable links were filtered, correct HyperText Markup Language (HTML) and Cascading Style Sheets (CSS) tags were manually selected for each link type to ensure the correct data were pulled from the web. The data are then stored in a relational database (`duckdb`) utilizing Structured Query Language (SQL) to ensure data integrity and correct typing of the data. 
+These data are collected using the webscraping libraries `rvest` and `RSelenium`. [@rvest; @rselenium] These libraries and the avaliablility of the data to be scraped greatly determined which sources were included in the final corpus. Links were obtained using two methods of collection, sitemap XML data and the `linkchecker` Application Programming Interface (API). Links are checked several times for uniqueness to ensure zero duplication. The links were then cleaned widely into articles and blog posts with some reports being included in the overall corpus. This was done by filtering first on URL parsing and then by random spot checking of the links. After viable links were filtered, correct HyperText Markup Language (HTML) and Cascading Style Sheets (CSS) tags were manually selected for each link type to ensure the correct data were pulled from the web. The data are then stored in a relational database (`duckdb`) [@duckdb] utilizing Structured Query Language (SQL) to ensure data integrity and correct typing of the data. 
 
 ### Data Structure and Type
 
@@ -79,12 +79,12 @@ If an article contained no viable text, it was not imported into the database an
 ```{r}
 #| echo: false
 
-bias_count <- tidytable::fread(here::here("content", "project", "bias_count_filtered.csv"))
+bias_count <- tidytable::fread(here::here("content", "project", "sample_data", "bias_count_filtered.csv"))
 kableExtra::kbl(bias_count) |>
   kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
 ```
 
-To create the corpus, an analysis of the number of characters were performed to limit bias in the data. Some sources yielded more data than other sources due to the nature of content creation. The original data contained XX% right-wing and XX% left-wing. The corpus was then trimmed using the 90% quantile on American Enterprise Institute and 92% quantile on Heritage Foundation. This balanced the final corpus to 51% right-wing and 49% left-wing. Figure 2 shows the histogram of the final corpus in length of characters. As the data shows, there are more "mid-length" articles for right-wing sources but more "long" articles for left-wing. 
+To create the corpus, an analysis of the number of characters were performed to limit bias in the data. Some sources yielded more data than other sources due to the nature of content creation. The original data contained ~57.2% right-wing and ~42.7% left-wing. The corpus was then trimmed using the 90% quantile on American Enterprise Institute and 92% quantile on Heritage Foundation. This balanced the final corpus to ~50.7% right-wing and ~49.2% left-wing. Figure 2 shows the histogram of the final corpus in length of characters. As the data shows, there are more "mid-length" articles for right-wing sources but more "long" articles for left-wing. 
 
 ![Histogram of Final Corpus](images/corpus_histogram_filtered_bias.png)
 
@@ -104,7 +104,7 @@ $$
 
 where $f_{i,j}$ is number of occurences of i in j, $df_i$ is the number of documents containing i, and N is the total number of documents.
 
-The text was vectorized using the `quanteda` library first using Term Frequency. [@quanteda] The top 10,000 bigrams in the corpus were then selected and transformed into a tf-idf vectorization. Text data, in particular, has a large sparse set of predictors [@tidytext]. In order to reduce the number of predictors from 10,000 to 400, Latent Semantic Analysis (LSA) is utilized. LSA uses singular value decomposition to perform dimensionality reduction on the number of predictors. [@latent_medium] LSA mathematically groups words together that are semantically similar. LSA has the advantage of dimensionality reduction and of grouping semantically similar words together into a single vector. However, like any dimsionality techniques [@islr], some information is lost in the process and bigram positional information is lost. In the context of this project, these drawbacks are considered minimal for the potential gains of reducing the number of features. It also grants insight into words that are semantically similar that otherwise would not have been found using traditional tf-idf vectorization.
+The text was vectorized using the `quanteda` library first using Term Frequency. [@quanteda] The top 10,000 bigrams in the corpus were then selected and transformed into a tf-idf vectorization. Text data, in particular, has a large sparse set of predictors [@tidytext]. In order to reduce the number of predictors from 10,000 to 200, Latent Semantic Analysis (LSA) is utilized. LSA uses singular value decomposition to perform dimensionality reduction on the number of predictors. [@latent_medium] LSA mathematically groups words together that are semantically similar. LSA has the advantage of dimensionality reduction and of grouping semantically similar words together into a single vector. However, like any dimsionality techniques [@islr], some information is lost in the process and bigram positional information is lost. In the context of this project, these drawbacks are considered minimal for the potential gains of reducing the number of features. It also grants insight into words that are semantically similar that otherwise would not have been found using traditional tf-idf vectorization.
 
 Additionally, the top 4,000 bigrams were selected and vectorized using tf-idf and were used to model in addition to LSA. This method provides a bit more transparency to which variables are important and is easier to tokenize and analyze new data since LSA cannot fully reproduce the original feature matrix. 
 
@@ -116,41 +116,118 @@ It is important to note bias inherent in the data itself. Due to the nature of w
 
 ### Modelling Methodology
 
-Once the corpus is vectorized, features are selected and LSA is performed, the data are readied to be modelled. The following section will highlight the models selected and used in this project. The models were chosen based on their ability to work with text data and best practices. No deep learning models were used in this project, however, it should be noted that deep learning methods, particularly those based on "transformers" are the state-of-the-art tools in text analysis at the time of this report. [@transformers_nlp] 
+Once the corpus is vectorized, features are selected and LSA is performed, the data are readied to be modelled. The following section will highlight the models selected and used in this project. The models were chosen based on their ability to work with text data, best practices, and computational efficiency. No deep learning models were used in this project, however, it should be noted that deep learning methods, particularly those based on "transformers" are the state-of-the-art tools in text analysis at the time of this report. [@transformers_nlp] 
 
 #### Models
 
 The models that were chosen to model this question were:
-
-- LASSO Logisitic Regression 
-  - Utilized mainly for its ability to do feature selection and ease of explanation [@islr]
-  - A good classical model for text [@smltar]
-  - Ability to have hyperparameter tuning [@tmwr]
 - Naive Bayes Classifier
   - Generally good start for text classification [@smltar]
   - A relatively simple model based on Bayes Thereom [@islr]
   - $Pr(Y = k | X = x) = \frac{\pi_i * f_k(x) = f_{k1}(x_1) * \dots * f_{kp}}{\sum^K_{k=1} \pi_l * f_{l1}(x_1) * \dots * f_{lp}}$
-- Random Forest Classification
-  - A Decision Tree Model which is easy to understand and train [@islr]
-  - Have the ability to decorrelate data by randomly splitting predictors [@islr]
+- LASSO Logisitic Regression 
+  - Utilized mainly for its ability to do feature selection and ease of explanation [@islr]
+  - A good classical model for text [@smltar]
   - Ability to have hyperparameter tuning [@tmwr]
+
 
 #### Hyperparameter Tuning
 
-The models were training using the R programming language using the `tidymodels` framework to ensure consistentcy across modeling techniques. Using this framework allows for ease of hyperparameter tuning. Hyperparameter tuning is utilized to try to achieve higher performance metrics in modeling. [@smltar] For LASSO Logistic Regression, $\lambda$ was optimized over 10 possible values. For Random Forest, the number of trees, number of variables within one node, and the randomly selected predictors were selected for hyperparameter tuning. To see the specifics of using `tidymodels` to model data, Tidy Modeling with R is the recommended resource. [@tmwr]
+The models were training using the R programming language using the `tidymodels` framework to ensure consistentcy across modeling techniques. Using this framework allows for ease of hyperparameter tuning. Hyperparameter tuning is utilized to try to achieve higher performance metrics in modeling. [@smltar] For LASSO Logistic Regression, $\lambda$ was optimized over 10 possible values. To see the specifics of using `tidymodels` to model data, Tidy Modeling with R is the recommended resource. [@tmwr]
 
+#### Model Evaluation Criteria
+
+When evaluating classification models, there are several metrics that can analyze model performance. This project collected Sensitivity, Specificity, Recall, Precision, F Score, Accuracy, and Reciever Operating Characteristic-Area Under the Curve (ROC AUC). The chosen hyperparameter tuning measures were selected by chosing the model with the highest ROC AUC score. This was chosen specifically because it a combination metric that analyzes the models performance at "distinguishing between positive and negative classes." [@roc_auc] Since this is the objective of the research question, it makes sense to chose the optimized model based on this criteria. [@smltar] 
+
+Since this project is mainly concerned with classifying text based on bigrams utilized in the corpus, outside of ROC AUC, Accuracy is determined to be the next most important metric. Accuracy is simply a measure of the total overall matches over the total documents.[@islr]  The other recorded metrics will be displayed in the model results section.
 
 # Results
 
-
+The following section will cover the results of the models described in the previous section. The data are split in accordance with modern modeling practices into a 75/25 split. [@smltar] A random seed was set to 2023 so that the split was reproducible across each modeling script. The training set consisted of 111,526 documents and the test set consisted of 37,177 documents. Modeling was performed using LSA to dimensionally reduce the data from 10,000 bigrams to 200 component vectors. Modeling was also performed using tf-idf vectorization on the top 4,000 bigrams within the corpus. 
 
 ## Exploratory Data Analysis
 
+Exploratory Data Analysis (EDA) was performed on the completed corpus to examine the data prior to modeling. The main purpose of this EDA was to analyze trends in the data as well as identify corpus specific stopwords that could bias the data in the extreme. An example of these specific stopwords would be the article source names such as "Heritage Foundation" or "Center for American Progress". These terms could specifically identify the sources an lead to easier classification. Other stopwords were identified that were used frequently in some articles such as "solely expressed" or "author reflect". These were removed due to the fact that these are editorial edits made to the documents and though they may be interesting, they were shown to bias the data heavily in early modeling steps. Other additional stopwords were removed that were artifacts of the webscrape. These included "showdatalabel" and "verticalalign". Though the reason should be obvious of why they were removed, webscraping is an inexact process and though many articles are incased as a single CSS class, some others involved the heavy use of charts embedded in their article CSS class. 
 
+The corpus was also inspected using methods used in the Quanteda documentation. [@quanteda] This analysis proved valuable in discovering future work for this corpus, but did not factor into the objective of this project. 
+
+Some examples of the data used in modeling will be located in the Appendix at the end of this document. The predictor set is extremely large and is availiable upon request. 
 
 ## Model Results
 
+Four models were utilized to produce these results and will be covered in the following sections. Overall, the LASSO logistic regression performed on the top 4,000 bigrams performed the best with an Accuracy on the test data set of 83.7%. This model is by far the easiest to understand and interpret the results. The LASSO logistic regression utilizing the LSA feature set performed well with an accuracy score of 72.4%. These results are positive in answering the research question considering that both LASSO methods performed above the baseline of 50%.
 
+### Naive Bayes Classification
+
+#### Tf-idf Vectorization
+
+The Naive Bayes model did not perform well using the 4,000 bigram corpus presenting an accuracy score of 60% but a ROC AUC of .50. This model did no better than a coin flip in the testing data set. 
+
+```{r}
+#| echo: false
+
+nb_rs_tfidf_metrics <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_rs_metrics_tfidf_bigrams_4k.csv"))
+
+kableExtra::kbl(nb_rs_tfidf_metrics) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
+```
+
+![Naive Bayes tf-idf Confusion Matrix](../modeling/plots/){width=80%}
+
+As is seen in the Confusion matrix above, the model predicted every document to be right-wing. This led to the accuracy score of 60% based on how the corpus was split for testing. This outcome makes sense for Naive Bayes since the predictors in this case were vectorized using the top 4,000 bigrams in the entire corpus and then transformed into tf-idf vectors. There are simply not enough different words used for Naive Bayes to accurately predict based on Bayes Thereom. A larger set of predictors should see a different result, but due to computational restrictions the set of predictors was limited to 4,000.
+
+#### LSA Vectorization
+
+The Naive Bayes model performed better using the Latent Semantic Analysis vectorization technique with 200 predictors. Though the accuracy was lower than tf-idf, at 56.7%, the ROC AUC was .613 which is better than a coin flip. 
+
+```{r}
+#| echo: false
+
+nb_rs_lsa_metrics <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_rs_metrics_lsa_bigrams.csv"))
+
+kableExtra::kbl(nb_rs_lsa_metrics) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
+```
+
+![Naive Bayes LSA Confusion Matrix](../modeling/plots/){width=80%}
+
+As is seen in the LSA confusion matrix, this model actually predicts that some of the test data are left-wing, however, it does not do so consistently accurate. This outcome is however, positive since LSA performs dimensionality reduction on a larger group of 10,000 bigrams. This allows for more information to be presented to the model which allows for Bayes Thereom to predict the conditional probability that an LSA component is located in the document.
+
+This work is promising in that more features could be included in an LSA vectorization and could allow for better modeling results. This process is computationally intensive but could be done in the future.
+
+### LASSO Logistic Regression
+
+#### Tf-idf Vectorization
+
+As already discussed, the LASSO Logistic Regression using tf-idf vectorization on the top 4,000 bigrams performed the best in modeling results. The LASSO has an accuracy score of 83.7% and an ROC AUC of .908. This is a fantastic result on the testing set.
+
+```{r}
+#| echo: false
+
+lasso_rs_tfidf_metrics <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_metrics_tfidf.csv"))
+
+kableExtra::kbl(lasso_rs_tfidf_metrics) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
+```
+
+![LASSO tf-idf Confusion Matrix](../modeling/plots/){width=80%}
+
+As is seen in the tf-idf confusion matrix, this model performs well in identifying the correct class for each document. Since the LASSO can perform feature selection based on the $\lambda$ value chosen, it can bring features that are common between the two classes down to zero so that they do not impact the final results. The $\lambda$ value chosen for this model based on hyperparameter tuning is 0.000464. With this $\lambda$ value, 978 features where brought to 0 in the final model. This equates to 24.5% of the 4,000 bigrams. An initial analysis of the variables selected shows that those reduced to zero may be the most common terms between the two classes. 
+
+![LASSO Variable Importance Plot](../modeling/plots/variable_importance_plot_lasso_tfidf.png)
+
+Another interesting aspect of the LASSO method is that variable importance can be examined quite easily. Above is a plot of the most important variables in the LASSO tf-idf model. 
+
+#### LSA Vectorization
+
+```{r}
+#| echo: false
+
+lasso_rs_lsa_metrics <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_metrics_lsa.csv"))
+
+kableExtra::kbl(lasso_rs_lsa_metrics) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
+```
 
 # Further Work
 

@@ -63,8 +63,7 @@ tune_rs <- tune_grid(
   tune_wf,
   bigram_folds,
   grid = lambda_grid,
-  metrics = class_metrics,
-  control = control_resamples(save_pred = TRUE)
+  metrics = class_metrics
 )
 
 readr::write_rds(tune_rs, here::here("content","modeling", "model_results", "tune_results_lasso_tfidf.rds"), compress = "gz")
@@ -88,7 +87,7 @@ autoplot(tune_rs) +
     title = "Lasso model performance across regularization penalties",
     subtitle = "Performance metrics can be used to identity the best penalty"
   )
-ggsave("plots/cv_metrics_lasso_tfidf.png")
+ggsave(here::here("content", "modeling", "plots", "cv_metrics_lasso_tfidf.png"))
 ```
 
 # Selecting Best ROC-AUC to tune Model
@@ -114,7 +113,7 @@ lasso_variables <- fitted_lasso |>
   tidy() |>
   arrange(-estimate)
 
-tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_third_run_4k.csv"))
+tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_final_run_4k.csv"))
 
 lasso_variables
 ```
@@ -131,7 +130,7 @@ fitted_lasso |>
 ```{r}
 library(vip)
 
-vip_lasso <- last_fit_lasso |>
+vip_lasso <- fitted_lasso |>
   extract_fit_parsnip() |>
   vi() |>
   mutate(
@@ -148,7 +147,7 @@ vip_lasso |>
                               "POS" = "red")) +
   labs(y = NULL)
 
-ggsave("plots/variable_importance_plot_lasso_tfidf.png")
+ggsave(here::here("content", "modeling", "plots", "variable_importance_plot_lasso_tfidf.png"))
 ```
 
 ```{r}
@@ -165,13 +164,13 @@ last_fit_lasso |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_lasso_tfidf.png")
+ggsave(here::here("content", "modeling", "plots", "roc_curve_lasso_tfidf.png"))
 
 last_fit_lasso |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_lasso_tfidf.png")
+ggsave(here::here("content", "modeling", "plots", "confusion_matrix_lasso_tfidf.png"))
 ```
 

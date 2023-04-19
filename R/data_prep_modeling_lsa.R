@@ -8,7 +8,7 @@ docid_to_bias <- function(df) {
 }
 
 # Reading in Bag of Words Data
-bigram_lsa <- tidytable::fread(here::here("data", "model_data", "lsa_bigram_docs_400.csv.gz"))
+bigram_lsa <- tidytable::fread(here::here("data", "model_data", "lsa_bigram_docs_200.csv.gz"))
 
 # Docid to Rownames
 rownames(bigram_lsa) <- bigram_lsa$doc_id
