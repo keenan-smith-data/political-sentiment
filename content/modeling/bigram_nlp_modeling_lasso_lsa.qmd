@@ -109,13 +109,33 @@ final_lasso <- finalize_workflow(tune_wf, chosen_auc)
 # Fitting Model on Training Data
 
 ```{r}
-fitted_lasso <- fit(final_lasso, bigram_train)
+last_fit_lasso <- last_fit(final_lasso, lsa_split)
+
+lasso_metric <- last_fit_lasso |>
+  collect_predictions() |>
+  class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
+
+tidytable::fwrite(lasso_metric, here::here("content","modeling", "model_results", "lasso_test_metrics_lsa.csv"))
+
+last_fit_lasso |>
+  collect_predictions() |>
+  roc_curve(source_bias, `.pred_left-wing`) |>
+  autoplot()
+
+ggsave(here::here("content", "modeling", "plots", "roc_curve_lasso_lsa.png"))
+
+last_fit_lasso |>
+  collect_predictions() |>
+  conf_mat(source_bias, .pred_class) |>
+  autoplot(type = "heatmap")
+
+ggsave(here::here("content", "modeling", "plots", "confusion_matrix_lasso_lsa.png"))
 ```
 
 # Variable Importance Examination
 
 ```{r}
-lasso_variables <- fitted_lasso |>
+lasso_variables <- last_fit_lasso |>
   extract_fit_parsnip() |>
   tidy() |>
   arrange(-estimate)
@@ -126,7 +146,7 @@ lasso_variables
 ```
 
 ```{r}
-fitted_lasso |>
+last_fit_lasso |>
   extract_fit_parsnip() |>
   tidy() |>
   arrange(estimate)
@@ -156,28 +176,3 @@ vip_lasso |>
 
 ggsave(here::here("content", "modeling", "plots", "variable_importance_plot_lasso_lsa.png"))
 ```
-
-```{r}
-last_fit_lasso <- last_fit(final_lasso, lsa_split)
-
-lasso_metric <- last_fit_lasso |>
-  collect_predictions() |>
-  class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
-
-tidytable::fwrite(lasso_metric, here::here("content","modeling", "model_results", "lasso_test_metrics_lsa.csv"))
-
-last_fit_lasso |>
-  collect_predictions() |>
-  roc_curve(source_bias, `.pred_left-wing`) |>
-  autoplot()
-
-ggsave(here::here("content", "modeling", "plots", "roc_curve_lasso_lsa.png"))
-
-last_fit_lasso |>
-  collect_predictions() |>
-  conf_mat(source_bias, .pred_class) |>
-  autoplot(type = "heatmap")
-
-ggsave(here::here("content", "modeling", "plots", "confusion_matrix_lasso_lsa.png"))
-```
-

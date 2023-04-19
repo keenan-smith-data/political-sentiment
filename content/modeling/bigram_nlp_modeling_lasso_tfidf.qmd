@@ -102,55 +102,6 @@ final_lasso <- finalize_workflow(tune_wf, chosen_auc)
 # Fitting Model on Training Data
 
 ```{r}
-fitted_lasso <- fit(final_lasso, bigram_train)
-```
-
-# Variable Importance Examination
-
-```{r}
-lasso_variables <- fitted_lasso |>
-  extract_fit_parsnip() |>
-  tidy() |>
-  arrange(-estimate)
-
-tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_final_run_4k.csv"))
-
-lasso_variables
-```
-
-```{r}
-fitted_lasso |>
-  extract_fit_parsnip() |>
-  tidy() |>
-  arrange(estimate)
-```
-
-## Variable Importance Plot
-
-```{r}
-library(vip)
-
-vip_lasso <- fitted_lasso |>
-  extract_fit_parsnip() |>
-  vi() |>
-  mutate(
-    Importance = abs(Importance),
-    Variable = forcats::fct_reorder(Variable, Importance)
-  )
-
-vip_lasso |>
-  slice_head(n = 20) |>
-  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = c("NEG" = "blue",
-                              "POS" = "red")) +
-  labs(y = NULL)
-
-ggsave(here::here("content", "modeling", "plots", "variable_importance_plot_lasso_tfidf.png"))
-```
-
-```{r}
 last_fit_lasso <- last_fit(final_lasso, tfidf_split)
 
 lasso_metric <- last_fit_lasso |>
@@ -174,3 +125,47 @@ last_fit_lasso |>
 ggsave(here::here("content", "modeling", "plots", "confusion_matrix_lasso_tfidf.png"))
 ```
 
+# Variable Importance Examination
+
+```{r}
+lasso_variables <- last_fit_lasso |>
+  extract_fit_parsnip() |>
+  tidy() |>
+  arrange(-estimate)
+
+tidytable::fwrite(lasso_variables, here::here("content", "modeling", "model_results", "lasso_variables_tfidf_final_run_4k.csv"))
+
+lasso_variables
+```
+
+```{r}
+last_fit_lasso |>
+  extract_fit_parsnip() |>
+  tidy() |>
+  arrange(estimate)
+```
+
+## Variable Importance Plot
+
+```{r}
+library(vip)
+
+vip_lasso <- last_fit_lasso |>
+  extract_fit_parsnip() |>
+  vi() |>
+  mutate(
+    Importance = abs(Importance),
+    Variable = forcats::fct_reorder(Variable, Importance)
+  )
+
+vip_lasso |>
+  slice_head(n = 20) |>
+  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = c("NEG" = "blue",
+                              "POS" = "red")) +
+  labs(y = NULL)
+
+ggsave(here::here("content", "modeling", "plots", "variable_importance_plot_lasso_tfidf.png"))
+```

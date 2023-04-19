@@ -35,7 +35,7 @@ states_vector <- c("alabama", "alaska", "arizona", "arkansas", "california", "co
 states_begin <- paste0("^", states_vector, "_")
 states_end <- paste0("\\w+_", states_vector, "$")
 
-bigrams_stopterms_lasso <- c("digest_lately", "delivered_inbox", "agreeing_receive", "copied_directly")
+bigrams_stopterms_lasso <- c("digest_lately", "delivered_inbox", "agreeing_receive", "copied_directly", "digest_latest", "saved_copied", "views_expressed", "summary_global", "health_worldwide" )
 ```
 
 ## Bigrams
@@ -53,7 +53,8 @@ readr::write_rds(bigram_trim, here::here("data", "tokens", "dfmat_bigram_trim.rd
 
 
 ```{r}
-# bigram_trim <- readr::read_rds(here::here("data", "tokens", "dfmat_bigram_trim.rds"))
+bigram_trim <- readr::read_rds(here::here("data", "tokens", "dfmat_bigram_trim.rds"))
+bigram_trim <- dfm_remove(bigram_trim, pattern = bigrams_stopterms_lasso)
 
 filtering <- topfeatures(bigram_trim, n = 10000) |> as.list() |> as_tidytable() |> pivot_longer()
 

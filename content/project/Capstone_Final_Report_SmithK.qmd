@@ -23,7 +23,7 @@ editor_options:
 
 # Introduction
 
-With the populist election of Donald Trump in 2016, the record voter turn-out for the election of 2020, and the overturning of nearly 50 years of precedent in the Dobb's decision [@dobbs], we are currently living in one of the most politically active moments in United States political history [@politicalcharge]. At the same time, the invention and wide acceptance of the internet, the 24 hour news-cycle, and social media networks such as Twitter and Facebook, the volume of poltical speech is arguably greater than at any time in American History. From this basis, this project aims to look at political speech in a data-centric approach. It uses modern Natural Language Processing (NLP) techniques with classical modeling to ask the question "Does Political Speech Indicate Bias?"
+With the populist election of Donald Trump in 2016, the record voter turn-out for the election of 2020, and the overturning of nearly 50 years of precedent in the Dobb's decision [@dobbs], we are currently living in one of the most politically active moments in United States political history [@politicalcharge]. At the same time, the invention and wide acceptance of the internet, the 24 hour news-cycle, and social media networks such as Twitter and Facebook, the volume of political speech is arguably greater than at any time in American History. From this basis, this project aims to look at political speech in a data-centric approach. It uses modern Natural Language Processing (NLP) techniques with classical modeling to ask the question "Does Political Speech Indicate Bias?"
 
 This question is interesting not just from a personal interest perspective, but also because the United States Supreme Court utilizes a legal method called "Textualism" combined in some cases with "Originalism" to decide on issues regarding U.S. law. Textualism as defined by Constitution Annotated is "A mode of legal interpretation that focuses on the plain meaning of the text of a legal document. Textualists usually believe there is an objective meaning of the text, and they do not typically inquire into questions regarding the intent of the drafters, adopters, or ratifiers of the Constitution and its amendments when deriving meaning from the text." [@textualism] With this as a baseline, the author of this paper decided to look at the plain text of several think-tanks and news sources to determine whether the most commonly used terms in these texts could be accurately modelled to determine political bias.
 
@@ -33,7 +33,7 @@ This NLP project utilizes a primarily English corpus with minimal Spanish entrie
 
 Political Ideology is a complex and nuanced subject. It is loosely defined as left and right wing by numerous news outlets and the public. However, this loose definition is often found to be lacking in precision. An study by Feldman and Johnston found, using Latent Class Analysis, six distinct classes of individuals when measured against economic and social questions. {@feldman_2013} Adorno defined ideology as "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno] Political parties are equally complex and nuanced with several actors and social movements. 
 
-It is important to highlight this because the author classifies the data based on traditional right-wing and left-wing denominations. In the exploratory data analysis stage of this project, it was found that the overal corpus of text analyzed found that, based on unsupervised cluster analysis and lexical diversity analysis, the overall differences between the sources overall was not too disimilar. See Figure 1.  However, this is not part of the scope of this project and therefore is categorized for future work at a later date. 
+It is important to highlight this because the author classifies the data based on traditional right-wing and left-wing denominations. In the exploratory data analysis stage of this project, it was found that the overall corpus of text analyzed found that, based on unsupervised cluster analysis and lexical diversity analysis, the overall differences between the sources overall was not too dissimilar. See Figure 1.  However, this is not part of the scope of this project and therefore is categorized for future work at a later date. 
 
 ![Cluster Analysis of Article Sources](images/art_source_cluster.png){width=80%}
 
@@ -104,7 +104,7 @@ $$
 
 where $f_{i,j}$ is number of occurences of i in j, $df_i$ is the number of documents containing i, and N is the total number of documents.
 
-The text was vectorized using the `quanteda` library first using Term Frequency. [@quanteda] The top 10,000 bigrams in the corpus were then selected and transformed into a tf-idf vectorization. Text data, in particular, has a large sparse set of predictors [@tidytext]. In order to reduce the number of predictors from 10,000 to 200, Latent Semantic Analysis (LSA) is utilized. LSA uses singular value decomposition to perform dimensionality reduction on the number of predictors. [@latent_medium] LSA mathematically groups words together that are semantically similar. LSA has the advantage of dimensionality reduction and of grouping semantically similar words together into a single vector. However, like any dimsionality techniques [@islr], some information is lost in the process and bigram positional information is lost. In the context of this project, these drawbacks are considered minimal for the potential gains of reducing the number of features. It also grants insight into words that are semantically similar that otherwise would not have been found using traditional tf-idf vectorization.
+The text was vectorized using the `quanteda` library first using Term Frequency. [@quanteda] The top 10,000 bigrams in the corpus were then selected and transformed into a tf-idf vectorization. Text data, in particular, has a large sparse set of predictors [@tidytext]. In order to reduce the number of predictors from 10,000 to 200, Latent Semantic Analysis (LSA) is utilized. LSA uses singular value decomposition to perform dimensionality reduction on the number of predictors. [@latent_medium] LSA mathematically groups words together that are semantically similar. LSA has the advantage of dimensionality reduction and of grouping semantically similar words together into a single vector. However, like any dimensionality techniques [@islr], some information is lost in the process and bigram positional information is lost. In the context of this project, these drawbacks are considered minimal for the potential gains of reducing the number of features. It also grants insight into words that are semantically similar that otherwise would not have been found using traditional tf-idf vectorization.
 
 Additionally, the top 4,000 bigrams were selected and vectorized using tf-idf and were used to model in addition to LSA. This method provides a bit more transparency to which variables are important and is easier to tokenize and analyze new data since LSA cannot fully reproduce the original feature matrix. 
 
@@ -125,7 +125,7 @@ The models that were chosen to model this question were:
   - Generally good start for text classification [@smltar]
   - A relatively simple model based on Bayes Thereom [@islr]
   - $Pr(Y = k | X = x) = \frac{\pi_i * f_k(x) = f_{k1}(x_1) * \dots * f_{kp}}{\sum^K_{k=1} \pi_l * f_{l1}(x_1) * \dots * f_{lp}}$
-- LASSO Logisitic Regression 
+- LASSO Logistic Regression 
   - Utilized mainly for its ability to do feature selection and ease of explanation [@islr]
   - A good classical model for text [@smltar]
   - Ability to have hyperparameter tuning [@tmwr]
@@ -133,11 +133,11 @@ The models that were chosen to model this question were:
 
 #### Hyperparameter Tuning
 
-The models were training using the R programming language using the `tidymodels` framework to ensure consistentcy across modeling techniques. Using this framework allows for ease of hyperparameter tuning. Hyperparameter tuning is utilized to try to achieve higher performance metrics in modeling. [@smltar] For LASSO Logistic Regression, $\lambda$ was optimized over 10 possible values. To see the specifics of using `tidymodels` to model data, Tidy Modeling with R is the recommended resource. [@tmwr]
+The models were training using the R programming language using the `tidymodels` framework to ensure consistency across modeling techniques. Using this framework allows for ease of hyperparameter tuning. Hyperparameter tuning is utilized to try to achieve higher performance metrics in modeling. [@smltar] For LASSO Logistic Regression, $\lambda$ was optimized over 10 possible values. To see the specifics of using `tidymodels` to model data, Tidy Modeling with R is the recommended resource. [@tmwr]
 
 #### Model Evaluation Criteria
 
-When evaluating classification models, there are several metrics that can analyze model performance. This project collected Sensitivity, Specificity, Recall, Precision, F Score, Accuracy, and Reciever Operating Characteristic-Area Under the Curve (ROC AUC). The chosen hyperparameter tuning measures were selected by chosing the model with the highest ROC AUC score. This was chosen specifically because it a combination metric that analyzes the models performance at "distinguishing between positive and negative classes." [@roc_auc] Since this is the objective of the research question, it makes sense to chose the optimized model based on this criteria. [@smltar] 
+When evaluating classification models, there are several metrics that can analyze model performance. This project collected Sensitivity, Specificity, Recall, Precision, F Score, Accuracy, and Reciever Operating Characteristic-Area Under the Curve (ROC AUC). The chosen hyperparameter tuning measures were selected by choosing the model with the highest ROC AUC score. This was chosen specifically because it a combination metric that analyzes the models performance at "distinguishing between positive and negative classes." [@roc_auc] Since this is the objective of the research question, it makes sense to chose the optimized model based on this criteria. [@smltar] 
 
 Since this project is mainly concerned with classifying text based on bigrams utilized in the corpus, outside of ROC AUC, Accuracy is determined to be the next most important metric. Accuracy is simply a measure of the total overall matches over the total documents.[@islr]  The other recorded metrics will be displayed in the model results section.
 
@@ -151,7 +151,7 @@ Exploratory Data Analysis (EDA) was performed on the completed corpus to examine
 
 The corpus was also inspected using methods used in the Quanteda documentation. [@quanteda] This analysis proved valuable in discovering future work for this corpus, but did not factor into the objective of this project. 
 
-Some examples of the data used in modeling will be located in the Appendix at the end of this document. The predictor set is extremely large and is availiable upon request. 
+Some examples of the data used in modeling will be located in the Appendix at the end of this document. The predictor set is extremely large and is available upon request. 
 
 ## Model Results
 
@@ -210,9 +210,9 @@ kableExtra::kbl(lasso_rs_tfidf_metrics) |>
   kableExtra::kable_styling(bootstrap_options = "striped", font_size = 10, latex_options = "HOLD_position")
 ```
 
-![LASSO tf-idf Confusion Matrix](../modeling/plots/){width=80%}
+![LASSO tf-idf Confusion Matrix](../modeling/plots/confusion_matrix_lasso_tfidf.png){width=80%}
 
-As is seen in the tf-idf confusion matrix, this model performs well in identifying the correct class for each document. Since the LASSO can perform feature selection based on the $\lambda$ value chosen, it can bring features that are common between the two classes down to zero so that they do not impact the final results. The $\lambda$ value chosen for this model based on hyperparameter tuning is 0.000464. With this $\lambda$ value, 978 features where brought to 0 in the final model. This equates to 24.5% of the 4,000 bigrams. An initial analysis of the variables selected shows that those reduced to zero may be the most common terms between the two classes. 
+As is seen in the tf-idf confusion matrix, this model performs well in identifying the correct class for each document. Since the LASSO can perform feature selection based on the $\lambda$ value chosen, it can bring features that are common between the two classes down to zero so that they do not impact the final results. The $\lambda$ value chosen for this model based on hyperparameter tuning is 0.000464. With this $\lambda$ value, 911 features where brought to 0 in the final model. This equates to 22.7% of the 4,000 bigrams. An initial analysis of the variables selected shows that those reduced to zero may be the most common terms between the two classes. 
 
 ![LASSO Variable Importance Plot](../modeling/plots/variable_importance_plot_lasso_tfidf.png)
 
@@ -231,7 +231,11 @@ kableExtra::kbl(lasso_rs_lsa_metrics) |>
 
 # Further Work
 
+This project involves a complex subject and a large corpus of data. For future work, the author would like to explore transformers for using the state-of-the-art techniques to look at the text of the data. These are also appealing because much of the time spent on this project was on feature engineering and removing specific stopwords from the text. This took several hours of data cleaning to get a corpus into the right state for modeling. The corpus is also a good candidate for topic modeling. Politics covers a wide spectrum of issues that are part of every day life. Just looking at the top variables within the LASSO variable importance plots shows a diverse selection of topics to cover. Unsupervised learning techniques could be used to uncover these topics and then model them. 
 
+The author would like to analyze the political spectrum more broadly instead of the right-wing and left-wing dichotomy. Analyzing this corpus more specifically through topic modeling and sentiment analysis could yield more specific results compared to the broad results denoted above. 
+
+Lastly, the author would like to build an information dashboard that could be used by the public to analyze the corpus and allow for others to look into the methodology and peer review it. 
 
 # References
 
