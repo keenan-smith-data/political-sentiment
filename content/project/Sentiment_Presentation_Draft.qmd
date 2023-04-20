@@ -1,5 +1,5 @@
 ---
-title: "Political Sentiment NLP"
+title: "Tokenizing Political Language to Determine Bias"
 author: "Keenan Smith"
 format:
   revealjs:
@@ -86,7 +86,7 @@ Transformers are the current highest form for NLP modeling but require much more
 Speaker notes go here.
 :::
 
-## Natural Language Processing {.smaller}
+## Natural Language Processing
 
 "the application of computer science to the **analysis, synthesis, and comprehension"** of written and spoken language" (Oxford Dictionary)
 
@@ -117,7 +117,7 @@ Speaker notes go here.
 
 # Methods
 
-## The Data {.smaller}
+## The Data
 
 :::: {.columns}
 ::: {.column width="65%"}

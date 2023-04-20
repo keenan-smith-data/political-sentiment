@@ -60,7 +60,6 @@ tune_rs <- tune_grid(
   control = control_resamples(save_pred = TRUE)
 )
 parallel::stopCluster(cl)
-readr::write_rds(tune_rs, here::here("content", "modeling", "model_results", "tune_results_naivebayes_tfidf.rds"), compress = "gz")
 ```
 
 # Hyperparameter Metrics

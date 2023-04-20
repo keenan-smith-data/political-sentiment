@@ -51,7 +51,9 @@ d_200_percent <- d_200 |>
          component = paste0("component", 1:1000))
 
 component1_features <- svd_component_features(component1, features_df_200, n = 20)
-component2_features <- svd_component_features(component2, features_df_200, n = 20)
+component86_features <- svd_component_features(component86, features_df_200, n = 20)
+component68_features <- svd_component_features(component68, features_df_200, n = 20)
+component108_features <- svd_component_features(component108, features_df_200, n = 20)
 
 
 component1_features |>
@@ -59,18 +61,37 @@ component1_features |>
   ggplot(aes(component1, name)) +
     facet_grid(~ type_sel, scales = "free") +
     geom_col(aes(fill = type_sel))
+ggsave(here::here("content", "modeling", "plots", "component1_features_lsa.png"))
 
-component2_features |>
-  mutate(name = forcats::fct_reorder(docid, desc(component2))) |>
-  ggplot(aes(component2, name)) +
+component86_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component86))) |>
+  ggplot(aes(component86, name)) +
     facet_grid(~ type_sel, scales = "free") +
     geom_col(aes(fill = type_sel))
+ggsave(here::here("content", "modeling", "plots", "component86_features_lsa.png"))
+
+component68_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component68))) |>
+  ggplot(aes(component68, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+
+ggsave(here::here("content", "modeling", "plots", "component68_features_lsa.png"))
+
+component108_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component108))) |>
+  ggplot(aes(component108, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+ggsave(here::here("content", "modeling", "plots", "component108_features_lsa.png"))
 ```
 
 ```{r}
+png(file="./content/modeling/plots/saving_plot2.png") 
 plot(d_200_percent$percent_variability,ylab="Percent variability explained")
 
 plot(d_200_percent$cum_per_variability,ylab="Percent variability explained",ylim=c(0,100),type="l")
+ggsave(here::here("content", "modeling", "plots", "cumvariabilityexplained_lsa.png"))
 ```
 
 ## n = 400
