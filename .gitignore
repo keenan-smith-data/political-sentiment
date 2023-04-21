@@ -9,6 +9,7 @@ tensorflow
 
 load.sql
 
+*.jpg
 *.svg
 *.png
 *.rds
