@@ -1,15 +1,26 @@
 ---
-title: "Political Sentiment NLP"
+title: "Tokenizing Political Language to Determine Bias"
+subtitle: "EM675 Final Presentation"
 author: "Keenan Smith"
+date: "26 Apr 2023"
+title-slide-attributes: 
+  data-background-image: ./images/khashayar-kouchpeydeh-chess-unsplash.jpg
+  data-background-size: contain
+  data-background-color: black
+  
+bibliography: references.bib
 format:
   revealjs:
+    slide-number: true
+    show-slide-number: all
     theme: serif
-    logo: ncstate-type-2x2-red.png
-    footer: Political_Sentiment_Capstone_Smith_Keenan 
+    logo: images/ncstate-type-2x2-red.png
+    footer: "[Capstone_Github_SmithK](https://github.com/keenan-smith-data/political-sentiment)"
     width: 1920
     height: 1080
     embed-resources: true
-    self-contained-math: true
+    mainfont: Roboto Slab
+    
 ---
 
 # Overview
@@ -18,7 +29,9 @@ format:
 ::: {.column width="50%"}
 
 -   Introduction
-    -   Research Question, Political Ideology, NLP
+    -   Research Question
+    -   Political Ideology
+    -   Natural Language Processing
 -   Methods
     -   The Data
     -   Programming Language
@@ -51,7 +64,6 @@ A **Data Science** Project that examines the question *"Does Political Speech in
   - These Data are in English
 - Classical Machine Learning Techniques are used for Classification
   - Transformers (The tech behind GPT) are goals for the future
-- Source Code is Located on Github [Github](https://github.com/keenan-smith-data/political-sentiment)
 
 :::
 
@@ -74,21 +86,19 @@ Transformers are the current highest form for NLP modeling but require much more
 
 ## Political Ideology
 
-"Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." (Adorno et al. 1950)
+"Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno]
 
-- The study of political ideology is vast and complex (Feldman 2013; Feldman, 2017; Jost, 2017)
-  - Construction of political parties are equally complicated and vast (Mayer, 2018; Mudge, 2018)
+- The study of political ideology is vast and complex [@feldman_2013]
+  - Construction of political parties are equally complicated and vast [@mayer_party; @mudge_parties]
 - This project chooses intentionally to focus on a wide corpus of data from left and right
 - Clustering of the Sources used shows this is a complicated topic
   - Further work should focus on this diversity and complexity
-  
-![Credit: Wikipedia 118th US Congress Makeup](images/118th_US_House_of_Representatives.png)
 
 ::: {.notes}
 Speaker notes go here.
 :::
 
-## Natural Language Processing {.smaller}
+## Natural Language Processing
 
 "the application of computer science to the **analysis, synthesis, and comprehension"** of written and spoken language" (Oxford Dictionary)
 
@@ -96,7 +106,7 @@ Speaker notes go here.
 ::: {.column width="55%"}
 
 - Mixing Data Science and how we use Natural Language
-- NLP use linguistic tools to build *features* out of langauge
+- NLP use linguistic tools to build *features* out of language
 - These features are then transformed into mathematical vectors in order to model
   - Tokens (units of language)
     - Characters, Words, n-grams, Sentences, Paragraphs
@@ -119,7 +129,51 @@ Speaker notes go here.
 
 # Methods
 
-## The Data {.smaller}
+::: {.notes}
+This needs some tables
+:::
+
+## Sources
+
+```{r}
+#| echo: false
+source_table <- tidytable::fread(here::here("data", "sources", "source_table.csv"))
+
+source_table |>
+  tidytable::rename("Article Source" = art_source,
+                    "Short Source" = short_source,
+                    "Source Bias" = source_bias) |>
+  kableExtra::kbl(caption = "Table of Sources") |>
+  kableExtra::kable_classic(font_size = 10, latex_options = "HOLD_position")
+```
+
+## Data Source in Length of Text {.scrollable}
+
+```{r}
+#| echo: false
+
+bias_count <- tidytable::fread(here::here("content", "project", "sample_data", "bias_count_filtered.csv"))
+bias_count |>
+  tidytable::rename("Source Bias" = source_bias,
+                    "Total Characters" = total,
+                    "# of Articles" = num,
+                    "Minimum" = min,
+                    "Maximum" = max,
+                    "Average #" = mean,
+                    "Median" = median,
+                    "Interquartile Range" = iqr,
+                    "Standard Deviation" = sd) |>
+  kableExtra::kbl(caption = "Character Analysis") |>
+  kableExtra::kable_classic(font_size = 6, latex_options = "HOLD_position")
+```
+
+```{r}
+source_count <- tidytable::fread(here::here("content", "project", "sample_data", "source_count_filtered.csv"))
+kableExtra::kbl(source_count) |>
+  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
+```
+
+## The Data
 
 :::: {.columns}
 ::: {.column width="65%"}
@@ -150,18 +204,10 @@ Speaker notes go here.
 :::
 ::::
 
-::: {.notes}
-This needs some tables
-:::
-
-## Sources
-
-Insert Source Table Here
-
 ## Data Sample {.scrollable}
 
 ```{r}
-sample_text <- tidytable::fread("sample_corpus.csv")
+sample_text <- tidytable::fread(here::here("content", "project", "sample_data", "sample_corpus.csv"))
 kableExtra::kbl(sample_text) |>
   kableExtra::kable_styling(bootstrap_options = "striped", font_size = 16)
 ```
@@ -178,7 +224,7 @@ Table of Sample Data
 Speaker notes go here.
 :::
 
-## The Data Prior to Modeling
+## Corpus Cleaning
 
 - The Corpus is tokenized using the Quanteda framework of libraries
   = Bigrams were chosen due to their ability to contain more lexical scope information
@@ -187,18 +233,27 @@ Speaker notes go here.
     - Many of these are leftover web artifacts from scraping being an imperfect science
     - Others are common terms used in articles ("originally_published", "see_also")
     - Lastly, proper nouns specific to certain think tanks (Organization Names, Sponsors)
-- This Corpus is Large consisting of 148,703 documents
-  - 3000 predictors chosen based on Frequency, vectorized using TF-IDF
-- The Data are split 75/25 stratifying on bias
-  - 111,526 documents in the training set
-  - 37,177 documents in the testing set
-  - Random Seed state is set to 2023 in every model for reproducibility
 
 ::: {.notes}
 Stopwords were removed to the best of my ability. Many times these were obvious, but most of the time they were pulled out after others were removed.
 Lastly, certain stopwords were not removed until initial modelling was completed as they weighed heavily towards identifying bias. This process is imperfect.
 Early on, the corpus had to be retokenized and saved to disk which took 10-20 mins per cycle.  
 :::
+
+## Data Vectorization
+
+- This Corpus is Large consisting of 148,703 documents
+
+- Two Data Modeling Techniques
+  - 4000 predictors chosen based on Frequency, vectorized using TF-IDF
+
+- Latent Semantic Analysis
+  - 10,000 predictors dimensionally reduced to 200 using Singular Value Decomposition
+
+- The Data are split 75/25 stratifying on bias
+  - 111,526 documents in the training set
+  - 37,177 documents in the testing set
+  - Random Seed state is set to 2023 in every model for reproducibility
 
 ## Models {.scrollable}
 
@@ -218,10 +273,7 @@ Models were chosen for their use in Text Classification Best Practices and ease 
 
 - Random Forest Classification
 
-- Gradient Boosted Classification Trees
-  - Utilizing the XGBoost Algorithm
-  - Think Decision Trees that learn based on Residuals and Thresholds
-  - Outside of Deep Learning, this algorithm is known for winning classification competitions
+
 
 ## Model Optimization
 
@@ -234,15 +286,6 @@ Speaker notes go here.
 :::
 
 # Results
-
-## Data Source in Length of Text {.scrollable}
-
-```{r}
-source_count <- tidytable::fread("source_count_filtered.csv")
-kableExtra::kbl(source_count) |>
-  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
-```
-
 
 ## Exploratory Data Analysis {.smaller}
 
@@ -286,7 +329,7 @@ Speaker notes go here.
   - Early Modeling showed Bigrams had better results
 - Regularized LASSO Regression Used so far
 
-```{r}
+```{.r}
 lasso_test_metrics <- tidytable::fread("lasso_test_metrics.csv")
 kableExtra::kbl(lasso_test_metrics) |>
   kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
@@ -296,14 +339,14 @@ kableExtra::kbl(lasso_test_metrics) |>
 
 ::: {.column width="45%"}
 
-![](images/variable_importance_plot.png)
+![](../modeling/plots/variable_importance_plot_lasso_tfidf.png)
 
 :::
 ::::
 
 ### Tab B (ROC Curve)
 
-![](images/roc_curve_lasso.png)
+![](../modeling/plots/roc_curve_lasso_tfidf.png){width=50%}
 
 :::
 
@@ -320,4 +363,13 @@ Speaker notes go here.
 - The R Packages Utilized are Manageable and Easy to Learn
 - Scraping is Easy to Replicate but Hard to find good sources
 
+## References
+
+::: {#refs}
+:::
+
 # Questions
+
+## Attributions
+
+- Cover Photo by [Khashayar Kouchpeydeh](https://unsplash.com/pt-br/@kouchpeydeh?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/photos/QR_TFiIX8hM?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)

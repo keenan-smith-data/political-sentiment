@@ -1,0 +1,114 @@
+---
+title: "naivebayes NLP Modeling"
+author: "Keenan Smith"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| output: false
+#| label: Reading in initial Libraries
+here::i_am("content/modeling/bigram_nlp_modeling_naivebayes_tfidf.qmd")
+library(tidymodels)
+
+library(parallel)
+all_cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(all_cores)
+
+# Script to Ensure Data Reproducibility
+source(here::here("R", "data_prep_modeling_tfidf.R"), echo = TRUE)
+```
+
+# Recipes
+
+```{r}
+sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
+text_rec <- recipe(source_bias ~ ., data = bigram_train)
+```
+
+# Engine
+
+```{r}
+library(discrim)
+naivebayes_spec <- naive_Bayes() |>
+  set_mode("classification") |>
+  set_engine("naivebayes")
+```
+
+# Workflows
+
+```{r}
+tune_wf <- workflow() |>
+  add_recipe(text_rec) |>
+  add_model(naivebayes_spec)
+```
+
+# Metric Set
+
+```{r}
+class_metrics <- metric_set(sens, spec, recall, precision, f_meas, accuracy, roc_auc, pr_auc)
+```
+
+# Hyperparameter Tuning
+
+```{r}
+doParallel::registerDoParallel(cl)
+tune_rs <- tune_grid(
+  tune_wf,
+  bigram_folds,
+  metrics = class_metrics,
+  control = control_resamples(save_pred = TRUE)
+)
+parallel::stopCluster(cl)
+```
+
+# Hyperparameter Metrics
+
+```{r}
+naivebayes_rs_metrics <- collect_metrics(tune_rs)
+tidytable::fwrite(naivebayes_rs_metrics, here::here("content", "modeling", "model_results", "naivebayes_rs_metrics_tfidf_bigrams_4k.csv"))
+naivebayes_rs_predictions <- collect_predictions(tune_rs)
+
+naivebayes_rs_metrics
+```
+
+## Resample ROC Curves
+
+```{r}
+naivebayes_rs_predictions |>
+  group_by(id) |>
+  roc_curve(truth = source_bias, `.pred_left-wing`) |>
+  autoplot() +
+  labs(
+    color = NULL,
+    title = "ROC curve for Naive Bayes Predictions",
+    subtitle = "Each resample fold is shown in a different color"
+  )
+ggsave("plots/cv_roc_naivebayes_tfidf.png")
+```
+
+
+```{r}
+last_fit_naivebayes <- last_fit(tune_wf, tfidf_split)
+
+naivebayes_metric <- last_fit_naivebayes |>
+  collect_predictions() |>
+  class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
+
+tidytable::fwrite(naivebayes_metric, here::here("content","modeling", "model_results", "naivebayes_test_metrics_tfidf.csv"))
+
+last_fit_naivebayes |>
+  collect_predictions() |>
+  roc_curve(source_bias, `.pred_left-wing`) |>
+  autoplot()
+
+ggsave("plots/roc_curve_naivebayes_tfidf.png")
+
+last_fit_naivebayes |>
+  collect_predictions() |>
+  conf_mat(source_bias, .pred_class) |>
+  autoplot(type = "heatmap")
+
+ggsave("plots/confusion_matrix_naivebayes_tfidf.png")
+```
+
