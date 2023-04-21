@@ -354,28 +354,28 @@
     "href": "content/project/Sentiment_Presentation_Draft.html#research-question",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Research Question",
-    "text": "Research Question\nA Data Science Project that examines the question “Does Political Speech indicate classical right-left political bias?”\n\n\n\nThe Corpus consists of Ideologically Identified Sources\n\nPrimarily U.S. Think Tanks\n\nSpecifically Chosen for Bias\n\nData are Scraped from the Web\nThese Data are in English\n\nClassical Machine Learning Techniques are used for Classification\n\nTransformers (The tech behind GPT) are goals for the future\n\nSource Code is Located on Github\n\n\nWhy?\n\nWe live in a politically charged and active time in the United States\nI like history, politics, and Natural Language\nHow we communicate is meaningful and important\nThe US Supreme Court uses Originalism and Textualism in their decisions\n\n\n\n\nMy interests are all the things you are not supposed to talk about at Thanksgiving Transformers are the current highest form for NLP modeling but require much more computing power"
+    "text": "Research Question\nA Data Science Project that examines the question “Does Political Speech indicate classical right-left political bias?”\n\n\n\nThe Corpus consists of Ideologically Identified Sources\n\nPrimarily U.S. Think Tanks\n\nSpecifically Chosen for Bias\n\nData are Scraped from the Web\nThese Data are in English\n\nClassical Machine Learning Techniques are used for Classification\n\nTransformers (The tech behind GPT) are goals for the future\n\n\n\nWhy?\n\nWe live in a politically charged and active time in the United States\nI like history, politics, and Natural Language\nHow we communicate is meaningful and important\nThe US Supreme Court uses Originalism and Textualism in their decisions\n\n\n\n\nMy interests are all the things you are not supposed to talk about at Thanksgiving Transformers are the current highest form for NLP modeling but require much more computing power"
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#political-ideology",
     "href": "content/project/Sentiment_Presentation_Draft.html#political-ideology",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Political Ideology",
-    "text": "Political Ideology\n“Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated.” (Adorno et al. 1950)\n\nThe study of political ideology is vast and complex (Feldman and Johnston 2014)\n\nConstruction of political parties are equally complicated and vast (Mayer 2018; MUDGE 2018)\n\nThis project chooses intentionally to focus on a wide corpus of data from left and right\nClustering of the Sources used shows this is a complicated topic\n\nFurther work should focus on this diversity and complexity\n\n\n\nCredit: Wikipedia 118th US Congress Makeup\nSpeaker notes go here."
+    "text": "Political Ideology\n“Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated.” (Adorno et al. 1950)\n\nThe study of political ideology is vast and complex (Feldman and Johnston 2014)\n\nConstruction of political parties are equally complicated and vast (Mayer 2018; MUDGE 2018)\n\nThis project chooses intentionally to focus on a wide corpus of data from left and right\nClustering of the Sources used shows this is a complicated topic\n\nFurther work should focus on this diversity and complexity\n\n\n\nSpeaker notes go here."
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#natural-language-processing",
     "href": "content/project/Sentiment_Presentation_Draft.html#natural-language-processing",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Natural Language Processing",
-    "text": "Natural Language Processing\n“the application of computer science to the analysis, synthesis, and comprehension” of written and spoken language” (Oxford Dictionary)\n\n\n\nMixing Data Science and how we use Natural Language\nNLP use linguistic tools to build features out of langauge\nThese features are then transformed into mathematical vectors in order to model\n\nTokens (units of language)\n\nCharacters, Words, n-grams, Sentences, Paragraphs\n\nTerm Frequency\nTerm Frequency Inverse Document Frequency (Tf-idf)\nEmbeddings (not used in this project)\n\n\n\n\n\n\nCredit: Xoriant\n\n\n\n\n\nThere are many other applications such as sentiment analysis and topic modeling to name a few\n\n\nSpeaker notes go here."
+    "text": "Natural Language Processing\n“the application of computer science to the analysis, synthesis, and comprehension” of written and spoken language” (Oxford Dictionary)\n\n\n\nMixing Data Science and how we use Natural Language\nNLP use linguistic tools to build features out of language\nThese features are then transformed into mathematical vectors in order to model\n\nTokens (units of language)\n\nCharacters, Words, n-grams, Sentences, Paragraphs\n\nTerm Frequency\nTerm Frequency Inverse Document Frequency (Tf-idf)\nEmbeddings (not used in this project)\n\n\n\n\n\n\nCredit: Xoriant\n\n\n\n\n\nThere are many other applications such as sentiment analysis and topic modeling to name a few\n\n\nSpeaker notes go here."
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#the-data",
     "href": "content/project/Sentiment_Presentation_Draft.html#the-data",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "The Data",
-    "text": "The Data\n\n\n\nBias\n\nSelected Data Sources on Availability of Data\nTrimmed as much as reasonably practical from Large Sources\nStopwords chosen based on EDA and Early Models\n\nRemoved artifacts left behind from scrape\n\n\nData Integrity\n\nData Scraped Straight Into SQL Database\nStrict Type Adherence\nUniqueness of Links Checked through Final Corpus selection\nNo Text, No Input into DB\n\n\n\n\nMetadata\n\nArticle Link art_link VARCHAR\nArticle Date art_date DATE\nArticle Author(s) art_author VARCHAR\nArticle Source art_source VARCHAR\nArticle Bias art_bias VARCHAR\n\nData\n\nText VARCHAR"
+    "text": "The Data\n\n\n\nBias\n\nSelected Data Sources on Availability of Data\nTrimmed as much as reasonably practical from Large Sources\nStopwords chosen based on EDA and Early Models\n\nData Integrity\n\nData Scraped Straight Into SQL Database\nStrict Type Adherence\nUniqueness of Links Checked through Final Corpus selection\nNo Text, No Input into DB\n\n\n\n\nMetadata\n\nArticle Link art_link\n\nVARCHAR\n\nArticle Date art_date\n\nDATE\n\nArticle Author(s) art_author\n\nVARCHAR\n\nArticle Source art_source\n\nVARCHAR\n\nArticle Bias art_bias\n\nVARCHAR\n\n\nData\n\nText\n\nVARCHAR"
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#sources",
@@ -410,7 +410,7 @@
     "href": "content/project/Sentiment_Presentation_Draft.html#models",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Models",
-    "text": "Models\nModels were chosen for their use in Text Classification Best Practices and ease of Modeling in R\n\nNaive Bayes Classifier\n\nA simple classifier that applies the Bayes Thereom to predictors\nAssume within kth class, the p predictors are independent (ISLR. 2018)\n\\(Pr(Y = k | X = x) = \\frac{\\pi_i * f_k(x) = f_{k1}(x_1) * \\dots * f_{kp}}{\\sum^K_{k=1} \\pi_l * f_{l1}(x_1) * \\dots * f_{lp}}\\)\nGenerally good in Spam Detection situation where words appear less in one than the other\n\nLASSO Logistic Regression\n\nRegularized Linear Regression that minimizes \\(\\lambda\\) value\nIn Statistics/Linear Algebra, the LASSO uses an \\(\\ell_1\\) penalty\nPerforms Feature Selection on the Linear Model\nWith close ties to Linear Regression, predictor effects are easier to understand\n\nRandom Forest Classification"
+    "text": "Models\nModels were chosen for their use in Text Classification Best Practices and computational efficiency\n\nNaive Bayes Classifier\n\nA simple classifier that applies the Bayes Thereom to predictors\nAssume within kth class, the p predictors are independent (ISLR. 2018)\n\\(Pr(Y = k | X = x) = \\frac{\\pi_i * f_k(x) = f_{k1}(x_1) * \\dots * f_{kp}}{\\sum^K_{k=1} \\pi_l * f_{l1}(x_1) * \\dots * f_{lp}}\\)\nGenerally good in Spam Detection situation where words appear less in one than the other\n\nLASSO Logistic Regression\n\nRegularized Linear Regression that minimizes \\(\\lambda\\) value\nIn Statistics/Linear Algebra, the LASSO uses an \\(\\ell_1\\) penalty\nPerforms Feature Selection on the Linear Model\nWith close ties to Linear Regression, predictor effects are easier to understand"
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#model-optimization",
@@ -431,7 +431,7 @@
     "href": "content/project/Sentiment_Presentation_Draft.html#exploratory-data-analysis",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Exploratory Data Analysis",
-    "text": "Exploratory Data Analysis\n\nHistogram Length Text by Bias\nSpeaker notes go here."
+    "text": "Exploratory Data Analysis"
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#exploratory-data-analysis-1",
@@ -480,7 +480,7 @@
     "href": "content/project/Sentiment_Presentation_Draft.html#references",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "References",
-    "text": "References\n\n\nFeldman, Stanley, and Christopher Johnston. 2014. “Understanding the Determinants of Political Ideology: Implications of Structural Complexity.” Political Pyschology 35 (3): 337–58. https://doi.org/10.1111/pops.12055.\n\n\nMayer, Sabrina. 2018. “Ideological Congruency, Social Group Likage or the Best Evaluated Party of All? Why Partisans Identify with a Political Party.” Quality & Quantity 53 (April): 297–313. https://doi.org/https://doi.org/10.1007/s11135-018-0753-2.\n\n\nMUDGE, STEPHANIE L. 2018. Leftism Reinvented: Western Parties from Socialism to Neoliberalism. Harvard University Press. http://www.jstor.org/stable/j.ctv2867r6."
+    "text": "References\n\n\nAdorno, Theodor, Else Frenkel-Brenswik, Daniel Levinson, and R Nevitt Sanford. 1950. The Authoritarian Personality. New York: Harper.\n\n\nFeldman, Stanley, and Christopher Johnston. 2014. “Understanding the Determinants of Political Ideology: Implications of Structural Complexity.” Political Pyschology 35 (3): 337–58. https://doi.org/10.1111/pops.12055.\n\n\nMayer, Sabrina. 2018. “Ideological Congruency, Social Group Likage or the Best Evaluated Party of All? Why Partisans Identify with a Political Party.” Quality & Quantity 53 (April): 297–313. https://doi.org/https://doi.org/10.1007/s11135-018-0753-2.\n\n\nMUDGE, STEPHANIE L. 2018. Leftism Reinvented: Western Parties from Socialism to Neoliberalism. Harvard University Press. http://www.jstor.org/stable/j.ctv2867r6."
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#corpus-cleaning",
@@ -494,13 +494,48 @@
     "href": "content/project/Sentiment_Presentation_Draft.html#data-vectorization",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Data Vectorization",
-    "text": "Data Vectorization\n\nThis Corpus is Large consisting of 148,703 documents\nTwo Data Modeling Techniques\n\n4000 predictors chosen based on Frequency, vectorized using TF-IDF\n\nLatent Semantic Analysis\n\n10,000 predictors dimensionally reduced to 200 using Singular Value Decomposition\n\nThe Data are split 75/25 stratifying on bias\n\n111,526 documents in the training set\n37,177 documents in the testing set\nRandom Seed state is set to 2023 in every model for reproducibility"
+    "text": "Data Vectorization\n\nCorpus is Large consisting of 148,703 documents\nTwo Data Vectorization Techniques\n\nTerm Frequency - Inverse Document Frequency (tf-idf)\n\n4000 predictors chosen based on Frequency, vectorized using TF-IDF\n\nLatent Semantic Analysis\n\n10,000 predictors dimensionally reduced to 200 using Singular Value Decomposition\n\n\nThe Data are split 75/25 stratifying on bias\n\n111,526 documents in the training set\n37,177 documents in the testing set\nRandom Seed state is set to 2023 in every model for reproducibility"
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#attributions",
     "href": "content/project/Sentiment_Presentation_Draft.html#attributions",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Attributions",
-    "text": "Attributions\n\nCover Photo by Khashayar Kouchpeydeh on Unsplash]\n\n\n\n\nCapstone_Github_SmithK"
+    "text": "Attributions\n\nCover Photo by Khashayar Kouchpeydeh on Unsplash\n\n\n\n\nCapstone_Github_SmithK"
+  },
+  {
+    "objectID": "content/project/Sentiment_Presentation_Draft.html#bigram-wordclouds-1",
+    "href": "content/project/Sentiment_Presentation_Draft.html#bigram-wordclouds-1",
+    "title": "Tokenizing Political Language to Determine Bias",
+    "section": "Bigram Wordclouds",
+    "text": "Bigram Wordclouds"
+  },
+  {
+    "objectID": "content/project/Sentiment_Presentation_Draft.html#left-wing-bigrams",
+    "href": "content/project/Sentiment_Presentation_Draft.html#left-wing-bigrams",
+    "title": "Tokenizing Political Language to Determine Bias",
+    "section": "Left-Wing Bigrams",
+    "text": "Left-Wing Bigrams"
+  },
+  {
+    "objectID": "content/project/Sentiment_Presentation_Draft.html#right-wing-bigrams",
+    "href": "content/project/Sentiment_Presentation_Draft.html#right-wing-bigrams",
+    "title": "Tokenizing Political Language to Determine Bias",
+    "section": "Right-Wing Bigrams",
+    "text": "Right-Wing Bigrams"
+  },
+  {
+    "objectID": "content/project/Sentiment_Presentation_Draft.html#bias-histogram",
+    "href": "content/project/Sentiment_Presentation_Draft.html#bias-histogram",
+    "title": "Tokenizing Political Language to Determine Bias",
+    "section": "Bias Histogram",
+    "text": "Bias Histogram\n\n\n\n\n\n\n\nSpeaker notes go here."
+  },
+  {
+    "objectID": "content/project/Sentiment_Presentation_Draft.html#source-histogram",
+    "href": "content/project/Sentiment_Presentation_Draft.html#source-histogram",
+    "title": "Tokenizing Political Language to Determine Bias",
+    "section": "Source Histogram",
+    "text": "Source Histogram"
   }
 ]

@@ -10,7 +10,7 @@ Built with R Version `r getRversion()`
 ```{r}
 #| output: false
 #| label: Reading in initial Libraries
-here::i_am("content/exploratory_data_analysis/exploratory_data_analysis.qmd")
+here::i_am("content/exploratory_data_analysis/exploratory_data_analysis_corpus.qmd")
 library(tidytable)
 library(ggplot2)
 library(quanteda)
@@ -81,9 +81,13 @@ corpus_df <- bind_rows(table_aei, table_am, table_brook, table_cap, table_cato, 
 ```
 
 ```{r}
+corpus_length <- corpus_df |>
+  select(art_link, art_date, art_source, short_source, source_bias, length_text)
+fwrite(corpus_length, here::here("content", "project", "sample_data", "corpus_length.csv"))
+
+
 summary(corpus_df)
 ```
-
 
 ```{r}
 library(scales)
@@ -181,6 +185,10 @@ corpus_df_fil_5 <- quantile(corpus_df_filtered$length_text, .05)
 
 corpus_df_filtered <- corpus_df_filtered |>
   filter(length_text > corpus_df_fil_5)
+
+corpus_length_filtered <- corpus_df_filtered |>
+  select(art_link, art_date, art_source, short_source, source_bias, length_text)
+fwrite(corpus_length_filtered, here::here("content", "project", "sample_data", "corpus_length_filtered.csv"))
 ```
 
 ```{r}

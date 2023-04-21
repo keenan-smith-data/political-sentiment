@@ -121,7 +121,7 @@ RUN ONCE MODELS ARE COMPLETED
 
 ```{r}
 tstat_bigram_freq <- textstat_frequency(dfmat_bigrams_trim, n = 200, groups = source_bias)
-fwrite(tstat_bigram_freq, here::here("content", "project", "tstat_freq_bigram.csv"))
+fwrite(tstat_bigram_freq, here::here("content", "project", "sample_data", "tstat_freq_bigram.csv"))
 
 left_bigram_freq <- subset(tstat_bigram_freq, group == "left-wing")
 right_bigram_freq <- subset(tstat_bigram_freq, group == "right-wing")

@@ -7,7 +7,6 @@ title-slide-attributes:
   data-background-image: ./images/khashayar-kouchpeydeh-chess-unsplash.jpg
   data-background-size: contain
   data-background-color: black
-  
 bibliography: references.bib
 format:
   revealjs:
@@ -181,7 +180,6 @@ kableExtra::kbl(source_count) |>
   - Selected Data Sources on Availability of Data
   - Trimmed as much as reasonably practical from Large Sources
   - Stopwords chosen based on EDA and Early Models
-    - Removed artifacts left behind from scrape
 - Data Integrity
   - Data Scraped Straight Into SQL Database
   - Strict Type Adherence
@@ -193,13 +191,19 @@ kableExtra::kbl(source_count) |>
 ::: {.column width="35%"}
 
 - Metadata
-  - Article Link `art_link` VARCHAR
-  - Article Date `art_date` DATE
-  - Article Author(s) `art_author` VARCHAR
-  - Article Source `art_source` VARCHAR
-  - Article Bias `art_bias` VARCHAR
+  - Article Link `art_link` 
+    - VARCHAR
+  - Article Date `art_date` 
+    - DATE
+  - Article Author(s) `art_author` 
+    - VARCHAR
+  - Article Source `art_source` 
+    - VARCHAR
+  - Article Bias `art_bias` 
+    - VARCHAR
 - Data
-  - Text VARCHAR
+  - Text 
+    - VARCHAR
 
 :::
 ::::
@@ -242,13 +246,13 @@ Early on, the corpus had to be retokenized and saved to disk which took 10-20 mi
 
 ## Data Vectorization
 
-- This Corpus is Large consisting of 148,703 documents
+- Corpus is Large consisting of 148,703 documents
 
-- Two Data Modeling Techniques
-  - 4000 predictors chosen based on Frequency, vectorized using TF-IDF
-
-- Latent Semantic Analysis
-  - 10,000 predictors dimensionally reduced to 200 using Singular Value Decomposition
+- Two Data Vectorization Techniques
+  - Term Frequency - Inverse Document Frequency (tf-idf)
+    - 4000 predictors chosen based on Frequency, vectorized using TF-IDF
+  - Latent Semantic Analysis
+    - 10,000 predictors dimensionally reduced to 200 using Singular Value Decomposition
 
 - The Data are split 75/25 stratifying on bias
   - 111,526 documents in the training set
@@ -257,7 +261,7 @@ Early on, the corpus had to be retokenized and saved to disk which took 10-20 mi
 
 ## Models {.scrollable}
 
-Models were chosen for their use in Text Classification Best Practices and ease of Modeling in R
+Models were chosen for their use in Text Classification Best Practices and computational efficiency
 
 - Naive Bayes Classifier
   - A simple classifier that applies the Bayes Thereom to predictors
@@ -271,10 +275,6 @@ Models were chosen for their use in Text Classification Best Practices and ease 
   - Performs Feature Selection on the Linear Model
   - With close ties to Linear Regression, predictor effects are easier to understand
 
-- Random Forest Classification
-
-
-
 ## Model Optimization
 
 Cross Validation
@@ -287,33 +287,80 @@ Speaker notes go here.
 
 # Results
 
-## Exploratory Data Analysis {.smaller}
+```{r}
+library(ggplot2)
+library(plotly)
+library(scales)
 
-![Histogram Length Text by Bias](images/corpus_histogram_filtered_bias.png)
+corpus_length <- tidytable::fread(here::here("content", "project", "sample_data", "corpus_length_filtered.csv"))
+
+histogram_bias <- ggplot(corpus_length, aes(x = length_text, fill = source_bias, color = source_bias)) +
+  geom_histogram(alpha = 0.5, position = "dodge") +
+  scale_x_log10(labels =label_number(scale_cut = cut_short_scale())) +
+  scale_color_manual(values = c("left-wing" = "blue",
+                                "right-wing" = "red")) +
+  scale_fill_manual(values = c("left-wing" = "blue",
+                                "right-wing" = "red")) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)") +           # Make background transparent
+  theme(rect = element_rect(fill = "transparent"))
+
+histogram_source <- ggplot(corpus_length, aes(x = length_text, fill = short_source, color = short_source)) +
+  geom_histogram(alpha = 0.5, position = "identity") +
+  scale_x_log10(labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Length Text",
+       y = "Number of Characters (log scale)") +
+  theme_classic() +           # Make background transparent
+  theme(rect = element_rect(fill = "transparent"))
+```
+
+## Bias Histogram
+
+```{r}
+#| fig-height: 10
+#| fig-width: 16
+#| fig-align: right
+ggplotly(histogram_bias)
+```
 
 ::: {.notes}
 Speaker notes go here.
 :::
 
-## Exploratory Data Analysis {.smaller}
+## Source Histogram
 
-![Histogram Length Text by Bias](images/corpus_histogram_filtered_source.png)
+```{r}
+#| fig-height: 10
+#| fig-width: 16
+#| fig-align: center
+ggplotly(histogram_source)
+```
 
-## Bigram Wordclouds
+## Left-Wing Bigrams
 
-:::: {.columns}
-::: {.column width="50%"}
+```{r}
+library(wordcloud2)
+tstat_bigram_freq <- tidytable::fread(here::here("content", "project", "sample_data", "tstat_freq_bigram.csv"))
 
-![](images/left_freq_wordcloud_bigram.png)
+left_bigram_freq <- subset(tstat_bigram_freq, group == "left-wing")
+right_bigram_freq <- subset(tstat_bigram_freq, group == "right-wing")
+```
 
-:::
+```{r}
+#| fig-height: 10
+#| fig-width: 16
+#| fig-align: center
+wordcloud2(left_bigram_freq, size = 1.5, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1, backgroundColor = "transparent")
+```
 
-::: {.column width="50%"}
+## Right-Wing Bigrams
 
-![](images/right_freq_bigram_wordcloud.png)
-
-:::
-::::
+```{r}
+#| fig-height: 10
+#| fig-width: 16
+#| fig-align: center
+wordcloud2(right_bigram_freq, size = 1.5, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1, backgroundColor = "transparent")
+```
 
 ## Model Results  {.scrollable}
 
