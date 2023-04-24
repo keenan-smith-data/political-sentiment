@@ -127,31 +127,6 @@ final_randomforest <- finalize_workflow(tune_wf, chosen_auc)
 # Fitting Model on Training Data
 
 ```{r}
-fitted_randomforest <- fit(final_randomforest, bigram_train)
-```
-
-# Variable Importance Examination
-
-## Variable Importance Plot
-
-```{r}
-library(vip)
-
-vip_randomforest <- fitted_randomforest |>
-  extract_fit_parsnip() |>
-  vi()
-
-vip_randomforest |>
-  slice_head(n = 20) |>
-  ggplot(aes(x = Importance, y = Variable)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0)) +
-  labs(y = NULL)
-
-ggsave("plots/variable_importance_plot_randomforest_tfidf.png")
-```
-
-```{r}
 last_fit_randomforest <- last_fit(final_randomforest, tfidf_split)
 
 randomforest_metric <- last_fit_randomforest |>
@@ -175,3 +150,23 @@ last_fit_randomforest |>
 ggsave("plots/confusion_matrix_randomforest_tfidf.png")
 ```
 
+# Variable Importance Examination
+
+## Variable Importance Plot
+
+```{r}
+library(vip)
+
+vip_randomforest <- last_fit_randomforest |>
+  extract_fit_parsnip() |>
+  vi()
+
+vip_randomforest |>
+  slice_head(n = 20) |>
+  ggplot(aes(x = Importance, y = Variable)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(y = NULL)
+
+ggsave("plots/variable_importance_plot_randomforest_tfidf.png")
+```

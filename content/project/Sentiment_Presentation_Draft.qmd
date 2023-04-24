@@ -19,10 +19,11 @@ format:
     height: 1080
     embed-resources: true
     mainfont: Roboto Slab
+    code-fold: true
     
 ---
 
-# Overview
+# Overview {background-image="./images/pol_lang_slides.png"}
 
 :::: {.columns}
 ::: {.column width="50%"}
@@ -49,7 +50,7 @@ format:
 :::
 ::::
 
-## Research Question
+## Research Question {background-image="./images/pol_lang_slides.png"}
 
 A **Data Science** Project that examines the question *"Does Political Speech indicate classical right-left political bias?"*
 
@@ -83,7 +84,7 @@ My interests are all the things you are not supposed to talk about at Thanksgivi
 Transformers are the current highest form for NLP modeling but require much more computing power
 :::
 
-## Political Ideology
+## Political Ideology {background-image="./images/pol_lang_slides.png"}
 
 "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno]
 
@@ -97,7 +98,7 @@ Transformers are the current highest form for NLP modeling but require much more
 Speaker notes go here.
 :::
 
-## Natural Language Processing
+## Natural Language Processing {background-image="./images/pol_lang_slides.png"}
 
 "the application of computer science to the **analysis, synthesis, and comprehension"** of written and spoken language" (Oxford Dictionary)
 
@@ -126,13 +127,27 @@ Speaker notes go here.
 Speaker notes go here.
 :::
 
-# Methods
+# {background-image="./images/pol_lang_methods.png"}
+
+```{r}
+library(tidytable)
+library(gtsummary)
+library(gt)
+
+gt_to_transparent <- function(gtab) {
+  gtab |>
+    tab_options(
+      table.background.color = "transparent"
+    )
+}
+corpus_length <- tidytable::fread(here::here("content", "project", "sample_data", "corpus_length_filtered.csv"))
+```
 
 ::: {.notes}
 This needs some tables
 :::
 
-## Sources
+## Sources {background-image="./images/pol_lang_slides.png"}
 
 ```{r}
 #| echo: false
@@ -142,37 +157,11 @@ source_table |>
   tidytable::rename("Article Source" = art_source,
                     "Short Source" = short_source,
                     "Source Bias" = source_bias) |>
-  kableExtra::kbl(caption = "Table of Sources") |>
-  kableExtra::kable_classic(font_size = 10, latex_options = "HOLD_position")
+  gt() |>
+  gt_to_transparent()
 ```
 
-## Data Source in Length of Text {.scrollable}
-
-```{r}
-#| echo: false
-
-bias_count <- tidytable::fread(here::here("content", "project", "sample_data", "bias_count_filtered.csv"))
-bias_count |>
-  tidytable::rename("Source Bias" = source_bias,
-                    "Total Characters" = total,
-                    "# of Articles" = num,
-                    "Minimum" = min,
-                    "Maximum" = max,
-                    "Average #" = mean,
-                    "Median" = median,
-                    "Interquartile Range" = iqr,
-                    "Standard Deviation" = sd) |>
-  kableExtra::kbl(caption = "Character Analysis") |>
-  kableExtra::kable_classic(font_size = 6, latex_options = "HOLD_position")
-```
-
-```{r}
-source_count <- tidytable::fread(here::here("content", "project", "sample_data", "source_count_filtered.csv"))
-kableExtra::kbl(source_count) |>
-  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
-```
-
-## The Data
+## The Data {background-image="./images/pol_lang_slides.png"}
 
 :::: {.columns}
 ::: {.column width="65%"}
@@ -208,19 +197,59 @@ kableExtra::kbl(source_count) |>
 :::
 ::::
 
-## Data Sample {.scrollable}
+## Data Sample {background-image="./images/pol_lang_slides.png" .scrollable}
 
 ```{r}
 sample_text <- tidytable::fread(here::here("content", "project", "sample_data", "sample_corpus.csv"))
-kableExtra::kbl(sample_text) |>
-  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 16)
+
+sample_text |>
+  gt() |>
+  gt_to_transparent()
 ```
 
 ::: {.notes}
 Table of Sample Data
 :::
 
-## Process
+## Length of Text Analysis {background-image="./images/pol_lang_slides.png"}
+
+```{r}
+corpus_length |>
+  select(source_bias, length_text) |>
+  tbl_summary(by = source_bias,
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}",
+      "{sd}",
+      "{sum}"
+    )) |>
+    as_gt() |>
+    gt_to_transparent()
+
+
+
+theme_gtsummary_compact()
+corpus_length |>
+  select(art_source, length_text) |>
+  tbl_summary(
+    by = art_source,
+    label = length_text ~ "Length of Text",
+    type = all_continuous() ~ "continuous2",
+    statistic = all_continuous() ~ c(
+      "{N_nonmiss}",
+      "{median} ({p25}, {p75})",
+      "{min}, {max}",
+      "{sd}",
+      "{sum}"
+    )) |>
+    as_gt() |>
+    gt_to_transparent()
+
+```
+
+## Process {background-image="./images/pol_lang_slides.png"}
 
 ![Technical Flow Chat](Flow Chart.drawio.png)
 
@@ -228,15 +257,34 @@ Table of Sample Data
 Speaker notes go here.
 :::
 
-## Corpus Cleaning
+## Corpus Cleaning {background-image="./images/pol_lang_slides.png"}
 
 - The Corpus is tokenized using the Quanteda framework of libraries
   = Bigrams were chosen due to their ability to contain more lexical scope information
   - Symbols, Numbers, and common Stopwords were excluded from the Corpus
   - Specific Stopwords were chosen via EDA and early LASSO Classification
     - Many of these are leftover web artifacts from scraping being an imperfect science
-    - Others are common terms used in articles ("originally_published", "see_also")
+    - Others are common terms used in articles 
+      - ("originally_published", "see_also")
     - Lastly, proper nouns specific to certain think tanks (Organization Names, Sponsors)
+    - Below is a sample of some of the removed bigrams
+
+```{.r}
+bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_los", "de_la", "la_de", "en_las", "en_la", "de_las", "see_also", "right_right",
+ "left_left", "getty_images", "world_week", "solely_author", "please_see", "topic_please", "senior_american", "associate_director", "team_american", "solely_expressed",
+  "douglas_sarah", "roe_economic", "resident_american", "allison_foreign", "pdf_read", "opinions_expressed", "international_scholars", "sarah_allison", "thomas_roe", 
+  "never_ways", "emphasis_added", "article_published", "newsletter_never", "expressed_solely", "report_pdf", "michael_barone", "thatcher_freedom", "margaret_thatcher", 
+  "policy_team", "special_assistant", "see_graph", "read_full", "et_al", "one_two", "tell_us", "looks_like", "may_well", "may_also", "just_like", "tells_us", 
+  "full_report", "full_article", "bergman_group", "reflect_views", "asia_program", "locked_priority", "priority_medium", "gte_mso", "e_t", "t_r", "r_e", "t_e", "r_r", 
+  "que_el", "con_el", "el_de", "que_la", "de_que", "en_los", "read_whole", "views_kennan", "new_content", "author_article", "read_entire", "author_reflect", "front_page", 
+  "article_first", "expressed_article", "agreeing_recieve", "delivered_inbox", "copied_directly", "latest_cfr", "policy_stories", "source_analysis", "digest_lately", 
+  "address_view","stories_week", "weekly_digest", "original_analyses", "also_agreeing", "news_brief", "use_view", "week_featuring", "inbox_morning", "featuring_briefs", 
+  "briefs_opinions", "opinions_explainers", "explainers_every", "friday_url", "url_address", "view_newsletters", "newsletters_news", "analysis_delivered", 
+  "morning_weekdays", "weekdays_think", "health_curation", "curation_original", "analyses_visualizations", "visualizations_commentaries", "commentaries_examining", 
+  "examining_debates", "worldwide_weekly", "weekly_entering", "entering_clicking", "clicking_subscribe", "subscribe_agreeing", "recieve_announcements", 
+  "well_invitations", "agreeing_privacy", "view_newsletters", "agreeing_receive", "receive_announcements", "privacy_policy")
+
+```
 
 ::: {.notes}
 Stopwords were removed to the best of my ability. Many times these were obvious, but most of the time they were pulled out after others were removed.
@@ -244,7 +292,7 @@ Lastly, certain stopwords were not removed until initial modelling was completed
 Early on, the corpus had to be retokenized and saved to disk which took 10-20 mins per cycle.  
 :::
 
-## Data Vectorization
+## Data Vectorization {background-image="./images/pol_lang_slides.png"}
 
 - Corpus is Large consisting of 148,703 documents
 
@@ -259,7 +307,7 @@ Early on, the corpus had to be retokenized and saved to disk which took 10-20 mi
   - 37,177 documents in the testing set
   - Random Seed state is set to 2023 in every model for reproducibility
 
-## Models {.scrollable}
+## Models {background-image="./images/pol_lang_slides.png"}
 
 Models were chosen for their use in Text Classification Best Practices and computational efficiency
 
@@ -271,31 +319,55 @@ Models were chosen for their use in Text Classification Best Practices and compu
 
 - LASSO Logistic Regression
   - Regularized Linear Regression that minimizes $\lambda$ value 
-  - In Statistics/Linear Algebra, the LASSO uses an $\ell_1$ penalty
+    - In Statistics/Linear Algebra, the LASSO uses an $\ell_1$ penalty
   - Performs Feature Selection on the Linear Model
   - With close ties to Linear Regression, predictor effects are easier to understand
+  - $Pr(Y_i=1|X_i) = {\frac{exp(\beta_0 + \beta_1X_i + \beta_2X_2 + \beta_3X_3 + \dots + \beta_jX_i))}{1 + exp (\beta_0 + \beta_1X_i + \beta_2X_2 + \dots + \beta_jX_i}} + \lambda|\beta|_1$
+    - Where $|\beta|_1 = \sum\limits_{j=1}^{p}|\beta|_j$.
 
-## Model Optimization
+## Model Optimization {background-image="./images/pol_lang_slides.png" .scrollable}
 
-Cross Validation
-- 10 Fold Cross Validation is Utilized to Optimize Models
-- Parameters are training based on best practices
+- Cross Validation
+
+  - 10 Fold Cross Validation is Utilized to Optimize Models
+  - Best $\lambda$ is chosen based on ROC AUC [@smltar]
+
+```{r}
+lasso_cv_tuning <- fread(here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
+
+lasso_cv_tuning |>
+  select(penalty, .metric, mean) |>
+  pivot_wider(names_from = .metric,
+              values_from = mean) |>
+  arrange(-roc_auc) |>
+  rename("Lambda" = penalty,
+         "Accuracy" = accuracy,
+         "F Score" = f_meas,
+         "Area Under Precision" = pr_auc,
+         "Precision" = precision,
+         "Recall" = recall,
+         "ROC AUC" = roc_auc,
+         "Sensitivity" = sens,
+         "Specificity" = spec) |>
+  gt() |>
+  fmt_number(columns = 1, decimals = 6) |>
+  fmt_number(columns = 2:9, decimals = 3) |>
+  gt_to_transparent()
+```
 
 ::: {.notes}
 Speaker notes go here.
 :::
 
-# Results
+# {background-image="./images/pol_lang_results.png"}
 
 ```{r}
 library(ggplot2)
 library(plotly)
 library(scales)
 
-corpus_length <- tidytable::fread(here::here("content", "project", "sample_data", "corpus_length_filtered.csv"))
-
 histogram_bias <- ggplot(corpus_length, aes(x = length_text, fill = source_bias, color = source_bias)) +
-  geom_histogram(alpha = 0.5, position = "dodge") +
+  geom_histogram(alpha = 0.5, position = "identity") +
   scale_x_log10(labels =label_number(scale_cut = cut_short_scale())) +
   scale_color_manual(values = c("left-wing" = "blue",
                                 "right-wing" = "red")) +
@@ -310,14 +382,13 @@ histogram_source <- ggplot(corpus_length, aes(x = length_text, fill = short_sour
   scale_x_log10(labels = label_number(scale_cut = cut_short_scale())) +
   labs(x = "Length Text",
        y = "Number of Characters (log scale)") +
-  theme_classic() +           # Make background transparent
   theme(rect = element_rect(fill = "transparent"))
 ```
 
-## Bias Histogram
+## Bias Histogram {background-image="./images/pol_lang_slides.png"}
 
 ```{r}
-#| fig-height: 10
+#| fig-height: 9
 #| fig-width: 16
 #| fig-align: right
 ggplotly(histogram_bias)
@@ -327,16 +398,16 @@ ggplotly(histogram_bias)
 Speaker notes go here.
 :::
 
-## Source Histogram
+## Source Histogram {background-image="./images/pol_lang_slides.png"}
 
 ```{r}
-#| fig-height: 10
+#| fig-height: 9
 #| fig-width: 16
 #| fig-align: center
 ggplotly(histogram_source)
 ```
 
-## Left-Wing Bigrams
+## Left-Wing Bigrams {background-image="./images/pol_lang_slides.png"}
 
 ```{r}
 library(wordcloud2)
@@ -347,22 +418,198 @@ right_bigram_freq <- subset(tstat_bigram_freq, group == "right-wing")
 ```
 
 ```{r}
-#| fig-height: 10
+#| fig-height: 9
 #| fig-width: 16
 #| fig-align: center
 wordcloud2(left_bigram_freq, size = 1.5, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1, backgroundColor = "transparent")
 ```
 
-## Right-Wing Bigrams
+## Right-Wing Bigrams {background-image="./images/pol_lang_slides.png"}
 
 ```{r}
-#| fig-height: 10
+#| fig-height: 9
 #| fig-width: 16
 #| fig-align: center
 wordcloud2(right_bigram_freq, size = 1.5, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1, backgroundColor = "transparent")
 ```
 
-## Model Results  {.scrollable}
+## Latent Semantic Analysis {background-image="./images/pol_lang_slides.png"}
+
+Insert LSA Description here
+
+```{r}
+svd_top_features <- function(selection, df = features_df_200, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_max(order_by = {{selection}}, n = n) |>
+    tidytable::mutate(type_sel = "max")
+}
+
+svd_bottom_features <- function(selection, df = features_df_200, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_min(order_by = {{selection}}, n = n) |>
+    tidytable::mutate(type_sel = "min")
+}
+
+svd_component_features <- function(selection, df = features_df_200, n = 20) {
+  temp_max <- svd_top_features(selection = {{selection}}, df = df, n = n)
+  temp_min <- svd_bottom_features(selection = {{selection}}, df = df, n = n)
+  final <- tidytable::bind_rows(temp_max, temp_min)
+  return(final)
+}
+
+features_df_200 <- fread(here::here("data", "model_data", "lsa_bigram_features_200.csv.gz"))
+```
+
+## Latent Semantic Analysis Component 1 {background-image="./images/pol_lang_slides.png"}
+
+```{r}
+#| fig-height: 9
+#| fig-width: 16
+#| fig-align: center
+component1_features <- svd_component_features(component1, features_df_200, n = 20)
+c1 <- component1_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component1))) |>
+  ggplot(aes(component1, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+
+ggplotly(c1)
+```
+
+## Latent Semantic Analysis Component 68 {background-image="./images/pol_lang_slides.png"}
+
+```{r}
+#| fig-height: 9
+#| fig-width: 16
+#| fig-align: center
+component68_features <- svd_component_features(component68, features_df_200, n = 20)
+c68 <- component68_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component68))) |>
+  ggplot(aes(component68, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+
+ggplotly(c68)
+```
+
+## Latent Semantic Analysis Component 86 {background-image="./images/pol_lang_slides.png"}
+
+```{r}
+#| fig-height: 9
+#| fig-width: 16
+#| fig-align: center
+component86_features <- svd_component_features(component86, features_df_200, n = 20)
+c86 <- component86_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component86))) |>
+  ggplot(aes(component86, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+
+ggplotly(c86)
+```
+
+## Latent Semantic Analysis Component 108 {background-image="./images/pol_lang_slides.png"}
+
+```{r}
+component108_features <- svd_component_features(component108, features_df_200, n = 20)
+c108 <- component108_features |>
+  mutate(name = forcats::fct_reorder(docid, desc(component108))) |>
+  ggplot(aes(component108, name)) +
+    facet_grid(~ type_sel, scales = "free") +
+    geom_col(aes(fill = type_sel))
+
+ggplotly(c108)
+```
+
+
+
+## Naive Bayes tfidf Model Results  {background-image="./images/pol_lang_slides.png"}
+
+::: {.panel-tabset}
+
+### Tab A (tfidf)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+- 4000 of the Most Frequent Bigrams Selected
+  - Early Modeling showed Bigrams had better results
+
+```{r}
+nb_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_tfidf.csv"))
+
+nb_test_metrics_tfidf |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric,
+              values_from = .estimate) |>
+  rename("Accuracy" = accuracy,
+         "F Score" = f_meas,
+         "Area Under Precision" = pr_auc,
+         "Precision" = precision,
+         "Recall" = recall,
+         "ROC AUC" = roc_auc,
+         "Sensitivity" = sens,
+         "Specificity" = spec) |>
+  gt() |>
+  fmt_number(decimals = 3) |>
+  gt_to_transparent()
+```
+
+:::
+
+::: {.column width="45%"}
+
+INSERT ROC plot here
+
+:::
+::::
+
+### Tab B (LSA)
+
+:::: {.columns}
+::: {.column width="55%"}
+
+- 4000 of the Most Frequent Bigrams Selected
+  - Early Modeling showed Bigrams had better results
+
+```{r}
+nb_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_lsa.csv"))
+
+nb_test_metrics_lsa |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric,
+              values_from = .estimate) |>
+  rename("Accuracy" = accuracy,
+         "F Score" = f_meas,
+         "Area Under Precision" = pr_auc,
+         "Precision" = precision,
+         "Recall" = recall,
+         "ROC AUC" = roc_auc,
+         "Sensitivity" = sens,
+         "Specificity" = spec) |>
+  gt() |>
+  fmt_number(decimals = 3) |>
+  gt_to_transparent()
+```
+
+:::
+
+::: {.column width="45%"}
+
+INSERT ROC plot here
+
+:::
+::::
+
+:::
+
+::: {.notes}
+Speaker notes go here.
+:::
+
+## LASSO Model Results {background-image="./images/pol_lang_slides.png"}
 
 ::: {.panel-tabset}
 
@@ -371,15 +618,26 @@ wordcloud2(right_bigram_freq, size = 1.5, color = pals::ocean.oxy(100), minRotat
 :::: {.columns}
 ::: {.column width="55%"}
 
-- 3000 of the Most Frequent Bigrams Selected
-  - Bigrams contain more information than Word Tokens
-  - Early Modeling showed Bigrams had better results
-- Regularized LASSO Regression Used so far
+- 4000 of the Most Frequent Bigrams Selected
 
-```{.r}
-lasso_test_metrics <- tidytable::fread("lasso_test_metrics.csv")
-kableExtra::kbl(lasso_test_metrics) |>
-  kableExtra::kable_styling(bootstrap_options = "striped", font_size = 28)
+```{r}
+lasso_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_tfidf.csv"))
+
+lasso_test_metrics_tfidf |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric,
+              values_from = .estimate) |>
+  rename("Accuracy" = accuracy,
+         "F Score" = f_meas,
+         "Area Under Precision" = pr_auc,
+         "Precision" = precision,
+         "Recall" = recall,
+         "ROC AUC" = roc_auc,
+         "Sensitivity" = sens,
+         "Specificity" = spec) |>
+  gt() |>
+  fmt_number(decimals = 3) |>
+  gt_to_transparent()
 ```
 
 :::
@@ -391,9 +649,17 @@ kableExtra::kbl(lasso_test_metrics) |>
 :::
 ::::
 
-### Tab B (ROC Curve)
+### Tab B (tfidf ROC)
 
 ![](../modeling/plots/roc_curve_lasso_tfidf.png){width=50%}
+
+### Tab C (LSA)
+
+
+
+### Tab D (LSA ROC)
+
+
 
 :::
 
@@ -401,7 +667,7 @@ kableExtra::kbl(lasso_test_metrics) |>
 Speaker notes go here.
 :::
 
-## Conclusion & Remarks
+## Conclusion & Remarks {background-image="./images/pol_lang_slides.png"}
 
 - Results appear to be promising
   - An Accuracy of 82% and ROC AUC of 90% is excellent for LASSO Regresssion
@@ -410,13 +676,13 @@ Speaker notes go here.
 - The R Packages Utilized are Manageable and Easy to Learn
 - Scraping is Easy to Replicate but Hard to find good sources
 
-## References
+## References {background-image="./images/pol_lang_slides.png"}
 
 ::: {#refs}
 :::
 
 # Questions
 
-## Attributions
+## Attributions {background-image="./images/pol_lang_slides.png"}
 
 - Cover Photo by [Khashayar Kouchpeydeh](https://unsplash.com/pt-br/@kouchpeydeh?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/photos/QR_TFiIX8hM?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)

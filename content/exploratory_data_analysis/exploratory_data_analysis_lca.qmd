@@ -14,21 +14,21 @@ here::i_am("content/exploratory_data_analysis/exploratory_data_analysis_lca.qmd"
 library(tidytable)
 library(ggplot2)
 
-svd_top_features <- function(selection, df = features_df_400, n = 20) {
+svd_top_features <- function(selection, df = features_df_200, n = 20) {
   df |>
     tidytable::transmute(docid, {{selection}}) |>
     tidytable::slice_max(order_by = {{selection}}, n = n) |>
     tidytable::mutate(type_sel = "max")
 }
 
-svd_bottom_features <- function(selection, df = features_df_400, n = 20) {
+svd_bottom_features <- function(selection, df = features_df_200, n = 20) {
   df |>
     tidytable::transmute(docid, {{selection}}) |>
     tidytable::slice_min(order_by = {{selection}}, n = n) |>
     tidytable::mutate(type_sel = "min")
 }
 
-svd_component_features <- function(selection, df = features_df_400, n = 20) {
+svd_component_features <- function(selection, df = features_df_200, n = 20) {
   temp_max <- svd_top_features(selection = {{selection}}, df = df, n = n)
   temp_min <- svd_bottom_features(selection = {{selection}}, df = df, n = n)
   final <- tidytable::bind_rows(temp_max, temp_min)

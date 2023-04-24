@@ -128,31 +128,6 @@ final_xgb <- finalize_workflow(tune_wf, chosen_auc)
 # Fitting Model on Training Data
 
 ```{r}
-fitted_xgb <- fit(final_xgb, bigram_train)
-```
-
-# Variable Importance Examination
-
-## Variable Importance Plot
-
-```{r}
-library(vip)
-
-vip_xgboost <- fitted_xgboost |>
-  extract_fit_parsnip() |>
-  vi()
-
-vip_xgboost |>
-  slice_head(n = 20) |>
-  ggplot(aes(x = Importance, y = Variable)) +
-  geom_col() +
-  scale_x_continuous(expand = c(0, 0)) +
-  labs(y = NULL)
-
-ggsave("plots/variable_importance_plot_xgb_lsa.png")
-```
-
-```{r}
 last_fit_xgb <- last_fit(final_xgb, lsa_split)
 
 xgb_metric <- last_fit_xgb |>
@@ -176,3 +151,23 @@ last_fit_xgb |>
 ggsave("plots/confusion_matrix_xgb_lsa.png")
 ```
 
+# Variable Importance Examination
+
+## Variable Importance Plot
+
+```{r}
+library(vip)
+
+vip_xgboost <- last_fit_xgb |>
+  extract_fit_parsnip() |>
+  vi()
+
+vip_xgboost |>
+  slice_head(n = 20) |>
+  ggplot(aes(x = Importance, y = Variable)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(y = NULL)
+
+ggsave("plots/variable_importance_plot_xgb_lsa.png")
+```

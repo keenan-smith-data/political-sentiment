@@ -73,6 +73,8 @@ parallel::stopCluster(cl)
 # Hyperparameter Metrics
 
 ```{r}
+tune_rs <- readr::read_rds(here::here("content", "modeling", "model_results", "tune_results_lasso_tfidf.rds"))
+
 lasso_rs_metrics <- collect_metrics(tune_rs)
 tidytable::fwrite(lasso_rs_metrics, here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
 
