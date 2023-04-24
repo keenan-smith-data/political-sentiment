@@ -65,7 +65,7 @@ parallel::stopCluster(cl)
 
 ```{r}
 naivebayes_rs_metrics <- collect_metrics(tune_rs)
-tidytable::fwrite(naivebayes_rs_metrics, here::here("content", "modeling", "model_results", "naivebayes_rs_metrics_lsa_bigrams.csv"))
+# tidytable::fwrite(naivebayes_rs_metrics, here::here("content", "modeling", "model_results", "naivebayes_rs_metrics_lsa_bigrams.csv"))
 naivebayes_rs_predictions <- collect_predictions(tune_rs)
 
 naivebayes_rs_metrics
@@ -78,12 +78,12 @@ naivebayes_rs_predictions |>
   group_by(id) |>
   roc_curve(truth = source_bias, `.pred_left-wing`) |>
   autoplot() +
-  labs(
+  labs( 
     color = NULL,
     title = "ROC curve for Naive Bayes Predictions",
     subtitle = "Each resample fold is shown in a different color"
   )
-ggsave("plots/cv_roc_naivebayes_lsa.png")
+# ggsave("plots/cv_roc_naivebayes_lsa.png")
 ```
 
 
@@ -94,20 +94,33 @@ naivebayes_metric <- last_fit_naivebayes |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(naivebayes_metric, here::here("content","modeling", "model_results", "naivebayes_test_metrics_lsa.csv"))
+# tidytable::fwrite(naivebayes_metric, here::here("content","modeling", "model_results", "naivebayes_test_metrics_lsa.csv"))
+
+fit_predictions <- last_fit_naivebayes |>
+  collect_predictions()
+
+tidytable::fwrite(fit_predictions, here::here("content","modeling", "model_results", "naivebayes_test_predictions_lsa.csv"))
+
+fit_roc_curve <- last_fit_naivebayes |>
+  collect_predictions() |>
+  roc_curve(source_bias, `.pred_left-wing`)
+
+fit_conf_mat <- last_fit_naivebayes |>
+  collect_predictions() |>
+  conf_mat(source_bias, .pred_class)
 
 last_fit_naivebayes |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_naivebayes_lsa.png")
+# ggsave("plots/roc_curve_naivebayes_lsa.png")
 
 last_fit_naivebayes |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_naivebayes_lsa.png")
+ggsave(here::here("content", "modeling", "plots", "confusion_matrix_naivebayes_lsa.png"))
 ```
 

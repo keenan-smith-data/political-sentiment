@@ -525,7 +525,12 @@ ggplotly(c108)
 
 
 
-## Naive Bayes tfidf Model Results  {background-image="./images/pol_lang_slides.png"}
+## Naive Bayes Model Results  {background-image="./images/pol_lang_slides.png"}
+
+```{r}
+preds_naivebayes_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_test_predictions_tfidf.csv"))
+preds_naivebayes_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_test_predictions_lsa.csv"))
+```
 
 ::: {.panel-tabset}
 
@@ -557,11 +562,25 @@ nb_test_metrics_tfidf |>
   gt_to_transparent()
 ```
 
+![](../modeling/plots/confusion_matrix_naivebayes_tfidf.png)
+
 :::
 
 ::: {.column width="45%"}
 
-INSERT ROC plot here
+```{r}
+preds_naivebayes_tfidf |>
+  mutate(.pred_class = as.factor(.pred_class),
+         source_bias = as.factor(source_bias) ) |>
+  yardstick::roc_curve(source_bias, `.pred_left-wing`) |>
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_line(linewidth = 1.5, color = "midnightblue") +
+  geom_abline(
+    lty = 2, alpha = 0.5,
+    color = "gray50",
+    linewidth = 1.2
+  )
+```
 
 :::
 ::::
@@ -570,9 +589,6 @@ INSERT ROC plot here
 
 :::: {.columns}
 ::: {.column width="55%"}
-
-- 4000 of the Most Frequent Bigrams Selected
-  - Early Modeling showed Bigrams had better results
 
 ```{r}
 nb_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_lsa.csv"))
@@ -594,11 +610,25 @@ nb_test_metrics_lsa |>
   gt_to_transparent()
 ```
 
+![](../modeling/plots/confusion_matrix_naivebayes_lsa.png)
+
 :::
 
 ::: {.column width="45%"}
 
-INSERT ROC plot here
+```{r}
+preds_naivebayes_lsa |>
+  mutate(.pred_class = as.factor(.pred_class),
+         source_bias = as.factor(source_bias) ) |>
+  yardstick::roc_curve(source_bias, `.pred_left-wing`) |>
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_line(linewidth = 1.5, color = "midnightblue") +
+  geom_abline(
+    lty = 2, alpha = 0.5,
+    color = "gray50",
+    linewidth = 1.2
+  )
+```
 
 :::
 ::::
@@ -611,6 +641,11 @@ Speaker notes go here.
 
 ## LASSO Model Results {background-image="./images/pol_lang_slides.png"}
 
+```{r}
+preds_lasso_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_predictions_tfidf.csv"))
+preds_lasso_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_predictions_lsa.csv"))
+```
+
 ::: {.panel-tabset}
 
 ### Tab A
@@ -619,6 +654,7 @@ Speaker notes go here.
 ::: {.column width="55%"}
 
 - 4000 of the Most Frequent Bigrams Selected
+- Lambda Value
 
 ```{r}
 lasso_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_tfidf.csv"))
@@ -640,26 +676,91 @@ lasso_test_metrics_tfidf |>
   gt_to_transparent()
 ```
 
+![](../modeling/plots/confusion_matrix_lasso_tfidf.png)
+
 :::
 
 ::: {.column width="45%"}
 
-![](../modeling/plots/variable_importance_plot_lasso_tfidf.png)
+```{r}
+preds_lasso_tfidf |>
+  mutate(.pred_class = as.factor(.pred_class),
+         source_bias = as.factor(source_bias) ) |>
+  yardstick::roc_curve(source_bias, `.pred_left-wing`) |>
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_line(linewidth = 1.5, color = "midnightblue") +
+  geom_abline(
+    lty = 2, alpha = 0.5,
+    color = "gray50",
+    linewidth = 1.2
+  )
+```
 
 :::
 ::::
 
-### Tab B (tfidf ROC)
+### Tab B (tfidf Var Imp)
 
-![](../modeling/plots/roc_curve_lasso_tfidf.png){width=50%}
+```{r}
+vip_lasso_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_variable_importance_tfidf.csv"))
+```
 
 ### Tab C (LSA)
 
+:::: {.columns}
+::: {.column width="55%"}
 
+- 200 Component Vectors
+- Lambda Value 
 
-### Tab D (LSA ROC)
+```{r}
+lasso_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_lsa.csv"))
 
+lasso_test_metrics_lsa |>
+  select(.metric, .estimate) |>
+  pivot_wider(names_from = .metric,
+              values_from = .estimate) |>
+  rename("Accuracy" = accuracy,
+         "F Score" = f_meas,
+         "Area Under Precision" = pr_auc,
+         "Precision" = precision,
+         "Recall" = recall,
+         "ROC AUC" = roc_auc,
+         "Sensitivity" = sens,
+         "Specificity" = spec) |>
+  gt() |>
+  fmt_number(decimals = 3) |>
+  gt_to_transparent()
+```
 
+![](../modeling/plots/confusion_matrix_lasso_lsa.png)
+
+:::
+
+::: {.column width="45%"}
+
+```{r}
+preds_lasso_lsa |>
+  mutate(.pred_class = as.factor(.pred_class),
+         source_bias = as.factor(source_bias) ) |>
+  yardstick::roc_curve(source_bias, `.pred_left-wing`) |>
+  ggplot(aes(x = 1 - specificity, y = sensitivity)) +
+  geom_line(linewidth = 1.5, color = "midnightblue") +
+  geom_abline(
+    lty = 2, alpha = 0.5,
+    color = "gray50",
+    linewidth = 1.2
+  )
+```
+
+:::
+::::
+
+### Tab D (LSA Var Imp)
+
+```{r}
+vip_lasso_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_variable_importance_lsa.csv"))
+```
 
 :::
 

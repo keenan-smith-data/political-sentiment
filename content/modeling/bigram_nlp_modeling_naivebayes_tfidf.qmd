@@ -22,7 +22,6 @@ source(here::here("R", "data_prep_modeling_tfidf.R"), echo = TRUE)
 # Recipes
 
 ```{r}
-sparse_bp <- hardhat::default_recipe_blueprint(composition = "dgCMatrix")
 text_rec <- recipe(source_bias ~ ., data = bigram_train)
 ```
 
@@ -84,7 +83,7 @@ naivebayes_rs_predictions |>
     title = "ROC curve for Naive Bayes Predictions",
     subtitle = "Each resample fold is shown in a different color"
   )
-ggsave("plots/cv_roc_naivebayes_tfidf.png")
+# ggsave("plots/cv_roc_naivebayes_tfidf.png")
 ```
 
 
@@ -95,20 +94,33 @@ naivebayes_metric <- last_fit_naivebayes |>
   collect_predictions() |>
   class_metrics(source_bias, estimate = .pred_class, `.pred_left-wing`)
 
-tidytable::fwrite(naivebayes_metric, here::here("content","modeling", "model_results", "naivebayes_test_metrics_tfidf.csv"))
+# tidytable::fwrite(naivebayes_metric, here::here("content","modeling", "model_results", "naivebayes_test_metrics_tfidf.csv"))
+
+fit_predictions <- last_fit_naivebayes |>
+  collect_predictions()
+
+tidytable::fwrite(fit_predictions, here::here("content","modeling", "model_results", "naivebayes_test_predictions_tfidf.csv"))
+
+fit_roc_curve <- last_fit_naivebayes |>
+  collect_predictions() |>
+  roc_curve(source_bias, `.pred_left-wing`)
+
+fit_conf_mat <- last_fit_naivebayes |>
+  collect_predictions() |>
+  conf_mat(source_bias, .pred_class)
 
 last_fit_naivebayes |>
   collect_predictions() |>
   roc_curve(source_bias, `.pred_left-wing`) |>
   autoplot()
 
-ggsave("plots/roc_curve_naivebayes_tfidf.png")
+# ggsave("plots/roc_curve_naivebayes_tfidf.png")
 
 last_fit_naivebayes |>
   collect_predictions() |>
   conf_mat(source_bias, .pred_class) |>
   autoplot(type = "heatmap")
 
-ggsave("plots/confusion_matrix_naivebayes_tfidf.png")
+ggsave(here::here("content", "modeling", "plots", "confusion_matrix_naivebayes_tfidf.png"))
 ```
 

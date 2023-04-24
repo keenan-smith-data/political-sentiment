@@ -550,21 +550,21 @@
     "href": "content/project/Sentiment_Presentation_Draft.html#latent-semantic-analysis",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Latent Semantic Analysis",
-    "text": "Latent Semantic Analysis"
+    "text": "Latent Semantic Analysis\nInsert LSA Description here"
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#naive-bayes-tfidf-model-results",
     "href": "content/project/Sentiment_Presentation_Draft.html#naive-bayes-tfidf-model-results",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "Naive Bayes tfidf Model Results",
-    "text": "Naive Bayes tfidf Model Results\n\nTab ATab B (ROC Curve)Tab C (LSA)\n\n\n\n\n\n4000 of the Most Frequent Bigrams Selected\n\nEarly Modeling showed Bigrams had better results\n\n\n\n\n\n\n\n\n  \n    \n    \n      Sensitivity\n      Specificity\n      Recall\n      Precision\n      F Score\n      Accuracy\n      ROC AUC\n      Area Under Precision\n    \n  \n  \n    0.000\n1.000\n0.000\nNA\nNA\n0.607\n0.500\n0.697\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n4000 of the Most Frequent Bigrams Selected\n\nEarly Modeling showed Bigrams had better results\n\n\n\n\n\n\n\n\n  \n    \n    \n      Sensitivity\n      Specificity\n      Recall\n      Precision\n      F Score\n      Accuracy\n      ROC AUC\n      Area Under Precision\n    \n  \n  \n    0.7625889\n0.3952396\n0.7625889\n0.4496168\n0.5657007\n0.5396616\n0.6162442\n0.6303654\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+    "text": "Naive Bayes tfidf Model Results\n\nTab A (tfidf)Tab B (LSA)\n\n\n\n\n\n4000 of the Most Frequent Bigrams Selected\n\nEarly Modeling showed Bigrams had better results\n\n\n\n\n\n\n\n\n  \n    \n    \n      Sensitivity\n      Specificity\n      Recall\n      Precision\n      F Score\n      Accuracy\n      ROC AUC\n      Area Under Precision\n    \n  \n  \n    0.000\n1.000\n0.000\nNA\nNA\n0.607\n0.500\n0.697\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n4000 of the Most Frequent Bigrams Selected\n\nEarly Modeling showed Bigrams had better results\n\n\n\n\n\n\n\n\n  \n    \n    \n      Sensitivity\n      Specificity\n      Recall\n      Precision\n      F Score\n      Accuracy\n      ROC AUC\n      Area Under Precision\n    \n  \n  \n    0.763\n0.395\n0.763\n0.450\n0.566\n0.540\n0.616\n0.630\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSpeaker notes go here."
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#lasso-model-results",
     "href": "content/project/Sentiment_Presentation_Draft.html#lasso-model-results",
     "title": "Tokenizing Political Language to Determine Bias",
     "section": "LASSO Model Results",
-    "text": "LASSO Model Results\n\nTab ATab B (ROC Curve)Tab CTab D\n\n\n\n\n\n4000 of the Most Frequent Bigrams Selected\n\n\n\n\n\n\n\n  \n    \n    \n      Sensitivity\n      Specificity\n      Recall\n      Precision\n      F Score\n      Accuracy\n      ROC AUC\n      Area Under Precision\n    \n  \n  \n    0.694376\n0.9301449\n0.694376\n0.8655864\n0.7705858\n0.8374533\n0.9086981\n0.88724\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSpeaker notes go here."
+    "text": "LASSO Model Results\n\nTab ATab B (tfidf ROC)Tab C (LSA)Tab D (LSA ROC)\n\n\n\n\n\n4000 of the Most Frequent Bigrams Selected\n\n\n\n\n\n\n\n  \n    \n    \n      Sensitivity\n      Specificity\n      Recall\n      Precision\n      F Score\n      Accuracy\n      ROC AUC\n      Area Under Precision\n    \n  \n  \n    0.694\n0.930\n0.694\n0.866\n0.771\n0.837\n0.909\n0.887\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSpeaker notes go here."
   },
   {
     "objectID": "content/project/Sentiment_Presentation_Draft.html#latent-semantic-analysis-components",
