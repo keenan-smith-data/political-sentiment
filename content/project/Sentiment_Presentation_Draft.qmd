@@ -20,12 +20,74 @@ format:
     embed-resources: true
     mainfont: Roboto Slab
     code-fold: true
-    
 ---
 
-# Overview {background-image="./images/pol_lang_slides.png"}
+```{r}
+#| label: Library, Function, and Data Read
+# Libraries
+library(tidytable)
+library(gtsummary)
+library(gt)
+library(ggplot2)
+library(plotly)
+library(scales)
+library(wordcloud2)
+# Functions
+gt_to_transparent <- function(gtab) {
+  gtab |>
+    tab_options(
+      table.background.color = "transparent",
+      table.font.size = 22
+    )
+}
+
+svd_top_features <- function(selection, df = features_df_200, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_max(order_by = {{selection}}, n = n) |>
+    tidytable::mutate(type_sel = "max")
+}
+
+svd_bottom_features <- function(selection, df = features_df_200, n = 20) {
+  df |>
+    tidytable::transmute(docid, {{selection}}) |>
+    tidytable::slice_min(order_by = {{selection}}, n = n) |>
+    tidytable::mutate(type_sel = "min")
+}
+
+svd_component_features <- function(selection, df = features_df_200, n = 20) {
+  temp_max <- svd_top_features(selection = {{selection}}, df = df, n = n)
+  temp_min <- svd_bottom_features(selection = {{selection}}, df = df, n = n)
+  final <- tidytable::bind_rows(temp_max, temp_min)
+  return(final)
+}
+
+corpus_length <- tidytable::fread(here::here("content", "project", "sample_data", "corpus_length_filtered.csv"))
+source_table <- tidytable::fread(here::here("data", "sources", "source_table.csv"))
+sample_text <- tidytable::fread(here::here("content", "project", "sample_data", "sample_corpus.csv"))
+lasso_cv_tuning <- fread(here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
+tstat_bigram_freq <- tidytable::fread(here::here("content", "project", "sample_data", "tstat_freq_bigram.csv"))
+features_df_200 <- fread(here::here("data", "model_data", "lsa_bigram_features_200.csv.gz"))
+d_200 <- fread(here::here("data", "model_data", "lsa_bigram_D_200.csv.gz"))
+# NB Predictions and Metrics
+preds_naivebayes_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_test_predictions_tfidf.csv"))
+preds_naivebayes_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_test_predictions_lsa.csv"))
+nb_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_tfidf.csv"))
+nb_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_lsa.csv"))
+# Lasso Predictions and Metrics
+preds_lasso_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_predictions_tfidf.csv"))
+preds_lasso_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_predictions_lsa.csv"))
+lasso_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_tfidf.csv"))
+lasso_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_lsa.csv"))
+# Variable Importance
+vip_lasso_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_variable_importance_tfidf.csv"))
+vip_lasso_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_variable_importance_lsa.csv"))
+```
+
+# Overview
 
 :::: {.columns}
+
 ::: {.column width="50%"}
 
 -   Introduction
@@ -48,13 +110,19 @@ format:
 -   Questions
 
 :::
+
 ::::
 
-## Research Question {background-image="./images/pol_lang_slides.png"}
+## Project Flow Overview
+
+![](./images/pol_lang_chart3.png){fig-align="center"}
+
+## Research Question
 
 A **Data Science** Project that examines the question *"Does Political Speech indicate classical right-left political bias?"*
 
 :::: {.columns}
+
 ::: {.column width="55%"}
 
 - The Corpus consists of Ideologically Identified Sources
@@ -77,32 +145,31 @@ A **Data Science** Project that examines the question *"Does Political Speech in
 - The US Supreme Court uses Originalism and Textualism in their decisions
 
 :::
+
 ::::
 
-::: {.notes}
-My interests are all the things you are not supposed to talk about at Thanksgiving
-Transformers are the current highest form for NLP modeling but require much more computing power
-:::
-
-## Political Ideology {background-image="./images/pol_lang_slides.png"}
+## Political Ideology
 
 "Ideologies have for different individuals, different degrees of appeal. A matter that depends upon the individuals needs and the degree to which these needs are being satisfied or frustrated." [@adorno]
+
+::: {.incremental}
 
 - The study of political ideology is vast and complex [@feldman_2013]
   - Construction of political parties are equally complicated and vast [@mayer_party; @mudge_parties]
 - This project chooses intentionally to focus on a wide corpus of data from left and right
 - Clustering of the Sources used shows this is a complicated topic
   - Further work should focus on this diversity and complexity
-
-::: {.notes}
-Speaker notes go here.
+  
 :::
 
-## Natural Language Processing {background-image="./images/pol_lang_slides.png"}
+![August Decrees by Monnet and Helman](./images/august-decrees-15925.jpg){width=50%}
+
+## Natural Language Processing
 
 "the application of computer science to the **analysis, synthesis, and comprehension"** of written and spoken language" (Oxford Dictionary)
 
 :::: {.columns}
+
 ::: {.column width="55%"}
 
 - Mixing Data Science and how we use Natural Language
@@ -117,53 +184,46 @@ Speaker notes go here.
 :::
 
 ::: {.column width="45%"}
+
 ![Credit: Xoriant](images/nlp_picture.png)
 :::
+
 ::::
 
 - There are many other applications such as sentiment analysis and topic modeling to name a few
 
-::: {.notes}
-Speaker notes go here.
-:::
-
 # {background-image="./images/pol_lang_methods.png"}
 
-```{r}
-library(tidytable)
-library(gtsummary)
-library(gt)
-
-gt_to_transparent <- function(gtab) {
-  gtab |>
-    tab_options(
-      table.background.color = "transparent"
-    )
-}
-corpus_length <- tidytable::fread(here::here("content", "project", "sample_data", "corpus_length_filtered.csv"))
-```
-
-::: {.notes}
-This needs some tables
-:::
-
-## Sources {background-image="./images/pol_lang_slides.png"}
+## Sources
 
 ```{r}
 #| echo: false
-source_table <- tidytable::fread(here::here("data", "sources", "source_table.csv"))
+#| label: Source Table
 
 source_table |>
   tidytable::rename("Article Source" = art_source,
                     "Short Source" = short_source,
                     "Source Bias" = source_bias) |>
   gt() |>
-  gt_to_transparent()
+  tab_header(
+    title = md("**Source Table**"),
+    subtitle = "Selected based on Data Availiability and Ease of Access"
+  ) |>
+  tab_footnote(
+    footnote = md('Libertarian are grouped with Right-Wing Reference: Jones, Robert P, Daniel Cox, and Juhem Navarro-Rivera. 2013. “In Search of Libertarians in America.” PRRI. 2013. http://www.prri.org/research/2013-american-valuessurvey/.'),
+    locations = cells_body(columns = "Article Source", rows = 2)
+  ) |>
+  gtExtras::gt_theme_538() |>
+  tab_options(
+    table.background.color = "transparent",
+    table.font.size = 16
+  )
 ```
 
-## The Data {background-image="./images/pol_lang_slides.png"}
+## The Data
 
 :::: {.columns}
+
 ::: {.column width="65%"}
 - Bias
   - Selected Data Sources on Availability of Data
@@ -195,25 +255,23 @@ source_table |>
     - VARCHAR
 
 :::
+
 ::::
 
-## Data Sample {background-image="./images/pol_lang_slides.png" .scrollable}
+## Data Sample {.scrollable}
 
 ```{r}
-sample_text <- tidytable::fread(here::here("content", "project", "sample_data", "sample_corpus.csv"))
-
+#| label: Sample Text
 sample_text |>
   gt() |>
+  gtExtras::gt_theme_538() |>
   gt_to_transparent()
 ```
 
-::: {.notes}
-Table of Sample Data
-:::
-
-## Length of Text Analysis {background-image="./images/pol_lang_slides.png"}
+## Length of Text Analysis
 
 ```{r}
+#| label: Length of Text Analysis
 corpus_length |>
   select(source_bias, length_text) |>
   tbl_summary(by = source_bias,
@@ -226,10 +284,12 @@ corpus_length |>
       "{sum}"
     )) |>
     as_gt() |>
+    gtExtras::gt_theme_538() |>
+    gtExtras::gt_highlight_rows(rows = 6) |>
     gt_to_transparent()
+```
 
-
-
+```{r}
 theme_gtsummary_compact()
 corpus_length |>
   select(art_source, length_text) |>
@@ -245,19 +305,17 @@ corpus_length |>
       "{sum}"
     )) |>
     as_gt() |>
+    gtExtras::gt_theme_538() |>
+    gtExtras::gt_highlight_rows(rows = 6) |>
     gt_to_transparent()
-
 ```
 
-## Process {background-image="./images/pol_lang_slides.png"}
+
+## Process
 
 ![Technical Flow Chat](Flow Chart.drawio.png)
 
-::: {.notes}
-Speaker notes go here.
-:::
-
-## Corpus Cleaning {background-image="./images/pol_lang_slides.png"}
+## Corpus Cleaning
 
 - The Corpus is tokenized using the Quanteda framework of libraries
   = Bigrams were chosen due to their ability to contain more lexical scope information
@@ -265,7 +323,6 @@ Speaker notes go here.
   - Specific Stopwords were chosen via EDA and early LASSO Classification
     - Many of these are leftover web artifacts from scraping being an imperfect science
     - Others are common terms used in articles 
-      - ("originally_published", "see_also")
     - Lastly, proper nouns specific to certain think tanks (Organization Names, Sponsors)
     - Below is a sample of some of the removed bigrams
 
@@ -286,15 +343,11 @@ bigram_stopterms_post_write <- c("new_york", "american_progress", "en_el", "de_l
 
 ```
 
-::: {.notes}
-Stopwords were removed to the best of my ability. Many times these were obvious, but most of the time they were pulled out after others were removed.
-Lastly, certain stopwords were not removed until initial modelling was completed as they weighed heavily towards identifying bias. This process is imperfect.
-Early on, the corpus had to be retokenized and saved to disk which took 10-20 mins per cycle.  
-:::
-
-## Data Vectorization {background-image="./images/pol_lang_slides.png"}
+## Data Vectorization
 
 - Corpus is Large consisting of 148,703 documents
+
+::: {.incremental}
 
 - Two Data Vectorization Techniques
   - Term Frequency - Inverse Document Frequency (tf-idf)
@@ -306,35 +359,72 @@ Early on, the corpus had to be retokenized and saved to disk which took 10-20 mi
   - 111,526 documents in the training set
   - 37,177 documents in the testing set
   - Random Seed state is set to 2023 in every model for reproducibility
+  
+:::
 
-## Models {background-image="./images/pol_lang_slides.png"}
+## Models
 
 Models were chosen for their use in Text Classification Best Practices and computational efficiency
 
-- Naive Bayes Classifier
+:::: {.columns}
+
+::: {.column width="45%"}
+
+**Naive Bayes Classifier**
+
+::: {.incremental}
+
   - A simple classifier that applies the Bayes Thereom to predictors
-  - Assume within *kth* class, the *p* predictors are independent (ISLR. 2018)
+  - Assume within *kth* class, the *p* predictors are independent [@islr]
   - $Pr(Y = k | X = x) = \frac{\pi_i * f_k(x) = f_{k1}(x_1) * \dots * f_{kp}}{\sum^K_{k=1} \pi_l * f_{l1}(x_1) * \dots * f_{lp}}$
   - Generally good in Spam Detection situation where words appear less in one than the other
 
-- LASSO Logistic Regression
+:::
+
+:::
+
+::: {.column width="45%"}
+
+**LASSO Logistic Regression**
+
+::: {.incremental}
   - Regularized Linear Regression that minimizes $\lambda$ value 
     - In Statistics/Linear Algebra, the LASSO uses an $\ell_1$ penalty
   - Performs Feature Selection on the Linear Model
   - With close ties to Linear Regression, predictor effects are easier to understand
-  - $Pr(Y_i=1|X_i) = {\frac{exp(\beta_0 + \beta_1X_i + \beta_2X_2 + \beta_3X_3 + \dots + \beta_jX_i))}{1 + exp (\beta_0 + \beta_1X_i + \beta_2X_2 + \dots + \beta_jX_i}} + \lambda|\beta|_1$
+  - $Pr(Y_i=1|X_i) = {\frac{exp(\beta_0 + \beta_1X_i + \beta_2X_2 + \dots + \beta_jX_i))}{1 + exp (\beta_0 + \beta_1X_i + \beta_2X_2 + \dots + \beta_jX_i}} + \lambda|\beta|_1$
     - Where $|\beta|_1 = \sum\limits_{j=1}^{p}|\beta|_j$.
 
-## Model Optimization {background-image="./images/pol_lang_slides.png" .scrollable}
+:::
+
+:::
+
+::::
+
+## Model Optimization {.scrollable}
 
 - Cross Validation
 
   - 10 Fold Cross Validation is Utilized to Optimize Models
   - Best $\lambda$ is chosen based on ROC AUC [@smltar]
 
-```{r}
-lasso_cv_tuning <- fread(here::here("content", "modeling", "model_results", "lasso_rs_metrics_tfidf_bigrams_4k.csv"))
+```{.r}
+lambda_grid <- grid_regular(penalty(), levels = 10)
+class_metrics <- metric_set(sens, spec, recall, precision, f_meas, accuracy, roc_auc, pr_auc)
+tune_rs <- tune_grid(
+  tune_wf,
+  bigram_folds,
+  grid = lambda_grid,
+  metrics = class_metrics
+)
 
+chosen_auc <- tune_rs |>
+  select_best(metric = "roc_auc")
+final_lasso <- finalize_workflow(tune_wf, chosen_auc)
+```
+
+```{r}
+#| label: lambda Optimization
 lasso_cv_tuning |>
   select(penalty, .metric, mean) |>
   pivot_wider(names_from = .metric,
@@ -350,201 +440,226 @@ lasso_cv_tuning |>
          "Sensitivity" = sens,
          "Specificity" = spec) |>
   gt() |>
+  tab_header(
+    title = md("**Classification Metric Set**"),
+    subtitle = "Using ROC AUC to Select Best Model"
+  ) |>
+  tab_source_note(source_note = md("Reference: Hvitfeldt, E., and J. Silge. 2022. *Supervised Machine Learning for Text Analysis in R.* 1st ed. Data Science Series. CRC Press.")) |>
   fmt_number(columns = 1, decimals = 6) |>
   fmt_number(columns = 2:9, decimals = 3) |>
+  gtExtras::gt_theme_538() |>
+  gtExtras::gt_highlight_rows(rows = 1,
+                              fill = "lightgrey",
+                              bold_target_only = TRUE,
+                              target_col = "Lambda") |>
+  gtExtras::gt_color_rows(c(2,7), palette = "ggsci::blue_material") |>
   gt_to_transparent()
 ```
-
-::: {.notes}
-Speaker notes go here.
-:::
 
 # {background-image="./images/pol_lang_results.png"}
 
 ```{r}
-library(ggplot2)
-library(plotly)
-library(scales)
-
+#| label: Histogram Creation
 histogram_bias <- ggplot(corpus_length, aes(x = length_text, fill = source_bias, color = source_bias)) +
   geom_histogram(alpha = 0.5, position = "identity") +
-  scale_x_log10(labels =label_number(scale_cut = cut_short_scale())) +
+  scale_x_log10(n.breaks = 16, labels = label_number(scale_cut = cut_short_scale())) +
+  scale_y_continuous(n.breaks = 10, labels = label_number(scale_cut = cut_short_scale())) +
   scale_color_manual(values = c("left-wing" = "blue",
                                 "right-wing" = "red")) +
   scale_fill_manual(values = c("left-wing" = "blue",
                                 "right-wing" = "red")) +
-  labs(x = "Length Text",
-       y = "Number of Characters (log scale)") +           # Make background transparent
+  labs(x = "Number of Characters (log-scale)",
+       y = "Number of Documents") +
+  ggthemes::theme_clean(base_size = 18) +
   theme(rect = element_rect(fill = "transparent"))
 
 histogram_source <- ggplot(corpus_length, aes(x = length_text, fill = short_source, color = short_source)) +
   geom_histogram(alpha = 0.5, position = "identity") +
-  scale_x_log10(labels = label_number(scale_cut = cut_short_scale())) +
-  labs(x = "Length Text",
-       y = "Number of Characters (log scale)") +
+  scale_x_log10(n.breaks = 5, labels = label_number(scale_cut = cut_short_scale())) +
+  scale_y_continuous(n.breaks = 5, labels = label_number(scale_cut = cut_short_scale())) +
+  labs(x = "Number of Characters (log-scale)",
+       y = "Number of Documents") +
+  facet_wrap(~ short_source, scales = "free") +
+  ggthemes::theme_clean(base_size = 16) +
   theme(rect = element_rect(fill = "transparent"))
 ```
 
-## Bias Histogram {background-image="./images/pol_lang_slides.png"}
+## Bias Histogram
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
-#| fig-align: right
-ggplotly(histogram_bias)
+#| label: Bias Histogram Plotly
+ggplotly(histogram_bias, width = 1800, height = 1000)
 ```
 
-::: {.notes}
-Speaker notes go here.
-:::
-
-## Source Histogram {background-image="./images/pol_lang_slides.png"}
+## Source Histogram
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
-#| fig-align: center
-ggplotly(histogram_source)
+#| label: Source Histogram Plotly
+ggplotly(histogram_source, width = 1800, height = 1000)
 ```
 
-## Left-Wing Bigrams {background-image="./images/pol_lang_slides.png"}
+## Left-Wing Bigrams
 
 ```{r}
-library(wordcloud2)
-tstat_bigram_freq <- tidytable::fread(here::here("content", "project", "sample_data", "tstat_freq_bigram.csv"))
-
+#| label: Bigrams
 left_bigram_freq <- subset(tstat_bigram_freq, group == "left-wing")
 right_bigram_freq <- subset(tstat_bigram_freq, group == "right-wing")
 ```
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
+#| label: Left Wing Wordcloud
+#| fig-height: 10
+#| fig-width: 20
 #| fig-align: center
 wordcloud2(left_bigram_freq, size = 1.5, color = pals::ocean.thermal(100), minRotation = pi/6, maxRotation = pi/6, rotateRatio = 1, backgroundColor = "transparent")
 ```
 
-## Right-Wing Bigrams {background-image="./images/pol_lang_slides.png"}
+## Right-Wing Bigrams
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
+#| label: Right Wing Wordcloud
+#| fig-height: 10
+#| fig-width: 20
 #| fig-align: center
 wordcloud2(right_bigram_freq, size = 1.5, color = pals::ocean.oxy(100), minRotation = -pi/6, maxRotation = -pi/6, rotateRatio = 1, backgroundColor = "transparent")
 ```
 
-## Latent Semantic Analysis {background-image="./images/pol_lang_slides.png"}
+## Latent Semantic Analysis
 
-Insert LSA Description here
+::: {.incremental}
+
+- Text Data are Largely Sparse and Highly Dimensional (lots of zeros, lots of features) [@smltar; @latent_medium] 
+- Dimensional Reduction is a Common Unsupervised Learning Method to Reduce the # of Features while trading for some loss of information [@islr]
+- LSA utilizes Truncated Singular Value Decomposition
+  - Every Matrix can be Split into Three Component Matrices using Linear Algebra
+  - $A_{mxn} = U_{mxr}S_{rxr}V_{nxr}^T$ [@svd_math]
+    - $m$ are the documents, $n$ are the features, $r$ are the components
+  - Mathematically Similar to Principal Components Analysis
+  - More flexible and can use Sparse Matrices
+- LSA groups mathematically similar features together semantically 
+- 200 *components* were chosen for Ease of Computation
+  - Some information is lost, but some insight is gained into semantically similar combinations
+  
+:::
+  
+## Component Variance Explained
 
 ```{r}
-svd_top_features <- function(selection, df = features_df_200, n = 20) {
-  df |>
-    tidytable::transmute(docid, {{selection}}) |>
-    tidytable::slice_max(order_by = {{selection}}, n = n) |>
-    tidytable::mutate(type_sel = "max")
-}
+d_200 <- d_200 |>
+  mutate(num = 1:200,
+         percent_variability = d^2/sum(d^2)*100,
+         cum_per_variability = cumsum(d^2)/sum(d^2)*100)
 
-svd_bottom_features <- function(selection, df = features_df_200, n = 20) {
-  df |>
-    tidytable::transmute(docid, {{selection}}) |>
-    tidytable::slice_min(order_by = {{selection}}, n = n) |>
-    tidytable::mutate(type_sel = "min")
-}
+percent_var <- ggplot(d_200, aes(x = num, y = percent_variability, fill = num)) +
+  geom_col() +
+  scale_x_continuous(n.breaks = 10, labels = label_number(scale_cut = cut_short_scale()), limits = c(1, 200)) +
+  scale_y_continuous(n.breaks = 10, labels = label_percent(scale = 1)) +
+  labs(y = "Percent Variability Explained",
+       x = "Number of Components") +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"),
+        legend.position = "none")
 
-svd_component_features <- function(selection, df = features_df_200, n = 20) {
-  temp_max <- svd_top_features(selection = {{selection}}, df = df, n = n)
-  temp_min <- svd_bottom_features(selection = {{selection}}, df = df, n = n)
-  final <- tidytable::bind_rows(temp_max, temp_min)
-  return(final)
-}
-
-features_df_200 <- fread(here::here("data", "model_data", "lsa_bigram_features_200.csv.gz"))
+cum_percent <- ggplot(d_200, aes(x = num, y = cum_per_variability)) +
+  geom_line(linewidth = 1.5, color = "midnightblue") +
+  scale_x_continuous(n.breaks = 10, labels = label_number(scale_cut = cut_short_scale()), limits = c(1, 200)) +
+  scale_y_continuous(n.breaks = 10, labels = label_percent(scale = 1)) +
+  labs(y = "Cumulative Percent Variability Explained",
+       x = "Number of Components") +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"),
+        legend.position = "none")
 ```
 
-## Latent Semantic Analysis Component 1 {background-image="./images/pol_lang_slides.png"}
+```{r}
+ggplotly(percent_var, width = 1800, height = 1000)
+```
+
+## Cumulative Variability Explained
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
-#| fig-align: center
+ggplotly(cum_percent, width = 1800, height = 1000)
+```
+
+
+## Latent Semantic Analysis Component 1
+
+```{r}
+#| label: Component 1
 component1_features <- svd_component_features(component1, features_df_200, n = 20)
 c1 <- component1_features |>
   mutate(name = forcats::fct_reorder(docid, desc(component1))) |>
   ggplot(aes(component1, name)) +
     facet_grid(~ type_sel, scales = "free") +
-    geom_col(aes(fill = type_sel))
+    geom_col(aes(fill = type_sel)) +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(rect = element_rect(fill = "transparent"))
 
-ggplotly(c1)
+ggplotly(c1, width = 1800, height = 1000)
 ```
 
-## Latent Semantic Analysis Component 68 {background-image="./images/pol_lang_slides.png"}
+## Latent Semantic Analysis Component 68
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
-#| fig-align: center
+#| label: Component 68
 component68_features <- svd_component_features(component68, features_df_200, n = 20)
 c68 <- component68_features |>
   mutate(name = forcats::fct_reorder(docid, desc(component68))) |>
   ggplot(aes(component68, name)) +
     facet_grid(~ type_sel, scales = "free") +
-    geom_col(aes(fill = type_sel))
+    geom_col(aes(fill = type_sel)) +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(rect = element_rect(fill = "transparent"))
 
-ggplotly(c68)
+ggplotly(c68, width = 1800, height = 1000)
 ```
 
-## Latent Semantic Analysis Component 86 {background-image="./images/pol_lang_slides.png"}
+## Latent Semantic Analysis Component 86
 
 ```{r}
-#| fig-height: 9
-#| fig-width: 16
-#| fig-align: center
+#| label: Component 86
 component86_features <- svd_component_features(component86, features_df_200, n = 20)
 c86 <- component86_features |>
   mutate(name = forcats::fct_reorder(docid, desc(component86))) |>
   ggplot(aes(component86, name)) +
     facet_grid(~ type_sel, scales = "free") +
-    geom_col(aes(fill = type_sel))
+    geom_col(aes(fill = type_sel)) +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(rect = element_rect(fill = "transparent"))
 
-ggplotly(c86)
+ggplotly(c86, width = 1800, height = 1000)
 ```
 
-## Latent Semantic Analysis Component 108 {background-image="./images/pol_lang_slides.png"}
+## Latent Semantic Analysis Component 108
 
 ```{r}
+#| label: Component 108
 component108_features <- svd_component_features(component108, features_df_200, n = 20)
 c108 <- component108_features |>
   mutate(name = forcats::fct_reorder(docid, desc(component108))) |>
   ggplot(aes(component108, name)) +
     facet_grid(~ type_sel, scales = "free") +
-    geom_col(aes(fill = type_sel))
+    geom_col(aes(fill = type_sel)) +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(rect = element_rect(fill = "transparent"))
 
-ggplotly(c108)
+ggplotly(c108, width = 1800, height = 1000)
 ```
 
-
-
-## Naive Bayes Model Results  {background-image="./images/pol_lang_slides.png"}
-
-```{r}
-preds_naivebayes_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_test_predictions_tfidf.csv"))
-preds_naivebayes_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "naivebayes_test_predictions_lsa.csv"))
-```
+## Naive Bayes Model Results
 
 ::: {.panel-tabset}
 
 ### Tab A (tfidf)
 
 :::: {.columns}
+
 ::: {.column width="55%"}
 
 - 4000 of the Most Frequent Bigrams Selected
-  - Early Modeling showed Bigrams had better results
 
 ```{r}
-nb_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_tfidf.csv"))
-
+#| label: Naive Bayes Tfidf Metrics
 nb_test_metrics_tfidf |>
   select(.metric, .estimate) |>
   pivot_wider(names_from = .metric,
@@ -559,16 +674,48 @@ nb_test_metrics_tfidf |>
          "Specificity" = spec) |>
   gt() |>
   fmt_number(decimals = 3) |>
+  tab_header(
+    title = md("**Classification Metric Naive Bayes tfidf**"),
+    subtitle = "Using ROC AUC to Select Best Model"
+  ) |>
+  tab_source_note(source_note = md("Reference: Hvitfeldt, E., and J. Silge. 2022. *Supervised Machine Learning for Text Analysis in R.* 1st ed. Data Science Series. CRC Press.")) |>
+  gtExtras::gt_color_rows(c(6:7), palette = "ggsci::blue_material") |>
+  gtExtras::gt_theme_538() |>
   gt_to_transparent()
 ```
 
-![](../modeling/plots/confusion_matrix_naivebayes_tfidf.png)
+```{r}
+#| label: Naive Bayes tfidf Conf Mat
+nb_tfidf_confmat <- preds_naivebayes_tfidf |>
+  mutate(.pred_class = as.factor(.pred_class) |> forcats::fct_expand("left-wing") |> forcats::fct_relevel(c("left-wing", "right-wing")),
+         source_bias = as.factor(source_bias) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         ) |>
+  yardstick::conf_mat(source_bias, .pred_class)
+
+nb_tfidf_confmat_df <- as_tidytable(nb_tfidf_confmat$table) |>
+  mutate(Prediction = as.factor(Prediction) |> forcats::fct_relevel(c("right-wing", "left-wing")),
+         Truth = as.factor(Truth) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         )
+
+nb_tfidf_confmat_df |>
+  ggplot(mapping = aes(x = Truth, y = Prediction)) +
+    geom_tile(aes(fill = N), colour = "white") +
+    geom_text(aes(label = N)) +
+    scale_fill_gradient(low="white", high="#009194") +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(legend.position = "none",
+    rect = element_rect(fill = "transparent",
+                        color = "transparent"))
+```
 
 :::
 
 ::: {.column width="45%"}
 
 ```{r}
+#| label: Naive Bayes tfidf ROC Plot
+#| fig-height: 8
+#| fig-width: 8
 preds_naivebayes_tfidf |>
   mutate(.pred_class = as.factor(.pred_class),
          source_bias = as.factor(source_bias) ) |>
@@ -579,20 +726,23 @@ preds_naivebayes_tfidf |>
     lty = 2, alpha = 0.5,
     color = "gray50",
     linewidth = 1.2
-  )
+  ) +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"))
 ```
 
 :::
+
 ::::
 
 ### Tab B (LSA)
 
 :::: {.columns}
+
 ::: {.column width="55%"}
 
 ```{r}
-nb_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","naivebayes_test_metrics_lsa.csv"))
-
+#| label: Naive Bayes lsa Metrics
 nb_test_metrics_lsa |>
   select(.metric, .estimate) |>
   pivot_wider(names_from = .metric,
@@ -607,16 +757,48 @@ nb_test_metrics_lsa |>
          "Specificity" = spec) |>
   gt() |>
   fmt_number(decimals = 3) |>
+  tab_header(
+    title = md("**Classification Metric Naive Bayes LSA**"),
+    subtitle = "Using ROC AUC to Select Best Model"
+  ) |>
+  tab_source_note(source_note = md("Reference: Hvitfeldt, E., and J. Silge. 2022. *Supervised Machine Learning for Text Analysis in R.* 1st ed. Data Science Series. CRC Press.")) |>
+  gtExtras::gt_color_rows(c(6:7), palette = "ggsci::blue_material") |>
+  gtExtras::gt_theme_538() |>
   gt_to_transparent()
 ```
 
-![](../modeling/plots/confusion_matrix_naivebayes_lsa.png)
+```{r}
+#| label: Naive Bayes LSA Conf Mat
+nb_lsa_confmat <- preds_naivebayes_lsa |>
+  mutate(.pred_class = as.factor(.pred_class) |> forcats::fct_relevel(c("left-wing", "right-wing")),
+         source_bias = as.factor(source_bias) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         ) |>
+  yardstick::conf_mat(source_bias, .pred_class)
+
+nb_lsa_confmat_df <- as_tidytable(nb_lsa_confmat$table) |>
+  mutate(Prediction = as.factor(Prediction) |> forcats::fct_relevel(c("right-wing", "left-wing")),
+         Truth = as.factor(Truth) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         )
+
+nb_lsa_confmat_df |>
+  ggplot(mapping = aes(x = Truth, y = Prediction)) +
+    geom_tile(aes(fill = N), colour = "white") +
+    geom_text(aes(label = N)) +
+    scale_fill_gradient(low="white", high="#009194") +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(legend.position = "none",
+    rect = element_rect(fill = "transparent",
+                        color = "transparent"))
+```
 
 :::
 
 ::: {.column width="45%"}
 
 ```{r}
+#| label: Naive Bayes LSA ROC Curve 
+#| fig-height: 8
+#| fig-width: 8
 preds_naivebayes_lsa |>
   mutate(.pred_class = as.factor(.pred_class),
          source_bias = as.factor(source_bias) ) |>
@@ -627,38 +809,32 @@ preds_naivebayes_lsa |>
     lty = 2, alpha = 0.5,
     color = "gray50",
     linewidth = 1.2
-  )
+  ) +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"))
 ```
 
 :::
+
 ::::
 
 :::
 
-::: {.notes}
-Speaker notes go here.
-:::
-
-## LASSO Model Results {background-image="./images/pol_lang_slides.png"}
-
-```{r}
-preds_lasso_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_predictions_tfidf.csv"))
-preds_lasso_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_test_predictions_lsa.csv"))
-```
+## LASSO Model Results
 
 ::: {.panel-tabset}
 
 ### Tab A
 
 :::: {.columns}
+
 ::: {.column width="55%"}
 
 - 4000 of the Most Frequent Bigrams Selected
-- Lambda Value
+- Lambda Value: **0.000464**
 
 ```{r}
-lasso_test_metrics_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_tfidf.csv"))
-
+#| label: lasso tfidf metrics
 lasso_test_metrics_tfidf |>
   select(.metric, .estimate) |>
   pivot_wider(names_from = .metric,
@@ -673,16 +849,48 @@ lasso_test_metrics_tfidf |>
          "Specificity" = spec) |>
   gt() |>
   fmt_number(decimals = 3) |>
+  tab_header(
+    title = md("**Classification Metrics LASSO tfidf**"),
+    subtitle = "Using ROC AUC to Select Best Model"
+  ) |>
+  tab_source_note(source_note = md("Reference: Hvitfeldt, E., and J. Silge. 2022. *Supervised Machine Learning for Text Analysis in R.* 1st ed. Data Science Series. CRC Press.")) |>
+  gtExtras::gt_color_rows(c(6:7), palette = "ggsci::blue_material") |>
+  gtExtras::gt_theme_538() |>
   gt_to_transparent()
 ```
 
-![](../modeling/plots/confusion_matrix_lasso_tfidf.png)
+```{r}
+#| label: lasso tfidf conf mat
+lasso_tfidf_confmat <- preds_lasso_tfidf |>
+  mutate(.pred_class = as.factor(.pred_class) |> forcats::fct_relevel(c("left-wing", "right-wing")),
+         source_bias = as.factor(source_bias) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         ) |>
+  yardstick::conf_mat(source_bias, .pred_class)
+
+lasso_tfidf_confmat_df <- as_tidytable(lasso_tfidf_confmat$table) |>
+  mutate(Prediction = as.factor(Prediction) |> forcats::fct_relevel(c("right-wing", "left-wing")),
+         Truth = as.factor(Truth) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         )
+
+lasso_tfidf_confmat_df |>
+  ggplot(mapping = aes(x = Truth, y = Prediction)) +
+    geom_tile(aes(fill = N), colour = "white") +
+    geom_text(aes(label = N)) +
+    scale_fill_gradient(low="white", high="#009194") +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(legend.position = "none",
+    rect = element_rect(fill = "transparent",
+                        color = "transparent"))
+```
 
 :::
 
 ::: {.column width="45%"}
 
 ```{r}
+#| label: Lasso tfidf ROC curve
+#| fig-height: 8
+#| fig-width: 8
 preds_lasso_tfidf |>
   mutate(.pred_class = as.factor(.pred_class),
          source_bias = as.factor(source_bias) ) |>
@@ -693,29 +901,49 @@ preds_lasso_tfidf |>
     lty = 2, alpha = 0.5,
     color = "gray50",
     linewidth = 1.2
-  )
+  ) +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"))
 ```
 
 :::
+
 ::::
 
 ### Tab B (tfidf Var Imp)
 
 ```{r}
-vip_lasso_tfidf <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_variable_importance_tfidf.csv"))
+#| label: Lasso VIP tfidf 
+#| fig-align: center
+vip_tfidf_chart <- vip_lasso_tfidf |>
+  mutate(
+    Importance = abs(Importance),
+    Variable = forcats::fct_reorder(Variable, Importance)
+  ) |>
+  slice_head(n = 40) |>
+  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = c("NEG" = "blue",
+                               "POS" = "red")) +
+  labs(y = NULL) +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"))
+
+ggplotly(vip_tfidf_chart, width = 1600, height = 900)
 ```
 
 ### Tab C (LSA)
 
 :::: {.columns}
+
 ::: {.column width="55%"}
 
 - 200 Component Vectors
-- Lambda Value 
+- Lambda Value: **0e-10**
 
 ```{r}
-lasso_test_metrics_lsa <- tidytable::fread(here::here("content", "modeling", "model_results","lasso_test_metrics_lsa.csv"))
-
+#| label: Lasso LSA metrics
 lasso_test_metrics_lsa |>
   select(.metric, .estimate) |>
   pivot_wider(names_from = .metric,
@@ -730,16 +958,48 @@ lasso_test_metrics_lsa |>
          "Specificity" = spec) |>
   gt() |>
   fmt_number(decimals = 3) |>
+  tab_header(
+    title = md("**Classification Metric LASSO LSA**"),
+    subtitle = "Using ROC AUC to Select Best Model"
+  ) |>
+  tab_source_note(source_note = md("Reference: Hvitfeldt, E., and J. Silge. 2022. *Supervised Machine Learning for Text Analysis in R.* 1st ed. Data Science Series. CRC Press.")) |>
+  gtExtras::gt_color_rows(c(6:7), palette = "ggsci::blue_material") |>
+  gtExtras::gt_theme_538() |>
   gt_to_transparent()
 ```
 
-![](../modeling/plots/confusion_matrix_lasso_lsa.png)
+```{r}
+#| label: Lasso LSA Conf Mat
+lasso_lsa_confmat <- preds_lasso_lsa |>
+  mutate(.pred_class = as.factor(.pred_class) |> forcats::fct_relevel(c("left-wing", "right-wing")),
+         source_bias = as.factor(source_bias) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         ) |>
+  yardstick::conf_mat(source_bias, .pred_class)
+
+lasso_lsa_confmat_df <- as_tidytable(lasso_lsa_confmat$table) |>
+  mutate(Prediction = as.factor(Prediction) |> forcats::fct_relevel(c("right-wing", "left-wing")),
+         Truth = as.factor(Truth) |> forcats::fct_relevel(c("left-wing", "right-wing"))
+         )
+
+lasso_lsa_confmat_df |>
+  ggplot(mapping = aes(x = Truth, y = Prediction)) +
+    geom_tile(aes(fill = N), colour = "white") +
+    geom_text(aes(label = N)) +
+    scale_fill_gradient(low="white", high="#009194") +
+    ggthemes::theme_clean(base_size = 18) +
+    theme(legend.position = "none",
+    rect = element_rect(fill = "transparent",
+                        color = "transparent"))
+```
 
 :::
 
 ::: {.column width="45%"}
 
 ```{r}
+#| label: Lasso LSA ROC Curve
+#| fig-height: 8
+#| fig-width: 8
 preds_lasso_lsa |>
   mutate(.pred_class = as.factor(.pred_class),
          source_bias = as.factor(source_bias) ) |>
@@ -750,40 +1010,61 @@ preds_lasso_lsa |>
     lty = 2, alpha = 0.5,
     color = "gray50",
     linewidth = 1.2
-  )
+  ) +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"))
 ```
 
 :::
+
 ::::
 
 ### Tab D (LSA Var Imp)
 
 ```{r}
-vip_lasso_lsa <- tidytable::fread(here::here("content", "modeling", "model_results", "lasso_variable_importance_lsa.csv"))
+#| label: Lasso VIP LSA
+#| fig-align: center
+vip_lsa_chart <- vip_lasso_lsa |>
+  mutate(
+    Importance = abs(Importance),
+    Variable = forcats::fct_reorder(Variable, Importance)
+  ) |>
+  slice_head(n = 30) |>
+  ggplot(aes(x = Importance, y = Variable, fill = Sign)) +
+  geom_col() +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = c("NEG" = "blue",
+                               "POS" = "red")) +
+  labs(y = NULL) +
+  ggthemes::theme_clean(base_size = 18) +
+  theme(rect = element_rect(fill = "transparent"))
+
+ggplotly(vip_lsa_chart, width = 1600, height = 900)
 ```
 
 :::
 
-::: {.notes}
-Speaker notes go here.
-:::
+## Conclusion & Remarks
 
-## Conclusion & Remarks {background-image="./images/pol_lang_slides.png"}
-
-- Results appear to be promising
-  - An Accuracy of 82% and ROC AUC of 90% is excellent for LASSO Regresssion
+- Models Results Appear Promising
+  - An Accuracy of 83.7% and ROC AUC of .909 is pretty impressive for LASSO Classification on a Test Set of 37,177 documents
   - Results are Relatively Easy to Interpret
-- The Dataset is Large but not Unwieldy for others to Utilize
-- The R Packages Utilized are Manageable and Easy to Learn
-- Scraping is Easy to Replicate but Hard to find good sources
+- Other Models were attempted, but Computation Time > 36 hours
+  - Random Forest and xgBoost
+  - Initial xgBoost on Early Data Set was closer to Naive Bayes than Lasso
+- Transformers and Neural Nets would be Next Step
+- Data Set is Large, but not Unwieldy
+- Would like to make a Dashboard for the Public to Interact with
+- Overall, this is a step, but not the finish line
 
-## References {background-image="./images/pol_lang_slides.png"}
+
+## References
 
 ::: {#refs}
 :::
 
 # Questions
 
-## Attributions {background-image="./images/pol_lang_slides.png"}
+## Attributions
 
 - Cover Photo by [Khashayar Kouchpeydeh](https://unsplash.com/pt-br/@kouchpeydeh?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/photos/QR_TFiIX8hM?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)
