@@ -30,8 +30,8 @@ DBI::dbExecute(pol_parquet_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documen
 # Export Main DB for Back Up
 
 ```{r}
-export_statement <- export_db(here::here("data", "backup"), pol_sent_db)
-DBI::dbExecute(pol_sent_db, export_statement)
+export_statement <- export_db(here::here("data", "backup"), pol_parquet_db)
+DBI::dbExecute(pol_parquet_db, export_statement)
 ```
 
 # Export Scrape DB
@@ -55,7 +55,6 @@ DBI::dbExecute(scrape_db_wilson, copy_statement)
 # Copy Exported Data into Main DB
 
 ```{r}
-
 copy_wilson <- copy_from_table("text_wilson", here::here("data", "scrape_db", "text_wilson.parquet"), pol_parquet_db)
 DBI::dbExecute(pol_parquet_db, copy_wilson)
 ```
@@ -171,7 +170,6 @@ check_cbpp <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cbpp")
 check_mani <- dbGetQuery(pol_sent_db, "SELECT * FROM text_mani")
 check_hrw <- dbGetQuery(pol_sent_db, "SELECT * FROM text_hrw")
 check_cato <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cato")
-
 check_third <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_third")
 check_demos <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_demos")
 check_cfr <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_cfr")

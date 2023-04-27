@@ -18,6 +18,7 @@ format:
     width: 1920
     height: 1080
     embed-resources: true
+    self-contained-math: true
     mainfont: Roboto Slab
     code-fold: true
 ---
