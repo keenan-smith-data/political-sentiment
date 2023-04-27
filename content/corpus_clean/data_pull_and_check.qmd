@@ -30,8 +30,8 @@ DBI::dbExecute(pol_parquet_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documen
 # Export Main DB for Back Up
 
 ```{r}
-export_statement <- export_db(here::here("data", "backup"), pol_parquet_db)
-DBI::dbExecute(pol_parquet_db, export_statement)
+export_statement <- export_db(here::here("data", "backup"), pol_sent_db)
+DBI::dbExecute(pol_sent_db, export_statement)
 ```
 
 # Export Scrape DB
@@ -186,7 +186,8 @@ source_table <- dplyr::tbl(pol_parquet_db, "source_table")
 source_table
 tables <- dbListTables(pol_parquet_db)
 tables_corpus<- tables[4:length(tables)]
-dbRemoveTable(pol_parquet_db, "full_corpus")
+dbRemoveTable(pol_sent_db, "full_corpus")
+dbListTables(pol_sent_db)
 ```
 
 

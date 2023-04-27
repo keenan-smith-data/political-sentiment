@@ -271,6 +271,8 @@ links_berg <- unnest_to_format(berg_all_links, "Berggruen Institute", "left-wing
 
 # Unnesting and Writing to Disk
 
+This needs to be refactored at some point since the data is managed in SQL and only needs `art_source` for joins.
+
 ```{r}
 #| label: Unnesting and Writing to Disk
 # Heritage Sitemap Link Collection
@@ -320,6 +322,7 @@ links_hrw <- map_df(.x = hrw_all_links, .f = xml_to_tibble)
 links_hrw <- links_hrw |> mutate(art_source = "Human Rights Watch",
                                  art_bias = "left-wing")
 fwrite(links_hrw, here("data", "links_hrw.csv.gz"))
+
 # Guttmacher Institute Link Collection
 links_gutt <- map_df(.x = gutt_all_links, .f = xml_to_tibble)
 links_gutt <- links_gutt |> mutate(art_source = "Guttmacher Institute",

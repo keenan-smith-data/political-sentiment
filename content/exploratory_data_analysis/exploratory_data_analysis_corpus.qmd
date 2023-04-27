@@ -225,7 +225,6 @@ bias_count_filtered$total[[1]] / total_length_filtered
 bias_count_filtered$total[[2]] / total_length_filtered
 ```
 
-
 ```{r}
 ggplot(corpus_df_filtered, aes(x = length_text, fill = short_source, color = short_source)) +
   geom_histogram(alpha = 0.5, position = "identity") +
@@ -269,8 +268,6 @@ sample_corpus <- corpus_df_filtered |>
   select(art_link, art_date, text, source_bias)
 fwrite(sample_corpus, here::here("content", "project", "sample_corpus.csv"))
 ```
-
-
 
 ## Creating Corpus Object
 
