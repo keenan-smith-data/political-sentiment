@@ -18,7 +18,7 @@ article_pull_html <- function(df) {
     s.html = source.html,
     text.css = text.css.tag
   )
-  art_date <- date_pull_testing(
+  art_date <- date_pull(
     s.html = source.html,
     date.css = date.css.tag
   )

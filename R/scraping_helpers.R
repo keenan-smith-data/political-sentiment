@@ -22,7 +22,7 @@ text_pull <- function(s.html, text.css = NA) {
   return(final.data)
 }
 
-date_pull_testing <- function(s.html, date.css) {
+date_pull <- function(s.html, date.css) {
   # browser()
   trad.date.format <- stringr::regex("^(?:(1[0-2]|0?[1-9])/(3[01]|[12][0-9]|0?[1-9])|(3[01]|[12][0-9]|0?[1-9])/(1[0-2]|0?[1-9]))/(?:[0-9]{2})?[0-9]{2}$")
   yyyy.mm.dd <- stringr::regex("([0-9]{4})-?(1[0-2]|0[1-9])-?(3[01]|0[1-9]|[12][0-9])")
@@ -39,21 +39,6 @@ date_pull_testing <- function(s.html, date.css) {
   )
   date.test <- date.test[[1]]
   art_date <- lubridate::mdy(date.test)
-  return(art_date)
-}
-
-date_pull_special <- function(s.html, date.css) {
-  date.text <- rvest::html_elements(s.html, css = date.css)
-  date.text <- xml2::xml_attrs(date.text[[1]])[1]
-  date.text <- stringr::str_extract(date.text, stringr::regex("\\d\\d\\d\\d-\\d\\d-\\d\\d"))
-  art_date <- lubridate::mdy(date.text)
-  return(date.text)
-}
-
-date_pull <- function(s.html, date.css) {
-  date.text <- element_pull(e.html = s.html, css.tag = date.css)
-  date.text <- date.text[1]
-  art_date <- lubridate::mdy(date.text)
   return(art_date)
 }
 

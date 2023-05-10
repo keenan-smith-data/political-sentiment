@@ -9,13 +9,10 @@ here::i_am("content/corpus_clean/data_pull_and_check.qmd")
 library(DBI)
 library(tidytable)
 
-source(here::here("R", "export_db.R"))
-source(here::here("R", "text_sql_statements.R"))
-source(here::here("R", "copy_to_sql.R"))
-source(here::here("R", "copy_from_sql.R"))
-source(here::here("R", "create_db_sql.R"))
+source(here::here("R", "sql_export_db.R"))
+source(here::here("R", "sql_article_table_helpers.R"))
+source(here::here("R", "sql_table_creation_helpers.R"))
 ```
-
 
 ```{r}
 #| label: Connecting the DB
@@ -24,7 +21,8 @@ pol_parquet_db <- dbConnect(duckdb::duckdb(), dbdir = here::here("data","pol-par
 ```
 
 ```{r}
-DBI::dbExecute(pol_parquet_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data/backup'")
+#| label: Importing Backup Database to Database
+DBI::dbExecute(pol_sent_db, "IMPORT DATABASE 'C:/Users/slaps/OneDrive/Documents/Programming/political-sentiment/data/backup'")
 ```
 
 # Export Main DB for Back Up
@@ -59,11 +57,6 @@ copy_wilson <- copy_from_table("text_wilson", here::here("data", "scrape_db", "t
 DBI::dbExecute(pol_parquet_db, copy_wilson)
 ```
 
-
-```{r}
-dbListTables(pol_parquet_db)
-```
-
 # Creating Table Function
 
 Check to make sure that the table isn't already created
@@ -80,13 +73,13 @@ DBI::dbExecute(pol_parquet_db, table_create)
 ```{r}
 corpus_concatenation <- function(df) {
   df |>
-    group_by(art_link,
+    tidytable::group_by(art_link,
              art_date,
              art_author,
              art_topic,
              art_title,
              art_source) |> # These are the metadata tags REFACTOR in future
-    summarise(full_text = paste(text, collapse = " "),
+    tidytable::summarize(full_text = paste(text, collapse = " "),
               .groups = "drop") # combining using the summarise function
 }
 ```
@@ -149,93 +142,7 @@ tables_idx <- dbListTables(pol_sent_db)[4:20]
 ```{r}
 #| label: Creating Index on art_link
 
-# dbSendStatement(pol_sent_db, "ALTER TABLE source_table ADD PRIMARY KEY (art_source)")
 purrr::map(.x = tables_corpus, .f = index_table, con = pol_sent_db)
-```
-
-# Bring Data into R to Check its Validity
-
-Create a Validator After Scrape is Done
-
-```{r}
-check_osf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_osf")
-check_gutt <- dbGetQuery(pol_sent_db, "SELECT * FROM text_gutt")
-check_disc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_disc")
-check_epi <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_epi")
-check_merc <- dbGetQuery(pol_sent_db, "SELECT * FROM text_merc")
-check_urban <- dbGetQuery(pol_sent_db, "SELECT * FROM text_urban")
-check_am <- dbGetQuery(pol_sent_db, "SELECT * FROM text_am")
-check_comf <- dbGetQuery(pol_sent_db, "SELECT * FROM text_comf")
-check_cbpp <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cbpp")
-check_mani <- dbGetQuery(pol_sent_db, "SELECT * FROM text_mani")
-check_hrw <- dbGetQuery(pol_sent_db, "SELECT * FROM text_hrw")
-check_cato <- dbGetQuery(pol_sent_db, "SELECT * FROM text_cato")
-check_third <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_third")
-check_demos <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_demos")
-check_cfr <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_cfr")
-check_iiss <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_iiss")
-check_fab <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_fab")
-check_wilson <- dbGetQuery(pol_parquet_db, "SELECT * FROM text_wilson")
-```
-
-
-# Building Full Corpus
-
-```{r}
-source_table <- dplyr::tbl(pol_parquet_db, "source_table")
-source_table
-tables <- dbListTables(pol_parquet_db)
-tables_corpus<- tables[4:length(tables)]
-dbRemoveTable(pol_sent_db, "full_corpus")
-dbListTables(pol_sent_db)
-```
-
-
-```{r}
-corpus_pull <- function(tbl_title, con) {
-  filter_date <- lubridate::ymd("20100101")
-  dplyr::tbl(con, tbl_title) |>
-    dplyr::left_join(source_table, by = source_table$art_source) |>
-    dplyr::filter(art_date >= filter_date) |>
-    dplyr::collect() |>
-    tidytable::as_tidytable()
-}
-
-create_full_corpus_table <- function(tbl_name, con) {
-  glue::glue_sql("
-                 CREATE OR REPLACE TABLE {tbl_name} (
-                 art_link VARCHAR PRIMARY KEY,
-                 art_date DATE,
-                 art_author VARCHAR,
-                 art_title VARCHAR,
-                 art_source VARCHAR,
-                 full_text VARCHAR,
-                 pull_index INTEGER,
-                 short_source VARCHAR,
-                 source_bias VARCHAR,
-                 length_text INTEGER,
-                 )",
-                 .con = con
-  )
-}
-```
-
-```{r}
-corpus_df <- purrr::map(.x = tables_corpus, .f = corpus_pull, con = pol_parquet_db) |>
-  bind_rows()
-
-# Adding Length Col to the Dataset
-corpus_df <- corpus_df |>
-  mutate(length_text = nchar(full_text))
-
-fwrite(corpus_df, here::here("data", "text", "full_corpus.csv"))
-
-# Full Corpus Unedited
-source(here::here("R", "create_db_sql.R"))
-table_create <- create_full_corpus_table("full_corpus", pol_parquet_db)
-DBI::dbExecute(pol_parquet_db, table_create)
-copy_full_corpus <- copy_table("full_corpus", here::here("data", "text", "full_corpus.csv"), pol_parquet_db)
-DBI::dbExecute(pol_parquet_db, copy_full_corpus)
 ```
 
 ```{r}

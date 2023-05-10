@@ -40,14 +40,14 @@ corpus_pull <- function(tbl_title, con) {
     tidytable::mutate(
     short_source = as.factor(short_source),
     source_bias = as.factor(source_bias),
-    length_text = nchar(full_text)) |>
+    length_text = nchar(full_text),
+    total_words = tokenizers::count_words(full_text)) |>
     tidytable::rename(text = full_text)
 }
 
 
 source_table <- dplyr::tbl(pol_parquet_db, "source_table")
 
-source_tibble <- dplyr::collect(source_table)
 table_aei <- corpus_pull("text_aei", pol_parquet_db)
 table_am <- corpus_pull("text_am", pol_parquet_db)
 table_brook <- corpus_pull("text_brook", pol_parquet_db)
@@ -76,7 +76,12 @@ corpus_df <- bind_rows(table_aei, table_am, table_brook, table_cap, table_cato, 
                       table_gutt, table_heritage, table_iiss, table_jacob, table_mani, table_merc, table_osf,
                       table_third, table_urban, table_wilson)
 
+bigrams_test <- corpus_df |>
+  tidytable::mutate(
+    bigrams = tokenizers::tokenize_ngrams(text, n = 2, ngram_delim = "_")
+  )
 
+readr::write_rds(bigrams_test, here::here("data", "tokens", "bigrams_test.rds"), compress = "gz")
 # DBI::dbDisconnect(pol_parquet_db, shutdown = TRUE)
 ```
 
