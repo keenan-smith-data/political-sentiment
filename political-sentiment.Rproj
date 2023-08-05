@@ -15,7 +15,3 @@ LaTeX: pdfLaTeX
 UseNativePipeOperator: Yes
 
 QuitChildProcessesOnExit: Yes
-
-PythonType: conda
-PythonVersion: 3.9.16
-PythonPath: ~/miniconda3/envs/pol_sent/python.exe
